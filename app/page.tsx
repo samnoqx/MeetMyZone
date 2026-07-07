@@ -16,8 +16,8 @@ interface PageProps {
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const params = await searchParams;
   
-  let title = "MeetMyZone | Visual Timezone Meeting Planner";
-  let description = "Find perfect meeting overlaps across global timezones. Free tool for remote teams. Compare schedules, view working hour overlaps, and schedule meetings.";
+  let title = "MeetMyZone — Global Time Zone Converter & Plan Perfect Meetings Worldwide";
+  let description = "Instantly check live times across 190+ countries with MeetMyZone's precision World Clock, or visualize working-hour overlaps to find the perfect meeting slot. Save your favorite locations, share schedules with one click, and coordinate global teams—all for free, with no login required.";
   
   const citiesParam = params.cities;
   const dateParam = params.date;

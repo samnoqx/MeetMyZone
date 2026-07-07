@@ -3,8 +3,8 @@ import "./globals.css";
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: "MeetMyZone | Visual Timezone Meeting Planner",
-  description: "Find perfect meeting overlaps across global timezones. Free tool for remote teams.",
+  title: "MeetMyZone — Global Time Zone Converter & Plan Perfect Meetings Worldwide",
+  description: "Instantly check live times across 190+ countries with MeetMyZone's precision World Clock, or visualize working-hour overlaps to find the perfect meeting slot. Save your favorite locations, share schedules with one click, and coordinate global teams—all for free, with no login required.",
   manifest: "/site.webmanifest",
   appleWebApp: {
     title: "MeetMyZone"

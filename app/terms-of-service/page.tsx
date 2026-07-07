@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-250">
-      
+
       {/* Back and Home Header */}
       <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
         <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-white transition">
@@ -23,7 +23,7 @@ export default function TermsOfServicePage() {
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-10 shadow-xl dark:shadow-2xl font-sans">
-          
+
           {/* Logo & Headline */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-6 mb-6">
             <div className="flex flex-col items-center select-none shrink-0">
@@ -43,7 +43,7 @@ export default function TermsOfServicePage() {
           </div>
 
           <div className="flex flex-col gap-6 text-xs sm:text-sm leading-relaxed text-slate-650 dark:text-slate-350">
-            
+
             <section className="flex flex-col gap-2">
               <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 1. Acceptance of Terms & Welcome to MeetMyZone
@@ -61,7 +61,7 @@ export default function TermsOfServicePage() {
                 2. Intended Use & License Grants
               </h2>
               <p>
-                MeetMyZone provides a free, visual coordination utility designed to help remote workers, distributed team leads, and international organizations coordinate working hours, find overlap slots, and export calendar links. 
+                MeetMyZone provides a free, visual coordination utility designed to help remote workers, distributed team leads, and international organizations coordinate working hours, find overlap slots, and export calendar links.
               </p>
               <p className="mt-1">
                 We grant you a personal, non-exclusive, non-transferable, revocable license to access and use our website and tools strictly for your personal or commercial meeting organization workflows. You may copy planning layout URLs containing encoded parameters to share availability tables with colleagues and teammates, but you do not acquire any ownership over the underlying mathematical matrices, database queries, visual assets, or source code.
