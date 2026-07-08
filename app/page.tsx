@@ -45,6 +45,9 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   return {
     title,
     description,
+    alternates: {
+      canonical: 'https://meetmyzone.com',
+    },
     openGraph: {
       title,
       description,

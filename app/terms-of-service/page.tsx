@@ -5,6 +5,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: "Terms of Service | MeetMyZone",
   description: "Read the Terms of Service for MeetMyZone. Understand the conditions of use, user responsibilities, prohibited activities, and legal disclaimers regarding timezone accuracy.",
+  alternates: {
+    canonical: "https://meetmyzone.com/terms-of-service"
+  }
 };
 
 export default function TermsOfServicePage() {

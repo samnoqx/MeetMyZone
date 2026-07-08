@@ -5,6 +5,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: "Privacy Policy | MeetMyZone",
   description: "Read the Privacy Policy for MeetMyZone. Learn how we handle your timezone calculations, third-party cookies, Google AdSense integrations, and compliance under GDPR and CCPA.",
+  alternates: {
+    canonical: "https://meetmyzone.com/privacy-policy"
+  }
 };
 
 export default function PrivacyPolicyPage() {

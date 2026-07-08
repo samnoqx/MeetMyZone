@@ -46,6 +46,9 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   return {
     title,
     description,
+    alternates: {
+      canonical: `https://meetmyzone.com/timezone/${cities}`,
+    },
     openGraph: {
       title,
       description,

@@ -5,6 +5,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: "About Us | MeetMyZone",
   description: "Discover the origin story and mission behind MeetMyZone, a visual timezone meeting planner built by a B.Tech student to solve scheduling problems.",
+  alternates: {
+    canonical: "https://meetmyzone.com/about-us"
+  }
 };
 
 const ArrowLeftIcon = ({ size = 16 }: { size?: number }) => (

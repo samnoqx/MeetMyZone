@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   },
   openGraph: {
     siteName: "MeetMyZone"
+  },
+  alternates: {
+    canonical: "https://meetmyzone.com"
   }
 };
 
