@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Footer from '@/components/Footer';
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "MeetMyZone — Global Time Zone Converter & Plan Perfect Meetings Worldwide",
@@ -68,6 +69,21 @@ export default function RootLayout({
         `}} />
       </head>
       <body className="min-h-full flex flex-col bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-250">
+        {/* Google Analytics */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-W62TK5ME01"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-W62TK5ME01');
+          `}
+        </Script>
+
         {/* Spotlight Glow Effect */}
         <div className="fixed inset-0 pointer-events-none z-0 spotlight-glow" />
 
