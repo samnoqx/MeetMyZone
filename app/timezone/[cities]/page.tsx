@@ -50,6 +50,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       title,
       description,
       type: 'website',
+      siteName: 'MeetMyZone',
       images: [
         {
           url: relativeOgUrl,

@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
   appleWebApp: {
     title: "MeetMyZone"
+  },
+  openGraph: {
+    siteName: "MeetMyZone"
   }
 };
 
@@ -23,6 +26,17 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "MeetMyZone",
+              "url": "https://meetmyzone.com"
+            })
+          }}
+        />
         <script dangerouslySetInnerHTML={{
           __html: `
           (function() {

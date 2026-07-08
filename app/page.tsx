@@ -49,6 +49,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
       title,
       description,
       type: 'website',
+      siteName: 'MeetMyZone',
       images: [
         {
           url: relativeOgUrl,
