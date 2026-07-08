@@ -103,3 +103,30 @@ export function parsePairing(pairingSlug: string): ResolvedPairing | null {
   
   return null;
 }
+
+/**
+ * Parses a dynamic routing cities slug (e.g., 'london-to-new-york-to-tokyo')
+ * into an array of city name and timezone objects.
+ */
+export function parseCitiesSlug(citiesSlug: string): { cityName: string; timezone: string }[] {
+  const parts = citiesSlug.toLowerCase().split(/-(?:to|vs|and)-/);
+  return parts.map(part => {
+    const resolvedTz = resolveSlug(part);
+    if (resolvedTz) {
+      return {
+        cityName: resolvedTz.cityName,
+        timezone: resolvedTz.zoneName
+      };
+    }
+    // Fallback: Convert e.g. "san-francisco" to "San Francisco"
+    const displayName = part
+      .split('-')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+    return {
+      cityName: displayName,
+      timezone: resolveTimeZone(displayName)
+    };
+  });
+}
+

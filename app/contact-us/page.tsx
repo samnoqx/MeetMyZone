@@ -28,13 +28,12 @@ export default function ContactUsPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-250">
       
-      {/* Navigation Header */}
       <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
-        <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition">
+        <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition">
           <ArrowLeftIcon size={16} />
           <span>Back to Planner</span>
         </Link>
-        <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition font-medium">
+        <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition font-medium">
           <HomeIcon size={16} />
           <span>Home</span>
         </Link>

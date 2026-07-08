@@ -131,8 +131,9 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
       const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
       if (savedTheme) {
         setTheme(savedTheme);
-      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        setTheme('light');
+      } else {
+        // Default to dark mode for everyone
+        setTheme('dark');
       }
     };
     
@@ -159,12 +160,10 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
 
 
 
-  // Update URL search parameters when state parameters change
+  // Update URL search parameters and path when state parameters change
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      const currentCitiesStr = cities.join(',');
-      const currentZonesStr = cities.map(city => cityTimezones[city] || resolveTimeZone(city)).join(',');
       
       // Auto-fallback if current referenceCity is removed
       let activeRef = referenceCity;
@@ -174,27 +173,64 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
         setReferenceCity(cities[0]);
       }
 
-      if (
-        params.get('cities') !== currentCitiesStr || 
-        params.get('zones') !== currentZonesStr ||
-        params.get('reference') !== activeRef ||
-        params.get('workStart') !== String(workHourStart) ||
-        params.get('workEnd') !== String(workHourEnd) ||
-        params.get('date') !== selectedDate
-      ) {
-        params.set('cities', currentCitiesStr);
-        params.set('zones', currentZonesStr);
+      // Generate the clean slug path for cities
+      const slugifyCity = (cityName: string) => {
+        const namePart = cityName.split(',')[0].trim();
+        return namePart
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-');
+      };
+      const citiesSlug = cities.map(slugifyCity).join('-to-');
+
+      const isConvertRoute = window.location.pathname.startsWith('/convert/');
+      let expectedPathname = window.location.pathname;
+      if (!isConvertRoute) {
+        expectedPathname = `/timezone/${citiesSlug}`;
+      }
+
+      // Clean up old query params
+      params.delete('cities');
+      params.delete('zones');
+
+      // Only set reference if it's not the default (which is the first city in the list)
+      if (activeRef === cities[0]) {
+        params.delete('reference');
+      } else {
         params.set('reference', activeRef);
+      }
+
+      // Only set workStart if it's not the default (9 AM)
+      if (workHourStart === 9) {
+        params.delete('workStart');
+      } else {
         params.set('workStart', String(workHourStart));
+      }
+
+      // Only set workEnd if it's not the default (5 PM)
+      if (workHourEnd === 17) {
+        params.delete('workEnd');
+      } else {
         params.set('workEnd', String(workHourEnd));
-        if (selectedDate) {
-          params.set('date', selectedDate);
-        }
-        const newUrl = `${window.location.pathname}?${params.toString()}`;
+      }
+
+      // Only set date if it's not the default (today)
+      const todayISO = DateTime.now().toISODate();
+      if (selectedDate === todayISO) {
+        params.delete('date');
+      } else if (selectedDate) {
+        params.set('date', selectedDate);
+      }
+
+      const queryString = params.toString();
+      const newUrl = `${expectedPathname}${queryString ? `?${queryString}` : ''}`;
+      const currentUrlPath = window.location.pathname + window.location.search;
+
+      if (currentUrlPath !== newUrl) {
         window.history.replaceState(null, '', newUrl);
       }
     }
-  }, [cities, cityTimezones, referenceCity, workHourStart, workHourEnd, selectedDate]);
+  }, [cities, referenceCity, workHourStart, workHourEnd, selectedDate]);
 
   // Update current reference city local hour periodically
   useEffect(() => {
@@ -614,18 +650,18 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
           <div className="hidden md:flex md:flex-row gap-4 w-full max-w-2xl mt-6 mb-2 mx-auto">
             <a
               href="#world-clock"
-              className="h-14 flex items-center justify-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 shadow-md shadow-cyan-500/15 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-[0.98] active:bg-cyan-500/30 transition-all duration-300 ease-in-out outline-none rounded-xl w-full backdrop-blur-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] shadow-black/20 text-base font-semibold cursor-pointer text-center"
+              className="group h-14 flex items-center justify-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 focus:text-cyan-600 dark:focus:text-cyan-400 active:text-cyan-600 dark:active:text-cyan-400 shadow-md shadow-cyan-500/15 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-[0.98] active:bg-cyan-500/30 transition-all duration-300 ease-in-out outline-none rounded-xl w-full backdrop-blur-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] shadow-black/20 text-base font-semibold cursor-pointer text-center"
             >
-              <svg className="w-5 h-5 text-cyan-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-cyan-600 dark:text-cyan-400 group-focus:text-cyan-600 dark:group-focus:text-cyan-400 group-active:text-cyan-600 dark:group-active:text-cyan-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>Open World Clock ↓</span>
             </a>
             <a
               href="#meeting-planner"
-              className="h-14 flex items-center justify-center gap-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 shadow-md shadow-blue-500/15 hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] active:bg-blue-600/30 transition-all duration-300 ease-in-out outline-none rounded-xl w-full backdrop-blur-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] shadow-black/20 text-base font-semibold cursor-pointer text-center"
+              className="group h-14 flex items-center justify-center gap-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-600 dark:text-blue-400 focus:text-blue-600 dark:focus:text-blue-400 active:text-blue-600 dark:active:text-blue-400 shadow-md shadow-blue-500/15 hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] active:bg-blue-600/30 transition-all duration-300 ease-in-out outline-none rounded-xl w-full backdrop-blur-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] shadow-black/20 text-base font-semibold cursor-pointer text-center"
             >
-              <svg className="w-5 h-5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 group-focus:text-blue-600 dark:group-focus:text-blue-400 group-active:text-blue-600 dark:group-active:text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <span>Start Meeting Planner ↓</span>
