@@ -11,8 +11,22 @@ export const metadata: Metadata = {
 };
 
 export default function TermsOfServicePage() {
+  const termsSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Terms of Service | MeetMyZone",
+    "description": "Read the Terms of Service for MeetMyZone. Understand the conditions of use, user responsibilities, prohibited activities, and disclaimers regarding timezone accuracy.",
+    "url": "https://meetmyzone.com/terms-of-service"
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-250">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      
+      {/* Sanitize and inject JSON-LD schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(termsSchema).replace(/</g, '\\u003c') }}
+      />
 
       <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
         <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition">
@@ -39,12 +53,12 @@ export default function TermsOfServicePage() {
                 Terms of Service
               </h1>
               <p className="text-xs sm:text-sm text-blue-500 dark:text-blue-400 font-medium">
-                Last updated: July 2026. Legal terms and disclaimer of timezone calculations.
+                Legal terms and disclaimer of timezone calculations.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-6 text-xs sm:text-sm leading-relaxed text-slate-650 dark:text-slate-350">
+          <div className="flex flex-col gap-6 text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-200">
 
             <section className="flex flex-col gap-2">
               <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
@@ -136,8 +150,8 @@ export default function TermsOfServicePage() {
               </p>
             </section>
 
-            <p className="mt-2 text-xs text-slate-450 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-4">
-              If you have any questions or require clarification regarding these Terms of Service, please reach out to us at <span className="font-semibold text-blue-500 dark:text-blue-400">support@meetmyzone.com</span> or write to us through our <Link href="/contact-us" className="text-teal-650 hover:underline">Contact Form</Link>.
+            <p className="mt-2 text-xs text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-4">
+              If you have any questions or require clarification regarding these Terms of Service, please reach out to us at <span className="font-semibold text-blue-500 dark:text-blue-400">support@meetmyzone.com</span> or write to us through our <Link href="/contact-us" className="text-teal-600 hover:underline">Contact Form</Link>.
             </p>
           </div>
         </div>

@@ -172,8 +172,8 @@ export default function ShareMenu({ cities, matrix, selectedDate, isCompact = fa
 
         {/* Floating Toast Notification */}
         {toast.show && (
-          <div className="fixed bottom-6 right-6 bg-teal-500 text-slate-955 px-4 py-3 rounded-xl shadow-2xl border border-teal-400 z-50 flex items-center gap-2.5 animate-bounce font-extrabold text-xs">
-            <svg className="w-4 h-4 text-slate-955" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="fixed bottom-6 right-6 bg-teal-500 text-slate-950 px-4 py-3 rounded-xl shadow-2xl border border-teal-400 z-50 flex items-center gap-2.5 animate-bounce font-extrabold text-xs">
+            <svg className="w-4 h-4 text-slate-950" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
             </svg>
             {toast.message}
@@ -188,7 +188,7 @@ export default function ShareMenu({ cities, matrix, selectedDate, isCompact = fa
       {/* Copy Link Button */}
       <button
         onClick={handleCopyLink}
-        className={`flex items-center justify-center md:justify-start gap-2 bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-white/10 hover:border-slate-350 dark:hover:border-slate-700 text-slate-750 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white rounded-lg text-xs md:text-sm transition-all shadow-md active:scale-95 cursor-pointer font-bold ${
+        className={`flex items-center justify-center md:justify-start gap-2 bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-white/10 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white rounded-lg text-xs md:text-sm transition-all shadow-md active:scale-95 cursor-pointer font-bold ${
           isCompact ? 'px-3 py-1.5 w-auto md:text-sm text-xs' : 'flex-1 md:flex-none px-3 md:px-4 py-2 w-full md:w-auto'
         }`}
       >
@@ -202,7 +202,7 @@ export default function ShareMenu({ cities, matrix, selectedDate, isCompact = fa
       {/* Copy Slack Summary Button */}
       <button
         onClick={handleCopySlackSummary}
-        className={`flex items-center justify-center md:justify-start gap-2 bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-white/10 hover:border-slate-350 dark:hover:border-slate-700 text-slate-750 dark:text-slate-200 hover:text-slate-955 dark:hover:text-white rounded-lg text-xs md:text-sm transition-all shadow-md active:scale-95 cursor-pointer font-bold ${
+        className={`flex items-center justify-center md:justify-start gap-2 bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-white/10 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white rounded-lg text-xs md:text-sm transition-all shadow-md active:scale-95 cursor-pointer font-bold ${
           isCompact ? 'px-3 py-1.5 w-auto md:text-sm text-xs' : 'flex-1 md:flex-none px-3 md:px-4 py-2 w-full md:w-auto'
         }`}
       >
@@ -215,8 +215,8 @@ export default function ShareMenu({ cities, matrix, selectedDate, isCompact = fa
 
       {/* Floating Toast Notification */}
       {toast.show && (
-        <div className="fixed bottom-6 right-6 bg-teal-500 text-slate-950 px-4 py-3 rounded-xl shadow-2xl border border-teal-400 z-50 flex items-center gap-2.5 animate-bounce font-extrabold text-xs">
-          <svg className="w-4 h-4 text-slate-955" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="fixed bottom-6 right-6 bg-teal-500 text-slate-955 px-4 py-3 rounded-xl shadow-2xl border border-teal-400 z-50 flex items-center gap-2.5 animate-bounce font-extrabold text-xs">
+          <svg className="w-4 h-4 text-slate-950" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
           </svg>
           {toast.message}

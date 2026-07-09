@@ -1,5 +1,4 @@
 import HomeClient from '../../HomeClient';
-import SEOSection from '../../../components/SEOSection';
 import { parseCitiesSlug } from '../../../utils/seoResolver';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -14,6 +13,10 @@ interface PageProps {
     workEnd?: string;
     date?: string;
   }>;
+}
+
+export async function generateStaticParams() {
+  return [];
 }
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
@@ -43,11 +46,20 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   
   const relativeOgUrl = `/api/og?${ogSearchParams.toString()}`;
   
+  // Prevent duplicate content penalty by canonicalizing 2-city queries to the dedicated convert page
+  const canonicalUrl = resolved.length === 2
+    ? `https://meetmyzone.com/convert/${resolved[0].cityName.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}-to-${resolved[1].cityName.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`
+    : `https://meetmyzone.com/timezone/${cities}`;
+  
   return {
     title,
     description,
+    robots: {
+      index: false,
+      follow: true,
+    },
     alternates: {
-      canonical: `https://meetmyzone.com/timezone/${cities}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
       title,
@@ -80,6 +92,8 @@ export default async function Page({ params, searchParams }: PageProps) {
   if (resolved.length === 0) {
     notFound();
   }
+
+
   
   const initialParams = {
     cities: resolved.map(c => c.cityName).join(','),
@@ -91,24 +105,9 @@ export default async function Page({ params, searchParams }: PageProps) {
   };
   
   // Use first two resolved cities for the SEO pairing details if available
-  const zoneA = resolved[0] ? {
-    slug: resolved[0].cityName.toLowerCase().replace(/\s+/g, '-'),
-    displayName: resolved[0].cityName,
-    cityName: resolved[0].cityName,
-    zoneName: resolved[0].timezone
-  } : undefined;
-
-  const zoneB = resolved[1] ? {
-    slug: resolved[1].cityName.toLowerCase().replace(/\s+/g, '-'),
-    displayName: resolved[1].cityName,
-    cityName: resolved[1].cityName,
-    zoneName: resolved[1].timezone
-  } : undefined;
-  
   return (
     <>
       <HomeClient initialParams={initialParams} />
-      <SEOSection zoneA={zoneA} zoneB={zoneB} />
     </>
   );
 }

@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     // Parse parameters
     const citiesList = citiesParam
       ? citiesParam.split(',').map((c) => decodeURIComponent(c.trim())).filter(Boolean)
-      : ['London', 'New York', 'Tokyo'];
+      : ['London', 'New York'];
 
     const zonesList = zonesParam
       ? zonesParam.split(',').map((z) => decodeURIComponent(z.trim())).filter(Boolean)

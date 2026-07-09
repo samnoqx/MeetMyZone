@@ -202,6 +202,7 @@ export function isWorkingHour(time: string, startHour: number = 8, endHour: numb
 
 export interface TimeMatrixCell {
   localTime: string;      // e.g. "09:00 AM"
+  localTime24: string;    // e.g. "09:00"
   offset: string;         // e.g. "UTC-05:00"
   offsetName: string;     // e.g. "EST"
   isWorking: boolean;
@@ -247,10 +248,12 @@ export function generateTimezoneMatrix(
       const localTime = refTime.setZone(zone);
       
       const formattedLocal = localTime.toFormat('hh:mm a');
+      const formattedLocal24 = localTime.toFormat('HH:mm');
       const offsetVal = localTime.toFormat('ZZ'); // Format e.g., -05:00 or +01:00
       
       citiesData[city] = {
         localTime: formattedLocal,
+        localTime24: formattedLocal24,
         offset: `UTC${offsetVal}`,
         offsetName: localTime.offsetNameShort || '',
         isWorking: isWorkingHour(formattedLocal, workStart, workEnd),

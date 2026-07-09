@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import Script from "next/script";
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://meetmyzone.com'),
   title: "MeetMyZone — Global Time Zone Converter & Plan Perfect Meetings Worldwide",
   description: "Instantly check live times across 190+ countries with MeetMyZone's precision World Clock, or visualize working-hour overlaps to find the perfect meeting slot. Save your favorite locations, share schedules with one click, and coordinate global teams—all for free, with no login required.",
   manifest: "/site.webmanifest",
@@ -71,7 +72,15 @@ export default function RootLayout({
           })();
         `}} />
       </head>
-      <body className="min-h-full flex flex-col bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-250">
+      <body className="min-h-full flex flex-col bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+        {/* Google AdSense / CMP Integration */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+
         {/* Google Analytics */}
         <Script
           async

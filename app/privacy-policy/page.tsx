@@ -11,8 +11,22 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPolicyPage() {
+  const privacySchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Privacy Policy | MeetMyZone",
+    "description": "Read the Privacy Policy for MeetMyZone. Learn how we handle your timezone calculations, third-party cookies, Google AdSense integrations, and compliance under GDPR and CCPA.",
+    "url": "https://meetmyzone.com/privacy-policy"
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-250">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      
+      {/* Sanitize and inject JSON-LD schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(privacySchema).replace(/</g, '\\u003c') }}
+      />
       
       <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
         <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition">
@@ -39,15 +53,15 @@ export default function PrivacyPolicyPage() {
                 Privacy Policy
               </h1>
               <p className="text-xs sm:text-sm text-blue-500 dark:text-blue-400 font-medium">
-                Last updated: July 2026. Your privacy and advertising disclosures.
+                Your privacy and advertising disclosures.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-6 text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-350">
+          <div className="flex flex-col gap-6 text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-200">
             
             <section className="flex flex-col gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 1. General Overview & Privacy Commitment
               </h2>
               <p>
@@ -59,7 +73,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="flex flex-col gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 2. Timezone Calculations & Zero Data Storage Policy
               </h2>
               <p>
@@ -76,7 +90,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="flex flex-col gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 3. Google AdSense & Third-Party Cookies Disclosure
               </h2>
               <p>
@@ -92,7 +106,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="flex flex-col gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 4. Consent Management Platform (CMP) & GDPR/UK Compliance
               </h2>
               <p>
@@ -104,19 +118,27 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="flex flex-col gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 5. Third-Party Privacy Policies & Cookie Opt-Out
               </h2>
               <p>
                 MeetMyZone&apos;s Privacy Policy does not apply to other advertisers or websites. Thus, we advise you to consult the respective Privacy Policies of these third-party ad servers for more detailed information. It may include their practices and instructions about how to opt-out of certain options.
               </p>
               <p className="mt-1">
-                You can choose to disable cookies through your individual browser options. To know more detailed information about cookie management with specific web browsers, it can be found at the browsers&apos; respective websites.
+                You can manage or opt-out of personalized third-party cookies and behavioral interest-based advertising networks globally through the following resource links:
+              </p>
+              <ul className="list-disc list-inside ml-2 flex flex-col gap-1 mt-1 font-semibold text-blue-500 dark:text-blue-400">
+                <li><a href="https://optout.networkadvertising.org/" target="_blank" rel="noopener noreferrer" className="hover:underline">Network Advertising Initiative (NAI) Opt-Out</a></li>
+                <li><a href="https://optout.aboutads.info/" target="_blank" rel="noopener noreferrer" className="hover:underline">Digital Advertising Alliance (DAA) Choice Center</a></li>
+                <li><a href="https://www.youronlinechoices.eu/" target="_blank" rel="noopener noreferrer" className="hover:underline">EDAA Consumer Opt-Out (Europe)</a></li>
+              </ul>
+              <p className="mt-1">
+                Additionally, you can choose to disable cookies through your individual browser settings. For detailed information regarding cookie management across specific web browsers (Chrome, Firefox, Safari, Edge), visit the browsers&apos; official documentation pages.
               </p>
             </section>
 
             <section className="flex flex-col gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 6. GDPR Data Protection Rights
               </h2>
               <p>
@@ -136,7 +158,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="flex flex-col gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 7. CCPA Privacy Rights (Do Not Sell My Personal Information)
               </h2>
               <p>
@@ -153,7 +175,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="flex flex-col gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 8. Information Collected via Support Queries
               </h2>
               <p>
@@ -162,7 +184,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="flex flex-col gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 9. Children&apos;s Information
               </h2>
               <p>

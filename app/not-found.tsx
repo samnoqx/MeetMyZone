@@ -6,7 +6,7 @@ export default function NotFound() {
     <div className="flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 py-16 sm:py-24">
       <div className="flex flex-col items-center max-w-md">
         {/* Large Branded 404 */}
-        <h1 className="text-7xl sm:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-teal-350 select-none tracking-tight">
+        <h1 className="text-7xl sm:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-teal-300 select-none tracking-tight">
           404
         </h1>
         

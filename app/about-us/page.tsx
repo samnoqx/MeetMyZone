@@ -23,8 +23,28 @@ const HomeIcon = ({ size = 16 }: { size?: number }) => (
 );
 
 export default function AboutUsPage() {
+  const aboutSchema = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "About Us | MeetMyZone",
+    "description": "Discover the origin story and mission behind MeetMyZone, a visual timezone meeting planner built by a B.Tech student to solve scheduling problems.",
+    "url": "https://meetmyzone.com/about-us",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "MeetMyZone",
+      "url": "https://meetmyzone.com",
+      "logo": "https://meetmyzone.com/logo.png"
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-250">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      
+      {/* Sanitize and inject JSON-LD schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutSchema).replace(/</g, '\\u003c') }}
+      />
       
       <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
         <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition">
@@ -58,10 +78,27 @@ export default function AboutUsPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-6 text-xs sm:text-sm leading-relaxed text-slate-650 dark:text-slate-350">
+          <div className="flex flex-col gap-6 text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-200">
+            
+            <section className="flex flex-col gap-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-xl">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                Core Editorial & Ownership Info
+              </h2>
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                <div className="bg-teal-500/10 dark:bg-teal-600/20 border border-teal-500/20 text-teal-600 dark:text-teal-400 p-4 rounded-xl font-mono text-center w-full sm:w-auto">
+                  <div className="font-extrabold text-sm">samnoqx</div>
+                  <div className="text-[10px] uppercase font-bold tracking-wider mt-0.5 opacity-80">Creator & Systems Engineer</div>
+                </div>
+                <div className="flex-1 text-[11px] sm:text-xs">
+                  <p className="mb-1"><strong>Affiliation:</strong> B.Tech Student in Computer Science and Engineering</p>
+                  <p className="mb-1"><strong>Project Domain:</strong> meetmyzone.com</p>
+                  <p><strong>Support Channel:</strong> <span className="font-semibold text-teal-600 dark:text-teal-400">support@meetmyzone.com</span></p>
+                </div>
+              </div>
+            </section>
             
             <section className="flex flex-col gap-3">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 The Origin Story
               </h2>
               <p>
@@ -76,7 +113,7 @@ export default function AboutUsPage() {
             </section>
 
             <section className="flex flex-col gap-3">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 Why This Project Matters
               </h2>
               <p>
@@ -99,7 +136,7 @@ export default function AboutUsPage() {
             </section>
 
             <section className="flex flex-col gap-3">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 My Commitment as a Student Developer
               </h2>
               <p>
@@ -111,7 +148,7 @@ export default function AboutUsPage() {
             </section>
 
             <section className="flex flex-col gap-3 border-t border-slate-100 dark:border-slate-800 pt-6">
-              <h2 className="text-base sm:text-lg font-bold text-slate-850 dark:text-slate-200">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 Let&apos;s Connect
               </h2>
               <p>

@@ -9,7 +9,7 @@ interface ClockCity {
 }
 
 const ClockIcon = () => (
-  <svg className="w-4 h-4 text-teal-505 dark:text-teal-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <svg className="w-4 h-4 text-teal-500 dark:text-teal-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
@@ -193,10 +193,10 @@ export default function WorldClock() {
     <section className="w-full flex flex-col font-sans mb-1 select-none">
       
       {/* Title */}
-      <h2 className="text-xs uppercase tracking-wider font-extrabold text-slate-455 dark:text-slate-500 flex items-center gap-1.5 mb-2.5">
+      <h2 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mb-2.5">
         <ClockIcon />
         <span>World Clock</span>
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-505 animate-pulse ml-0.5" />
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
       </h2>
 
       {/* Two Horizontal Cards Container */}
@@ -206,7 +206,16 @@ export default function WorldClock() {
         <div ref={containerRef1} className="relative w-full">
           <div 
             onClick={() => toggleSearch(1)}
-            className="w-full h-20 sm:h-22 premium-card rounded-2xl px-5 flex items-center justify-between hover:border-teal-500/40 dark:hover:border-teal-500/35 hover:scale-[1.005] active:scale-[0.99] transition-all duration-200 cursor-pointer group"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleSearch(1);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Change city for clock 1"
+            className="w-full h-20 sm:h-22 premium-card rounded-2xl px-5 flex items-center justify-between hover:border-teal-500/40 dark:hover:border-teal-500/35 hover:scale-[1.005] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-teal-500/35 transition-all duration-200 cursor-pointer group"
           >
             {/* Left Side: City & Info */}
             <div className="flex flex-col justify-center gap-1 min-w-0 flex-1 mr-3">
@@ -218,7 +227,7 @@ export default function WorldClock() {
                   <EditIcon />
                 </span>
               </div>
-              <span className="text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
+              <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 {date1 || '---'}
               </span>
             </div>
@@ -241,9 +250,10 @@ export default function WorldClock() {
                 <input
                   type="text"
                   placeholder="Search city..."
+                  aria-label="Search city name for clock 1"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-8 py-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl text-xs focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-slate-855 dark:text-slate-100 placeholder:text-slate-450 dark:placeholder:text-slate-600"
+                  className="w-full pl-8 pr-8 py-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl text-xs focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600"
                   autoFocus
                 />
                 <span className="absolute left-2.5">
@@ -258,7 +268,7 @@ export default function WorldClock() {
 
               <div className="flex flex-col gap-0.5 max-h-48 overflow-y-auto">
                 {searchQuery && !isLoading && suggestions.length === 0 ? (
-                  <p className="text-center text-[11px] text-slate-400 dark:text-slate-505 py-3">No matching cities found</p>
+                  <p className="text-center text-[11px] text-slate-400 dark:text-slate-500 py-3">No matching cities found</p>
                 ) : (
                   suggestions.map((sug) => (
                     <button
@@ -268,9 +278,9 @@ export default function WorldClock() {
                     >
                       <div className="flex flex-col gap-0.5 max-w-[75%]">
                         <span className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">{sug.label}</span>
-                        <span className="text-[9px] text-slate-450 dark:text-slate-550 truncate">{sug.timezone}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 truncate">{sug.timezone}</span>
                       </div>
-                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-555 border border-slate-200/50 dark:border-white/5 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded uppercase">
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 border border-slate-200/50 dark:border-white/5 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded uppercase">
                         Select
                       </span>
                     </button>
@@ -285,7 +295,16 @@ export default function WorldClock() {
         <div ref={containerRef2} className="relative w-full">
           <div 
             onClick={() => toggleSearch(2)}
-            className="w-full h-20 sm:h-22 premium-card rounded-2xl px-5 flex items-center justify-between hover:border-teal-500/40 dark:hover:border-teal-500/35 hover:scale-[1.005] active:scale-[0.99] transition-all duration-200 cursor-pointer group"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleSearch(2);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Change city for clock 2"
+            className="w-full h-20 sm:h-22 premium-card rounded-2xl px-5 flex items-center justify-between hover:border-teal-500/40 dark:hover:border-teal-500/35 hover:scale-[1.005] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-teal-500/35 transition-all duration-200 cursor-pointer group"
           >
             {/* Left Side: City & Info */}
             <div className="flex flex-col justify-center gap-1 min-w-0 flex-1 mr-3">
@@ -297,7 +316,7 @@ export default function WorldClock() {
                   <EditIcon />
                 </span>
               </div>
-              <span className="text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
+              <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 {date2 || '---'}
               </span>
             </div>
@@ -320,9 +339,10 @@ export default function WorldClock() {
                 <input
                   type="text"
                   placeholder="Search city..."
+                  aria-label="Search city name for clock 2"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-8 py-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl text-xs focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-slate-855 dark:text-slate-100 placeholder:text-slate-450 dark:placeholder:text-slate-600"
+                  className="w-full pl-8 pr-8 py-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl text-xs focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600"
                   autoFocus
                 />
                 <span className="absolute left-2.5">
@@ -337,7 +357,7 @@ export default function WorldClock() {
 
               <div className="flex flex-col gap-0.5 max-h-48 overflow-y-auto">
                 {searchQuery && !isLoading && suggestions.length === 0 ? (
-                  <p className="text-center text-[11px] text-slate-400 dark:text-slate-505 py-3">No matching cities found</p>
+                  <p className="text-center text-[11px] text-slate-400 dark:text-slate-500 py-3">No matching cities found</p>
                 ) : (
                   suggestions.map((sug) => (
                     <button
@@ -347,9 +367,9 @@ export default function WorldClock() {
                     >
                       <div className="flex flex-col gap-0.5 max-w-[75%]">
                         <span className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">{sug.label}</span>
-                        <span className="text-[9px] text-slate-450 dark:text-slate-550 truncate">{sug.timezone}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 truncate">{sug.timezone}</span>
                       </div>
-                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-555 border border-slate-200/50 dark:border-white/5 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded uppercase">
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 border border-slate-200/50 dark:border-white/5 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded uppercase">
                         Select
                       </span>
                     </button>

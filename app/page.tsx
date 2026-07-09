@@ -1,6 +1,5 @@
 import HomeClient from './HomeClient';
 import type { Metadata } from 'next';
-import SEOSection from '@/components/SEOSection';
 
 interface PageProps {
   searchParams: Promise<{
@@ -73,10 +72,28 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 
 export default async function Page({ searchParams }: PageProps) {
   const resolvedParams = await searchParams;
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://meetmyzone.com/#organization",
+    "name": "MeetMyZone",
+    "url": "https://meetmyzone.com",
+    "logo": "https://meetmyzone.com/logo.png",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": "support@meetmyzone.com",
+      "contactType": "customer support"
+    }
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
       <HomeClient initialParams={resolvedParams} />
-      <SEOSection />
     </>
   );
 }

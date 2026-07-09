@@ -2,15 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { DateTime } from 'luxon';
-import { 
-  generateTimezoneMatrix, 
-  resolveTimeZone, 
-  ZONE_SEARCH_INDEX 
+import {
+  generateTimezoneMatrix,
+  resolveTimeZone,
+  ZONE_SEARCH_INDEX
 } from '@/utils/timezone';
 import TimezoneTimeline from '@/components/TimezoneTimeline';
 import ShareMenu from '@/components/ShareMenu';
 import Link from 'next/link';
 import WorldClock from '@/components/WorldClock';
+import SEOSection from '@/components/SEOSection';
+import { ResolvedTimezone } from '@/utils/seoResolver';
 
 interface GeocodeSuggestion {
   label: string;
@@ -39,7 +41,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
     ? initialParams.zones.split(',').map((z) => decodeURIComponent(z.trim())).filter(Boolean)
     : [];
 
-  const initialCities = parsedCities.length > 0 ? parsedCities : ['London', 'New York', 'Tokyo'];
+  const initialCities = parsedCities.length > 0 ? parsedCities : ['London', 'New York'];
 
   const initialCityTimezones: Record<string, string> = {};
   if (parsedCities.length > 0) {
@@ -49,11 +51,10 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
   } else {
     initialCityTimezones['London'] = 'Europe/London';
     initialCityTimezones['New York'] = 'America/New_York';
-    initialCityTimezones['Tokyo'] = 'Asia/Tokyo';
   }
 
-  const initialReferenceCity = initialParams.reference 
-    ? decodeURIComponent(initialParams.reference.trim()) 
+  const initialReferenceCity = initialParams.reference
+    ? decodeURIComponent(initialParams.reference.trim())
     : (parsedCities.length > 0 ? parsedCities[0] : 'London');
 
   const initialWorkHourStart = (() => {
@@ -136,9 +137,9 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
         setTheme('dark');
       }
     };
-    
+
     syncThemeState();
-    
+
     window.addEventListener('pageshow', syncThemeState);
     return () => {
       window.removeEventListener('pageshow', syncThemeState);
@@ -164,7 +165,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      
+
       // Auto-fallback if current referenceCity is removed
       let activeRef = referenceCity;
       if (!cities.includes(referenceCity) && cities.length > 0) {
@@ -257,7 +258,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
       return;
     }
     const query = newCity.toLowerCase().trim();
-    
+
     const delayDebounceFn = setTimeout(() => {
       fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=en&format=json`)
         .then((res) => res.json())
@@ -281,7 +282,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
         .catch((err) => {
           console.error("Geocoding fetch error:", err);
           const matches = ZONE_SEARCH_INDEX
-            .filter(item => 
+            .filter(item =>
               (item.key.includes(query) || item.zone.toLowerCase().includes(query)) &&
               !cities.map(c => c.toLowerCase()).includes(item.label.toLowerCase())
             )
@@ -312,7 +313,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
       ...prev,
       [sug.label]: sug.timezone
     }));
-    
+
     setCities([...cities, sug.label]);
     setNewCity('');
     setErrorMsg('');
@@ -332,7 +333,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
     try {
       const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmed)}&count=1&language=en&format=json`);
       const data = await res.json();
-      
+
       if (data && data.results && data.results.length > 0) {
         const item = data.results[0];
         const region = item.admin1 ? `, ${item.admin1}` : '';
@@ -360,7 +361,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
           setErrorMsg(`Could not resolve timezone for "${trimmed}". Try a major city or country name.`);
           return;
         }
-        
+
         setCityTimezones(prev => ({
           ...prev,
           [trimmed]: resolvedZone
@@ -402,7 +403,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
   // Find overlapping working slots
   const getRecommendedSlots = (): { utcHour: number; formattedUtc: string; workingCities: string[]; score: number }[] => {
     if (cities.length === 0) return [];
-    
+
     const slots = matrix.map((row) => {
       const workingCities: string[] = [];
       cities.forEach((city) => {
@@ -451,7 +452,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
     const refZone = cityTimezones[referenceCity] || resolveTimeZone(referenceCity);
     const startLocal = DateTime.fromISO(selectedDate, { zone: refZone }).startOf('day').plus({ hours: activeSchedulingSlot.utcHour });
     const endLocal = startLocal.plus({ minutes: eventDuration });
-    
+
     const dateStr = startLocal.toFormat('EEEE, LLLL dd, yyyy');
     const currentUrl = window.location.href;
 
@@ -459,7 +460,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
       const zone = cityTimezones[city] || resolveTimeZone(city);
       const localStart = startLocal.setZone(zone);
       const localEnd = endLocal.setZone(zone);
-      
+
       return `${localStart.toFormat('h:mm a')} - ${localEnd.toFormat('h:mm a')} ${localStart.offsetNameShort} (${city})`;
     });
 
@@ -490,14 +491,14 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
   const getGoogleCalendarUrl = (slot: { formattedUtc: string; utcHour: number }) => {
     if (typeof window === 'undefined' || !selectedDate) return '';
     const refZone = cityTimezones[referenceCity] || resolveTimeZone(referenceCity);
-    
+
     // Parse selectedDate directly in target reference timezone to prevent date shifts
     const startLocal = DateTime.fromISO(selectedDate, { zone: refZone }).startOf('day').plus({ hours: slot.utcHour });
     const endLocal = startLocal.plus({ minutes: eventDuration });
-    
+
     const startUtcStr = startLocal.toUTC().toFormat("yyyyMMdd'T'HHmmss'Z'");
     const endUtcStr = endLocal.toUTC().toFormat("yyyyMMdd'T'HHmmss'Z'");
-    
+
     const title = encodeURIComponent(eventTitle || "Aligned Sync Meeting");
     const details = encodeURIComponent(eventDescription || `MeetMyZone: ${window.location.href}`);
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startUtcStr}/${endUtcStr}&details=${details}`;
@@ -507,14 +508,14 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
   const downloadIcsFile = (slot: { formattedUtc: string; utcHour: number }) => {
     if (typeof window === 'undefined' || !selectedDate) return;
     const refZone = cityTimezones[referenceCity] || resolveTimeZone(referenceCity);
-    
+
     // Parse selectedDate directly in target reference timezone to prevent date shifts
     const startLocal = DateTime.fromISO(selectedDate, { zone: refZone }).startOf('day').plus({ hours: slot.utcHour });
     const endLocal = startLocal.plus({ minutes: eventDuration });
-    
+
     const startUtcStr = startLocal.toUTC().toFormat("yyyyMMdd'T'HHmmss'Z'");
     const endUtcStr = endLocal.toUTC().toFormat("yyyyMMdd'T'HHmmss'Z'");
-    
+
     const icsContent = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
@@ -531,7 +532,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
       'END:VEVENT',
       'END:VCALENDAR'
     ].join('\r\n');
-    
+
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -556,20 +557,28 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
     const days = [];
     const startOfMonth = viewDate.startOf('month');
     const daysInMonth = viewDate.daysInMonth || 30;
-    
+
     const firstWeekday = startOfMonth.weekday;
     const paddingCount = firstWeekday === 7 ? 0 : firstWeekday;
-    
+
     for (let p = 0; p < paddingCount; p++) {
       days.push(null);
     }
-    
+
     for (let d = 1; d <= daysInMonth; d++) {
       days.push(startOfMonth.set({ day: d }));
     }
-    
+
     return days;
   };
+
+  // Dynamic SEO zones based on current cities state
+  const resolvedZones: ResolvedTimezone[] = cities.map(city => ({
+    slug: city.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-'),
+    displayName: city.split(',')[0],
+    cityName: city.split(',')[0],
+    zoneName: cityTimezones[city] || resolveTimeZone(city)
+  }));
 
   const monthGridDays = getDaysInMonthGrid();
 
@@ -586,27 +595,33 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
 
   return (
     <div className={theme === 'dark' ? 'dark' : ''}>
-      <div className="flex-1 bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 flex flex-col justify-start pb-20 font-sans selection:bg-teal-500/30 selection:text-teal-600 dark:selection:text-teal-300 transition-colors duration-250 min-h-screen">
-        
+      <div className="flex-1 bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 flex flex-col justify-start pb-20 font-sans selection:bg-teal-500/30 selection:text-teal-600 dark:selection:text-teal-300 transition-colors duration-200 min-h-screen">
+
         {/* Navigation Bar */}
         <nav className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-5 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-900">
-          <Link href="/" className="flex items-center gap-3 group select-none">
+          <Link href="/" className="flex items-center gap-1 md:gap-3 group select-none -ml-3 md:ml-0">
             <img
               src="/logo.png"
               alt="MeetMyZone Logo"
-              className="h-20 md:h-24 w-auto object-contain group-hover:scale-105 transition-transform my-auto -mr-6 md:-mr-8"
+              className="h-20 md:h-24 w-auto object-contain group-hover:scale-105 transition-transform my-auto -mr-8 md:-mr-8"
             />
-            <span className="font-black text-2xl md:text-3xl tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-600 dark:bg-clip-text dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:to-cyan-400 group-hover:opacity-90 transition-opacity">
+            <span className="font-black text-2xl md:text-3xl tracking-tight leading-normal bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-600 dark:bg-clip-text dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:to-cyan-400 group-hover:opacity-90 transition-opacity">
               MeetMyZone
             </span>
           </Link>
 
           {/* Action Controls (Share + Theme Toggle) */}
           <div className="flex items-center gap-2 md:gap-4">
+            <Link
+              href="/blog"
+              className="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-200 font-extrabold text-xs sm:text-sm shadow-sm transition-all active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+            >
+              Blog
+            </Link>
             <div className="hidden md:block">
               <ShareMenu cities={cities} matrix={matrix} selectedDate={selectedDate} isCompact={true} />
             </div>
-            
+
             <button
               onClick={() => {
                 const nextTheme = theme === 'dark' ? 'light' : 'dark';
@@ -642,7 +657,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
               Global Time Zone Converter. Plan Perfect Meetings.
             </span>
           </h1>
-          
+
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-3xl leading-relaxed">
             Instantly check live times across 190+ countries with our precision World Clock, or visualize working hour overlaps to find the perfect meeting slot. Save your favorite locations, share schedules with one click, and coordinate global teams — all free, no login required.
           </p>
@@ -675,64 +690,64 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
 
         {/* Main Area */}
         <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 mt-2 md:mt-2 flex flex-col gap-6 sm:gap-8">
-          
-          <div id="world-clock">
+
+          <div id="world-clock" className="w-full">
             <WorldClock />
           </div>
 
           {/* Top Widgets Grid */}
-          <div id="meeting-planner" className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
-            
+          <div id="meeting-planner" className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
+
             {/* Sidebar Column */}
             <div className="lg:col-span-1 flex flex-col gap-6 sm:gap-8">
-              
+
               {/* Year/Month Calendar Widget */}
-              <div className="premium-card p-6 rounded-2xl transition-colors duration-250 flex flex-col gap-4">
+              <div className="premium-card p-6 rounded-2xl transition-colors duration-200 flex flex-col gap-4">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                  <span className="text-sm font-extrabold text-slate-805 dark:text-slate-200 flex items-center gap-1.5">
+                  <span className="text-sm font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <svg className="w-4 h-4 text-teal-500 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     {viewDate.toFormat('MMMM yyyy')}
                   </span>
-                  
+
                   {/* Calendar Navigation Arrows */}
                   <div className="flex gap-1">
-                     <button
-                       onClick={() => setViewDate(viewDate.minus({ months: 1 }))}
-                       className="p-1.5 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/90 hover:text-teal-500 dark:hover:text-white text-slate-600 dark:text-slate-200 text-xs font-bold leading-none cursor-pointer transition-colors"
-                       title="Previous Month"
-                     >
-                       &larr;
-                     </button>
-                     <button
-                       onClick={() => {
-                         const today = DateTime.now();
-                         setViewDate(today.startOf('month'));
-                         setSelectedDate(today.toISODate() || '');
-                       }}
-                       className="px-2.5 py-1.5 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/90 hover:text-teal-500 dark:hover:text-white text-slate-600 dark:text-slate-200 text-[10px] font-bold cursor-pointer transition-colors"
-                     >
-                       Today
-                     </button>
-                     <button
-                       onClick={() => setViewDate(viewDate.plus({ months: 1 }))}
-                       className="p-1.5 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/90 hover:text-teal-500 dark:hover:text-white text-slate-600 dark:text-slate-200 text-xs font-bold leading-none cursor-pointer transition-colors"
-                       title="Next Month"
-                     >
-                       &rarr;
-                     </button>
+                    <button
+                      onClick={() => setViewDate(viewDate.minus({ months: 1 }))}
+                      className="p-1.5 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/90 hover:text-teal-500 dark:hover:text-white text-slate-600 dark:text-slate-200 text-xs font-bold leading-none cursor-pointer transition-colors"
+                      title="Previous Month"
+                    >
+                      &larr;
+                    </button>
+                    <button
+                      onClick={() => {
+                        const today = DateTime.now();
+                        setViewDate(today.startOf('month'));
+                        setSelectedDate(today.toISODate() || '');
+                      }}
+                      className="px-2.5 py-1.5 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/90 hover:text-teal-500 dark:hover:text-white text-slate-600 dark:text-slate-200 text-[10px] font-bold cursor-pointer transition-colors"
+                    >
+                      Today
+                    </button>
+                    <button
+                      onClick={() => setViewDate(viewDate.plus({ months: 1 }))}
+                      className="p-1.5 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/90 hover:text-teal-500 dark:hover:text-white text-slate-600 dark:text-slate-200 text-xs font-bold leading-none cursor-pointer transition-colors"
+                      title="Next Month"
+                    >
+                      &rarr;
+                    </button>
                   </div>
                 </div>
 
                 {/* Day Labels & Grid */}
                 <div className="grid grid-cols-7 gap-1 text-center font-semibold">
                   {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((wd, i) => (
-                    <span key={`wd-lbl-${i}`} className="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase py-1">
+                    <span key={`wd-lbl-${i}`} className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase py-1">
                       {wd}
                     </span>
                   ))}
-                  
+
                   {monthGridDays.map((day, idx) => {
                     if (!day) {
                       return <div key={`pad-${idx}`} className="h-7 w-7" />;
@@ -743,20 +758,19 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                       <button
                         key={`grid-day-${day.toISODate()}`}
                         onClick={() => setSelectedDate(day.toISODate() || '')}
-                        className={`h-7 w-7 rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
-                          isSelected
-                            ? 'bg-teal-600 dark:bg-teal-650 text-white shadow-md scale-105'
-                            : isToday
-                              ? 'border border-teal-505 text-teal-600 dark:text-teal-400'
-                              : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-305'
-                        }`}
+                        className={`h-7 w-7 rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${isSelected
+                          ? 'bg-teal-600 dark:bg-teal-700 text-white shadow-md scale-105'
+                          : isToday
+                            ? 'border border-teal-600 text-teal-600 dark:text-teal-400'
+                            : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200'
+                          }`}
                       >
                         {day.day}
                       </button>
                     );
                   })}
                 </div>
-                
+
                 {/* Active Selection Details */}
                 <div className="mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-2.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-bold">
                   <span>Selected Date:</span>
@@ -767,8 +781,8 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
               </div>
 
               {/* Controls & Add City Widget */}
-              <div className="premium-card p-6 rounded-2xl flex flex-col gap-4 transition-colors duration-250">
-                <h2 className="text-sm sm:text-base font-bold text-slate-808 dark:text-slate-200 flex items-center gap-2">
+              <div className="premium-card p-6 rounded-2xl flex flex-col gap-4 transition-colors duration-200">
+                <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                   <svg className="w-4 h-4 text-teal-500 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -782,17 +796,18 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                     <input
                       type="text"
                       placeholder="Search globally (e.g. Pune, Frankfurt)"
+                      aria-label="Search city or timezone to add to the planner"
                       value={newCity}
                       onChange={(e) => {
                         setNewCity(e.target.value);
                         setErrorMsg('');
                       }}
                       onKeyDown={(e) => e.key === 'Enter' && handleAddCity(newCity)}
-                      className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/30 transition-all"
+                      className="flex-1 min-w-0 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/30 transition-all"
                     />
                     <button
                       onClick={() => handleAddCity(newCity)}
-                      className="bg-teal-600 hover:bg-teal-505 text-white dark:text-slate-900 font-bold px-4 py-2 rounded-lg text-xs sm:text-sm transition-colors shadow-md cursor-pointer"
+                      className="bg-teal-600 hover:bg-teal-500 text-white dark:text-slate-900 font-bold px-4 py-2 rounded-lg text-xs sm:text-sm transition-colors shadow-md cursor-pointer"
                     >
                       Add
                     </button>
@@ -808,7 +823,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                           className="w-full text-left px-3 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors flex flex-col gap-0.5"
                         >
                           <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{sug.label}</span>
-                          <span className="text-[9px] text-slate-400 dark:text-slate-505 font-bold tracking-wide">{sug.timezone}</span>
+                          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold tracking-wide">{sug.timezone}</span>
                         </button>
                       ))}
                     </div>
@@ -844,8 +859,8 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
             </div>
 
             {/* Overlap Planner / Recommendation Widget */}
-            <div className="lg:col-span-2 premium-card p-6 rounded-2xl flex flex-col gap-4 transition-colors duration-250">
-              
+            <div className="lg:col-span-2 premium-card p-6 rounded-2xl flex flex-col gap-4 transition-colors duration-200">
+
               {/* Header + Selectors */}
               <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-3">
                 <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
@@ -854,12 +869,12 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                   </svg>
                   Best Meeting Slots (Working Hours Overlap)
                 </h2>
-                
+
                 {/* Working Hours Settings Panel */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   {/* Reference City */}
-                  <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 px-2 py-0.5 rounded-lg">
-                    <span className="text-[10px] sm:text-xs text-slate-550 dark:text-slate-200 font-semibold">Local Time For:</span>
+                  <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 px-2 py-0.5 rounded-lg focus-within:ring-2 focus-within:ring-teal-500/20 focus-within:border-teal-500/50">
+                    <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-200 font-semibold">Local Time For:</span>
                     <select
                       value={referenceCity}
                       onChange={(e) => setReferenceCity(e.target.value)}
@@ -872,10 +887,10 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                       ))}
                     </select>
                   </div>
- 
+
                   {/* Customizable Workday range */}
-                  <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 px-2 py-0.5 rounded-lg">
-                    <span className="text-[10px] sm:text-xs text-slate-550 dark:text-slate-200 font-semibold">Work Hours:</span>
+                  <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 px-2 py-0.5 rounded-lg focus-within:ring-2 focus-within:ring-teal-500/20 focus-within:border-teal-500/50">
+                    <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-200 font-semibold">Work Hours:</span>
                     <select
                       value={workHourStart}
                       onChange={(e) => setWorkHourStart(parseInt(e.target.value))}
@@ -912,7 +927,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                   {recommendedSlots.map((slot, index) => {
                     const isPerfect = slot.score === cities.length;
                     return (
-                      <div 
+                      <div
                         key={`slot-${slot.utcHour}`}
                         className="p-4 border rounded-xl flex flex-col justify-between gap-2.5 transition-all bg-gradient-to-br from-emerald-500/5 to-slate-50/50 dark:from-emerald-500/10 dark:to-slate-900 border-emerald-500/20 dark:border-emerald-500/30 ring-1 ring-emerald-500/5 dark:ring-emerald-500/20 shadow-sm hover:scale-[1.01]"
                       >
@@ -920,11 +935,10 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                           <span className="text-sm font-bold text-slate-900 dark:text-white tracking-wide">
                             {slot.formattedUtc}
                           </span>
-                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
-                            isPerfect 
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60 font-semibold' 
-                              : 'bg-slate-100 dark:bg-slate-900 text-slate-550 dark:text-slate-200 border-slate-200 dark:border-slate-800'
-                          }`}>
+                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${isPerfect
+                            ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60 font-semibold'
+                            : 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-200 border-slate-200 dark:border-slate-800'
+                            }`}>
                             {slot.score}/{cities.length} Cities
                           </span>
                         </div>
@@ -937,11 +951,10 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                             return (
                               <div key={`slot-city-${city}`} className="flex items-center justify-between text-xs">
                                 <span className="text-slate-500 dark:text-slate-200 max-w-[8rem] truncate" title={city}>{city}</span>
-                                <span className={`font-mono ${
-                                  cell.isWorking 
-                                    ? 'text-emerald-600 dark:text-emerald-450 font-semibold' 
-                                    : 'text-slate-400 dark:text-slate-400'
-                                }`}>
+                                <span className={`font-mono ${cell.isWorking
+                                  ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
+                                  : 'text-slate-400 dark:text-slate-400'
+                                  }`}>
                                   {cell.localTime}
                                 </span>
                               </div>
@@ -978,7 +991,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
           </div>
 
           {/* Dynamic Timeline Wrapper */}
-          <div className="flex flex-col gap-3">
+          <div className="w-full flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 px-1">
               <div className="flex flex-col sm:flex-row sm:items-center gap-3.5">
                 <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
@@ -987,26 +1000,24 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                   </svg>
                   24-Hour Timeline Comparison
                 </h2>
-                
+
                 {/* 12/24H Toggle */}
                 <div className="flex bg-slate-200/80 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-300 dark:border-slate-700/60 shadow-sm w-fit text-[9px] sm:text-[10px] font-bold">
                   <button
                     onClick={() => setIs24Hour(true)}
-                    className={`px-2.5 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${
-                      is24Hour
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                    }`}
+                    className={`px-2.5 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${is24Hour
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                      }`}
                   >
                     24H
                   </button>
                   <button
                     onClick={() => setIs24Hour(false)}
-                    className={`px-2.5 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${
-                      !is24Hour
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                    }`}
+                    className={`px-2.5 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${!is24Hour
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                      }`}
                   >
                     12H
                   </button>
@@ -1015,25 +1026,25 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] sm:text-xs">
                 <div className="flex items-center gap-1.5">
                   <span className="w-3 h-3 bg-amber-50/20 dark:bg-white border border-amber-200/60 dark:border-slate-200 rounded-sm" />
-                  <span className="text-slate-505 dark:text-slate-200">
+                  <span className="text-slate-500 dark:text-slate-200">
                     Work Hours ({formatHourLabel(workHourStart)} - {formatHourLabel(workHourEnd)})
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 bg-slate-100 dark:bg-slate-900 rounded-sm border border-slate-250 dark:border-slate-800" />
-                  <span className="text-slate-505 dark:text-slate-200">Night</span>
+                  <span className="w-3 h-3 bg-slate-100 dark:bg-slate-900 rounded-sm border border-slate-300 dark:border-slate-800" />
+                  <span className="text-slate-500 dark:text-slate-200">Night</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-3 h-3 bg-red-500/25 border border-red-500 rounded-sm" />
-                  <span className="text-slate-550 dark:text-slate-200">Current Hour</span>
+                  <span className="text-slate-500 dark:text-slate-200">Current Hour</span>
                 </div>
               </div>
             </div>
 
-            <TimezoneTimeline 
-              cities={cities} 
-              matrix={matrix} 
-              currentUtcHour={currentRefHour} 
+            <TimezoneTimeline
+              cities={cities}
+              matrix={matrix}
+              currentUtcHour={currentRefHour}
               is24Hour={is24Hour}
             />
           </div>
@@ -1044,9 +1055,9 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
         {isScheduleModalOpen && activeSchedulingSlot && (
           <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200 text-slate-900 dark:text-slate-100">
-              
+
               {/* Modal Header */}
-              <div className="flex items-center justify-between border-b border-slate-150 dark:border-slate-800 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                 <h3 className="text-base font-extrabold flex items-center gap-2">
                   <svg className="w-5 h-5 text-teal-500 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1055,7 +1066,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                 </h3>
                 <button
                   onClick={() => setIsScheduleModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-650 dark:hover:text-slate-250 p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors text-xl font-bold leading-none"
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors text-xl font-bold leading-none"
                 >
                   &times;
                 </button>
@@ -1078,7 +1089,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                     const cityLocal = startLocal.setZone(cityZone);
                     return (
                       <span key={`modal-city-${city}`} className="font-mono">
-                        {city.split(',')[0]}: <span className="font-bold text-slate-700 dark:text-slate-350">{cityLocal.toFormat('h:mm a')}</span>
+                        {city.split(',')[0]}: <span className="font-bold text-slate-700 dark:text-slate-200">{cityLocal.toFormat('h:mm a')}</span>
                       </span>
                     );
                   })}
@@ -1088,26 +1099,28 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
               {/* Form Inputs */}
               <div className="flex flex-col gap-3.5">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-mono tracking-wider font-extrabold text-slate-450 dark:text-slate-500 uppercase">
+                  <label htmlFor="event-title-input" className="text-[10px] font-mono tracking-wider font-extrabold text-slate-400 dark:text-slate-500 uppercase">
                     Event Title
                   </label>
                   <input
+                    id="event-title-input"
                     type="text"
                     value={eventTitle}
                     onChange={(e) => setEventTitle(e.target.value)}
                     placeholder="e.g. Project Sync Aligned"
-                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500/50"
+                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-mono tracking-wider font-extrabold text-slate-450 dark:text-slate-500 uppercase">
+                  <label htmlFor="meeting-duration-select" className="text-[10px] font-mono tracking-wider font-extrabold text-slate-400 dark:text-slate-500 uppercase">
                     Meeting Duration
                   </label>
                   <select
+                    id="meeting-duration-select"
                     value={eventDuration}
                     onChange={(e) => setEventDuration(parseInt(e.target.value))}
-                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500/50 cursor-pointer font-semibold"
+                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20 cursor-pointer font-semibold"
                   >
                     <option value={30}>30 Minutes</option>
                     <option value={60}>1 Hour</option>
@@ -1118,15 +1131,16 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-mono tracking-wider font-extrabold text-slate-450 dark:text-slate-500 uppercase">
+                  <label htmlFor="meeting-description-textarea" className="text-[10px] font-mono tracking-wider font-extrabold text-slate-400 dark:text-slate-500 uppercase">
                     Description / Notes
                   </label>
                   <textarea
+                    id="meeting-description-textarea"
                     rows={3}
                     value={eventDescription}
                     onChange={(e) => setEventDescription(e.target.value)}
                     placeholder="Add meeting links, agendas, or dial-in details..."
-                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500/50 resize-none font-sans"
+                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20 resize-none font-sans"
                   />
                 </div>
               </div>
@@ -1139,10 +1153,10 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                 >
                   Cancel
                 </button>
-                
+
                 <button
                   onClick={handleShareEvent}
-                  className="px-4 py-2 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-slate-750 dark:text-slate-200 shadow-sm"
+                  className="px-4 py-2 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-slate-700 dark:text-slate-200 shadow-sm"
                 >
                   {isShareCopied ? (
                     <>
@@ -1160,7 +1174,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                     </>
                   )}
                 </button>
-                           <button
+                <button
                   onClick={handleDownloadInvite}
                   className="px-4 py-2 bg-slate-100 hover:bg-teal-50/50 dark:bg-slate-955 dark:hover:bg-teal-900/20 border border-slate-200 hover:border-teal-500/50 dark:border-slate-800 dark:hover:border-teal-500/30 rounded-lg text-xs font-bold transition-all cursor-pointer text-slate-700 dark:text-slate-305"
                 >
@@ -1182,11 +1196,10 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                 <button
                   onClick={handleSaveSettings}
                   disabled={eventTitle.trim() === ''}
-                  className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${
-                    eventTitle.trim() !== ''
-                      ? 'bg-teal-650 hover:bg-teal-550 text-white dark:text-slate-900 cursor-pointer shadow-md shadow-teal-900/10'
-                      : 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 border border-slate-200 dark:border-slate-800 cursor-not-allowed opacity-50'
-                  }`}
+                  className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${eventTitle.trim() !== ''
+                    ? 'bg-teal-750 hover:bg-teal-600 text-white dark:text-slate-900 cursor-pointer shadow-md shadow-teal-900/10'
+                    : 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 border border-slate-200 dark:border-slate-800 cursor-not-allowed opacity-50'
+                    }`}
                 >
                   Save
                 </button>
@@ -1195,6 +1208,9 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
             </div>
           </div>
         )}
+
+        {/* Dynamic SEO Section */}
+        <SEOSection zones={resolvedZones} />
 
       </div>
     </div>
