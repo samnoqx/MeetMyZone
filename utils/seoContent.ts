@@ -260,12 +260,36 @@ export function getDstDetail(zone: ResolvedTimezone): DstDetail {
   const isDst = dt.isInDST;
   
   let nextChangeDate: string | null = null;
-  for (let d = 0; d < 365; d++) {
-    const nextDay = dt.plus({ days: d });
-    if (nextDay.isInDST !== isDst) {
-      nextChangeDate = nextDay.toFormat('LLLL d, yyyy');
+  
+  // 1. Month-by-month scan (max 12 checks)
+  let changeMonthIdx = -1;
+  for (let m = 1; m <= 12; m++) {
+    const checkTime = dt.plus({ months: m });
+    if (checkTime.isInDST !== isDst) {
+      changeMonthIdx = m;
       break;
     }
+  }
+
+  // 2. Binary search the days in that month (max 5 checks)
+  if (changeMonthIdx !== -1) {
+    const rangeStart = dt.plus({ months: changeMonthIdx - 1 });
+    const rangeEnd = dt.plus({ months: changeMonthIdx });
+    
+    let lowDays = 0;
+    let highDays = Math.ceil(rangeEnd.diff(rangeStart, 'days').days);
+    
+    while (lowDays < highDays) {
+      const midDays = Math.floor((lowDays + highDays) / 2);
+      const midTime = rangeStart.plus({ days: midDays });
+      if (midTime.isInDST !== isDst) {
+        highDays = midDays;
+      } else {
+        lowDays = midDays + 1;
+      }
+    }
+    
+    nextChangeDate = rangeStart.plus({ days: lowDays }).toFormat('LLLL d, yyyy');
   }
   
   const observeDst = nextChangeDate !== null;
