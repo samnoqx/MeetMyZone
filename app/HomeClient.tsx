@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DateTime } from 'luxon';
 import {
   generateTimezoneMatrix,
@@ -13,6 +13,7 @@ import Link from 'next/link';
 import WorldClock from '@/components/WorldClock';
 import SEOSection from '@/components/SEOSection';
 import { ResolvedTimezone } from '@/utils/seoResolver';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface GeocodeSuggestion {
   label: string;
@@ -108,15 +109,9 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
   const [currentRefHour, setCurrentRefHour] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
   const [suggestions, setSuggestions] = useState<GeocodeSuggestion[]>([]);
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [mounted, setMounted] = useState(false);
   const [is24Hour, setIs24Hour] = useState(true);
-
-  // Set mounted flag on client
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-  }, []);
+  const [restored, setRestored] = useState(false);
 
   // Event Scheduler Modal States
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
@@ -125,39 +120,228 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
   const [eventDescription, setEventDescription] = useState('');
   const [eventDuration, setEventDuration] = useState(60);
   const [isShareCopied, setIsShareCopied] = useState(false);
+  const [showRestoredToast, setShowRestoredToast] = useState(false);
 
-  // Handle client-side theme initialization and bfcache sync
+  // Hide the restored toast notification automatically after 3 seconds
   useEffect(() => {
-    const syncThemeState = () => {
-      const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-      if (savedTheme) {
-        setTheme(savedTheme);
-      } else {
-        // Default to dark mode for everyone
-        setTheme('dark');
-      }
-    };
+    if (showRestoredToast) {
+      const timer = setTimeout(() => {
+        setShowRestoredToast(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showRestoredToast]);
 
-    syncThemeState();
-
-    window.addEventListener('pageshow', syncThemeState);
-    return () => {
-      window.removeEventListener('pageshow', syncThemeState);
-    };
-  }, []);
-
-  // Load saved meeting configurations on mount
+  // Load saved planner and event scheduler state from sessionStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedTitle = localStorage.getItem('eventTitle');
-      const savedDesc = localStorage.getItem('eventDescription');
-      const savedDuration = localStorage.getItem('eventDuration');
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (savedTitle !== null) setEventTitle(savedTitle);
-      if (savedDesc !== null) setEventDescription(savedDesc);
-      if (savedDuration !== null) setEventDuration(parseInt(savedDuration));
+      let restoredCities = initialCities;
+      let restoredCityTimezones = initialCityTimezones;
+      let restoredRef = initialReferenceCity;
+      let restoredWorkStart = initialWorkHourStart;
+      let restoredWorkEnd = initialWorkHourEnd;
+      let restoredDate = initialSelectedDate;
+      let restoredViewDate = initialViewDate;
+      let restoredIs24Hour = true;
+      let restoredNewCity = '';
+      let restoredEventTitle = 'Aligned Sync Meeting';
+      let restoredEventDescription = '';
+      let restoredEventDuration = 60;
+      let restoredIsScheduleModalOpen = false;
+      let restoredActiveSchedulingSlot = null;
+      let wasRestored = false;
+
+      const savedStateStr = sessionStorage.getItem('mmz_planner_state');
+      if (savedStateStr) {
+        try {
+          const saved = JSON.parse(savedStateStr);
+          
+          // Check if session has expired (older than 24 hours)
+          const isExpired = typeof saved.timestamp === 'number' && (Date.now() - saved.timestamp > 24 * 60 * 60 * 1000);
+          
+          if (!isExpired) {
+            if (Array.isArray(saved.cities) && saved.cities.length > 0) {
+              restoredCities = saved.cities;
+            }
+            if (saved.cityTimezones) {
+              restoredCityTimezones = saved.cityTimezones;
+            }
+            if (saved.referenceCity) restoredRef = saved.referenceCity;
+            if (typeof saved.workHourStart === 'number') restoredWorkStart = saved.workHourStart;
+            if (typeof saved.workHourEnd === 'number') restoredWorkEnd = saved.workHourEnd;
+            if (saved.selectedDate) restoredDate = saved.selectedDate;
+            
+            if (saved.viewDate) {
+              const dt = DateTime.fromISO(saved.viewDate);
+              if (dt.isValid) restoredViewDate = dt;
+            }
+            
+            if (typeof saved.is24Hour === 'boolean') restoredIs24Hour = saved.is24Hour;
+            if (typeof saved.newCity === 'string') restoredNewCity = saved.newCity;
+            if (typeof saved.eventTitle === 'string') restoredEventTitle = saved.eventTitle;
+            if (typeof saved.eventDescription === 'string') restoredEventDescription = saved.eventDescription;
+            if (typeof saved.eventDuration === 'number') restoredEventDuration = saved.eventDuration;
+            if (typeof saved.isScheduleModalOpen === 'boolean') restoredIsScheduleModalOpen = saved.isScheduleModalOpen;
+            if (saved.activeSchedulingSlot) restoredActiveSchedulingSlot = saved.activeSchedulingSlot;
+            
+            wasRestored = true;
+          } else {
+            // Discard expired state
+            sessionStorage.removeItem('mmz_planner_state');
+          }
+        } catch (e) {
+          console.error('Failed to parse saved planner state from sessionStorage:', e);
+        }
+      }
+
+      // URL Parameter Overrides (URL parameters always take precedence over sessionStorage)
+      if (initialParams.cities) {
+        restoredCities = initialParams.cities.split(',').map((c) => decodeURIComponent(c.trim())).filter(Boolean);
+        restoredCityTimezones = {};
+        const parsedZones = initialParams.zones
+          ? initialParams.zones.split(',').map((z) => decodeURIComponent(z.trim())).filter(Boolean)
+          : [];
+        restoredCities.forEach((city, idx) => {
+          restoredCityTimezones[city] = parsedZones[idx] || resolveTimeZone(city);
+        });
+      }
+
+      if (initialParams.reference) {
+        restoredRef = decodeURIComponent(initialParams.reference.trim());
+      } else if (initialParams.cities && restoredCities.length > 0) {
+        restoredRef = restoredCities[0];
+      }
+
+      if (initialParams.workStart) {
+        const parsed = parseInt(initialParams.workStart, 10);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 23) {
+          restoredWorkStart = parsed;
+        }
+      }
+
+      if (initialParams.workEnd) {
+        const parsed = parseInt(initialParams.workEnd, 10);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 23) {
+          restoredWorkEnd = parsed;
+        }
+      }
+
+      if (initialParams.date) {
+        const dt = DateTime.fromISO(initialParams.date);
+        if (dt.isValid) {
+          restoredDate = initialParams.date;
+          restoredViewDate = dt.startOf('month');
+        }
+      }
+
+      /* eslint-disable react-hooks/set-state-in-effect */
+      // Update states in a single batch
+      setCities(restoredCities);
+      setCityTimezones(restoredCityTimezones);
+      setReferenceCity(restoredRef);
+      setWorkHourStart(restoredWorkStart);
+      setWorkHourEnd(restoredWorkEnd);
+      setSelectedDate(restoredDate);
+      setViewDate(restoredViewDate);
+      setIs24Hour(restoredIs24Hour);
+      setNewCity(restoredNewCity);
+      setEventTitle(restoredEventTitle);
+      setEventDescription(restoredEventDescription);
+      setEventDuration(restoredEventDuration);
+      setIsScheduleModalOpen(restoredIsScheduleModalOpen);
+      setActiveSchedulingSlot(restoredActiveSchedulingSlot);
+      /* eslint-enable react-hooks/set-state-in-effect */
+      
+      setRestored(true);
+      setMounted(true);
+      if (wasRestored) {
+        setShowRestoredToast(true);
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Save planner state to sessionStorage with debounce (runs only after initial restoration)
+  useEffect(() => {
+    if (!restored) return;
+
+    const delayDebounceFn = setTimeout(() => {
+      const stateToSave = {
+        timestamp: Date.now(),
+        cities,
+        cityTimezones,
+        referenceCity,
+        workHourStart,
+        workHourEnd,
+        selectedDate,
+        viewDate: viewDate.toISO(),
+        is24Hour,
+        newCity,
+        eventTitle,
+        eventDescription,
+        eventDuration,
+        isScheduleModalOpen,
+        activeSchedulingSlot
+      };
+      sessionStorage.setItem('mmz_planner_state', JSON.stringify(stateToSave));
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [
+    restored,
+    cities,
+    cityTimezones,
+    referenceCity,
+    workHourStart,
+    workHourEnd,
+    selectedDate,
+    viewDate,
+    is24Hour,
+    newCity,
+    eventTitle,
+    eventDescription,
+    eventDuration,
+    isScheduleModalOpen,
+    activeSchedulingSlot
+  ]);
+
+  // Window scroll restoration using History API
+  useEffect(() => {
+    if (mounted) {
+      const historyState = window.history.state;
+      if (historyState && typeof historyState.scrollY === 'number') {
+        const timer = setTimeout(() => {
+          window.scrollTo({
+            top: historyState.scrollY,
+            behavior: 'instant' as ScrollBehavior
+          });
+        }, 50);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [mounted]);
+
+  // Save window scroll position to History API state on scroll
+  useEffect(() => {
+    if (!mounted) return;
+
+    let debounceTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        const state = window.history.state || {};
+        window.history.replaceState({ ...state, scrollY: window.scrollY }, '');
+      }, 150);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(debounceTimeout);
+    };
+  }, [mounted]);
+
+
 
 
 
@@ -167,9 +351,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
       const params = new URLSearchParams(window.location.search);
 
       // Auto-fallback if current referenceCity is removed
-      let activeRef = referenceCity;
       if (!cities.includes(referenceCity) && cities.length > 0) {
-        activeRef = cities[0];
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setReferenceCity(cities[0]);
       }
@@ -190,30 +372,12 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
         expectedPathname = `/timezone/${citiesSlug}`;
       }
 
-      // Clean up old query params
+      // Clean up old query params and temporary UI state
       params.delete('cities');
       params.delete('zones');
-
-      // Only set reference if it's not the default (which is the first city in the list)
-      if (activeRef === cities[0]) {
-        params.delete('reference');
-      } else {
-        params.set('reference', activeRef);
-      }
-
-      // Only set workStart if it's not the default (9 AM)
-      if (workHourStart === 9) {
-        params.delete('workStart');
-      } else {
-        params.set('workStart', String(workHourStart));
-      }
-
-      // Only set workEnd if it's not the default (5 PM)
-      if (workHourEnd === 17) {
-        params.delete('workEnd');
-      } else {
-        params.set('workEnd', String(workHourEnd));
-      }
+      params.delete('reference');
+      params.delete('workStart');
+      params.delete('workEnd');
 
       // Only set date if it's not the default (today)
       const todayISO = DateTime.now().toISODate();
@@ -228,7 +392,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
       const currentUrlPath = window.location.pathname + window.location.search;
 
       if (currentUrlPath !== newUrl) {
-        window.history.replaceState(null, '', newUrl);
+        window.history.replaceState(window.history.state, '', newUrl);
       }
     }
   }, [cities, referenceCity, workHourStart, workHourEnd, selectedDate]);
@@ -300,7 +464,9 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
   }, [newCity, cities]);
 
   // Generate matrix based on active cities and custom parameters
-  const matrix = generateTimezoneMatrix(cities, referenceCity, workHourStart, workHourEnd, selectedDate, cityTimezones);
+  const matrix = useMemo(() => {
+    return generateTimezoneMatrix(cities, referenceCity, workHourStart, workHourEnd, selectedDate, cityTimezones);
+  }, [cities, referenceCity, workHourStart, workHourEnd, selectedDate, cityTimezones]);
 
   // Add a city suggestion to the planner
   const handleSelectSuggestion = (sug: GeocodeSuggestion) => {
@@ -401,7 +567,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
   };
 
   // Find overlapping working slots
-  const getRecommendedSlots = (): { utcHour: number; formattedUtc: string; workingCities: string[]; score: number }[] => {
+  const recommendedSlots = useMemo(() => {
     if (cities.length === 0) return [];
 
     const slots = matrix.map((row) => {
@@ -424,7 +590,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
       .filter(slot => slot.score > 0)
       .sort((a, b) => b.score - a.score || a.utcHour - b.utcHour)
       .slice(0, 4);
-  };
+  }, [cities, matrix]);
 
   // Open the event scheduler configuration modal
   const handleOpenSchedulerModal = (slot: { formattedUtc: string; utcHour: number }) => {
@@ -432,11 +598,28 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
     setIsScheduleModalOpen(true);
   };
 
-  // Save event template to state/localStorage
+  // Save event template to state/sessionStorage
   const handleSaveSettings = () => {
-    localStorage.setItem('eventTitle', eventTitle);
-    localStorage.setItem('eventDescription', eventDescription);
-    localStorage.setItem('eventDuration', String(eventDuration));
+    if (typeof window !== 'undefined') {
+      const stateToSave = {
+        timestamp: Date.now(),
+        cities,
+        cityTimezones,
+        referenceCity,
+        workHourStart,
+        workHourEnd,
+        selectedDate,
+        viewDate: viewDate.toISO(),
+        is24Hour,
+        newCity,
+        eventTitle,
+        eventDescription,
+        eventDuration,
+        isScheduleModalOpen: false,
+        activeSchedulingSlot
+      };
+      sessionStorage.setItem('mmz_planner_state', JSON.stringify(stateToSave));
+    }
     setIsScheduleModalOpen(false);
   };
 
@@ -543,7 +726,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
     document.body.removeChild(link);
   };
 
-  const recommendedSlots = getRecommendedSlots();
+  // recommendedSlots is defined via useMemo above
 
   // Helper to format the display hours for settings labels
   const formatHourLabel = (h: number) => {
@@ -553,7 +736,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
   };
 
   // Generate days in month grid (Sunday-start)
-  const getDaysInMonthGrid = () => {
+  const monthGridDays = useMemo(() => {
     const days = [];
     const startOfMonth = viewDate.startOf('month');
     const daysInMonth = viewDate.daysInMonth || 30;
@@ -570,17 +753,22 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
     }
 
     return days;
-  };
+  }, [viewDate]);
 
   // Dynamic SEO zones based on current cities state
-  const resolvedZones: ResolvedTimezone[] = cities.map(city => ({
-    slug: city.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-'),
-    displayName: city.split(',')[0],
-    cityName: city.split(',')[0],
-    zoneName: cityTimezones[city] || resolveTimeZone(city)
-  }));
+  const resolvedZones: ResolvedTimezone[] = useMemo(() => {
+    return cities.map(city => ({
+      slug: city.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-'),
+      displayName: city.split(',')[0],
+      cityName: city.split(',')[0],
+      zoneName: cityTimezones[city] || resolveTimeZone(city)
+    }));
+  }, [cities, cityTimezones]);
 
-  const monthGridDays = getDaysInMonthGrid();
+  // Memoize SEO section to avoid re-renders during drag/time sliders shifts
+  const memoizedSEOSection = useMemo(() => {
+    return <SEOSection zones={resolvedZones} />;
+  }, [resolvedZones]);
 
   if (!mounted) {
     return (
@@ -594,7 +782,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
   }
 
   return (
-    <div className={theme === 'dark' ? 'dark' : ''}>
+    <div>
       <div className="flex-1 bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 flex flex-col justify-start pb-20 font-sans selection:bg-teal-500/30 selection:text-teal-600 dark:selection:text-teal-300 transition-colors duration-200 min-h-screen">
 
         {/* Navigation Bar */}
@@ -622,31 +810,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
               <ShareMenu cities={cities} matrix={matrix} selectedDate={selectedDate} isCompact={true} />
             </div>
 
-            <button
-              onClick={() => {
-                const nextTheme = theme === 'dark' ? 'light' : 'dark';
-                setTheme(nextTheme);
-                if (nextTheme === 'dark') {
-                  document.documentElement.classList.add('dark');
-                  localStorage.setItem('theme', 'dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                  localStorage.setItem('theme', 'light');
-                }
-              }}
-              className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-300 transition-all shadow-sm active:scale-95 cursor-pointer"
-              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {theme === 'dark' ? (
-                <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              )}
-            </button>
+            <ThemeToggle />
           </div>
         </nav>
 
@@ -1210,7 +1374,17 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
         )}
 
         {/* Dynamic SEO Section */}
-        <SEOSection zones={resolvedZones} />
+        {memoizedSEOSection}
+
+        {/* Restored Session Toast Notification */}
+        {showRestoredToast && (
+          <div className="fixed bottom-6 right-6 z-[9999] bg-emerald-600 dark:bg-emerald-700 text-white font-semibold text-xs sm:text-sm px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 border border-emerald-500/20 pointer-events-none select-none transition-all duration-300">
+            <svg className="w-4.5 h-4.5 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Planner restored from your previous session.</span>
+          </div>
+        )}
 
       </div>
     </div>

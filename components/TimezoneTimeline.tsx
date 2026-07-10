@@ -103,6 +103,36 @@ export default function TimezoneTimeline({
   currentUtcHour,
   is24Hour = true,
 }: TimezoneTimelineProps) {
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Restore scroll position
+    const savedScrollX = sessionStorage.getItem('mmz_timeline_scroll_x');
+    if (savedScrollX) {
+      container.scrollLeft = parseInt(savedScrollX, 10);
+    }
+
+    // Save scroll position on scroll (debounced to avoid performance hit)
+    let debounceTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        if (container) {
+          sessionStorage.setItem('mmz_timeline_scroll_x', String(container.scrollLeft));
+        }
+      }, 200);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      clearTimeout(debounceTimeout);
+    };
+  }, []);
+
   // Helper to format the display of the reference city hour in the timeline header
   const getHeaderHourLabel = (utcHour: number) => {
     const period = utcHour >= 12 ? 'PM' : 'AM';
@@ -113,7 +143,10 @@ export default function TimezoneTimeline({
   return (
     <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xl dark:shadow-2xl backdrop-blur-md transition-colors duration-200">
       {/* Scrollable Container */}
-      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-slate-100 dark:scrollbar-track-slate-900">
+      <div
+        ref={scrollContainerRef}
+        className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-slate-100 dark:scrollbar-track-slate-900"
+      >
         <div className="min-w-[750px] sm:min-w-[1200px] select-none">
           {/* Header Row */}
           <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80">

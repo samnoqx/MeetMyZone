@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export const metadata: Metadata = {
   title: "MeetMyZone Blog | Global Time Zone Strategy & Remote Work Guides",
@@ -95,9 +96,12 @@ export default function BlogIndexPage() {
         <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition">
           <span>← Back to Planner</span>
         </Link>
-        <Link href="/" className="font-black text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-600 dark:from-white dark:to-cyan-400">
-          MeetMyZone Blog
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/" className="font-black text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-600 dark:from-white dark:to-cyan-400">
+            MeetMyZone Blog
+          </Link>
+          <ThemeToggle />
+        </div>
       </header>
 
       {/* Main Container */}

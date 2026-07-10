@@ -130,3 +130,12 @@ export function parseCitiesSlug(citiesSlug: string): { cityName: string; timezon
   });
 }
 
+export function getSlugForCityAndZone(cityName: string, zoneName: string): string {
+  for (const [abbr, item] of Object.entries(TIMEZONE_ABBR_MAP)) {
+    if (item.zoneName === zoneName) {
+      return abbr;
+    }
+  }
+  return cityName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+}
+

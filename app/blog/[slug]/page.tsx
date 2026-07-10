@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface BlogPostData {
   title: string;
@@ -367,9 +368,12 @@ export default async function BlogPostPage({ params }: PageProps) {
         <Link href="/blog" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition text-xs sm:text-sm font-semibold">
           <span>&larr; Back to Blog</span>
         </Link>
-        <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition text-xs sm:text-sm font-semibold">
-          <span>Timezone Planner</span>
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition text-xs sm:text-sm font-semibold">
+            <span>Timezone Planner</span>
+          </Link>
+          <ThemeToggle />
+        </div>
       </header>
 
       {/* Article Main Grid */}

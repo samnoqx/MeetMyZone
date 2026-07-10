@@ -126,6 +126,12 @@ function getSupportedTimeZones(): string[] {
 
 export const ALL_IANA_ZONES = getSupportedTimeZones();
 
+// Pre-computed lowercase map for raw IANA matching
+const ALL_IANA_ZONES_LOWER_MAP = new Map<string, string>();
+ALL_IANA_ZONES.forEach((z) => {
+  ALL_IANA_ZONES_LOWER_MAP.set(z.toLowerCase(), z);
+});
+
 export interface ZoneSearchItem {
   key: string;
   label: string;
@@ -144,6 +150,15 @@ export const ZONE_SEARCH_INDEX: ZoneSearchItem[] = ALL_IANA_ZONES.map((zone) => 
   };
 });
 
+// Pre-computed map for exact search matches
+const ZONE_SEARCH_INDEX_MAP = new Map<string, string>();
+ZONE_SEARCH_INDEX.forEach((item) => {
+  ZONE_SEARCH_INDEX_MAP.set(item.key, item.zone);
+});
+
+// Resolution cache for resolveTimeZone
+const resolveCache = new Map<string, string>();
+
 /**
  * Resolves a city name to an official IANA timezone identifier.
  * Uses exact checks, dynamic index mapping, custom overrides, and partial scans.
@@ -151,52 +166,53 @@ export const ZONE_SEARCH_INDEX: ZoneSearchItem[] = ALL_IANA_ZONES.map((zone) => 
 export function resolveTimeZone(city: string): string {
   const normalized = city.trim().toLowerCase();
   
+  const cached = resolveCache.get(normalized);
+  if (cached) {
+    return cached;
+  }
+
+  let result = city;
+
   // 1. Try raw IANA matching
-  const directIana = ALL_IANA_ZONES.find(z => z.toLowerCase() === normalized);
+  const directIana = ALL_IANA_ZONES_LOWER_MAP.get(normalized);
   if (directIana) {
-    return directIana;
+    result = directIana;
+  } else {
+    // 2. Try exact search match
+    const indexMatch = ZONE_SEARCH_INDEX_MAP.get(normalized);
+    if (indexMatch) {
+      result = indexMatch;
+    } else if (CITY_TO_ZONE[normalized]) {
+      // 3. Try custom CITY_TO_ZONE override
+      result = CITY_TO_ZONE[normalized];
+    } else {
+      // 4. Try partial matches
+      const partial = ZONE_SEARCH_INDEX.find(item => 
+        item.key.includes(normalized) || normalized.includes(item.key)
+      );
+      if (partial) {
+        result = partial.zone;
+      }
+    }
   }
 
-  // 2. Try exact search match
-  const indexMatch = ZONE_SEARCH_INDEX.find(item => item.key === normalized);
-  if (indexMatch) {
-    return indexMatch.zone;
-  }
-
-  // 3. Try custom CITY_TO_ZONE override
-  if (CITY_TO_ZONE[normalized]) {
-    return CITY_TO_ZONE[normalized];
-  }
-  
-  // 4. Try partial matches
-  const partial = ZONE_SEARCH_INDEX.find(item => 
-    item.key.includes(normalized) || normalized.includes(item.key)
-  );
-  if (partial) {
-    return partial.zone;
-  }
-  
-  return city; // Fallback
+  resolveCache.set(normalized, result);
+  return result;
 }
 
 /**
- * Checks if a formatted time string (e.g. '09:00 AM') represents a standard working hour
+ * Checks if a local hour and minute falls within standard working hours
  * (between custom start and end hours inclusive).
  */
-export function isWorkingHour(time: string, startHour: number = 8, endHour: number = 17): boolean {
-  // Parse using Luxon's fromFormat
-  const parsed = DateTime.fromFormat(time, 'hh:mm a');
-  if (!parsed.isValid) return false;
-  
-  // Create boundary times on the same arbitrary day
-  const start = parsed.set({ hour: startHour, minute: 0 });
-  const end = parsed.set({ hour: endHour, minute: 0 });
-  
-  // Verify if it falls between start and end hours (handling overnight wraps)
+export function isWorkingHour(hour: number, minute: number, startHour: number = 8, endHour: number = 17): boolean {
+  const currentMinutes = hour * 60 + minute;
+  const startMinutes = startHour * 60;
+  const endMinutes = endHour * 60;
+
   if (startHour <= endHour) {
-    return parsed >= start && parsed <= end;
+    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
   } else {
-    return parsed >= start || parsed <= end;
+    return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
   }
 }
 
@@ -239,33 +255,61 @@ export function generateTimezoneMatrix(
     ? DateTime.fromISO(selectedDateStr).setZone(refZone).startOf('day')
     : DateTime.now().setZone(refZone).startOf('day');
   
+  // Pre-resolve timezone names and short offset names once per city for the entire matrix
+  const cityZones: Record<string, string> = {};
+  const cityOffsetNames: Record<string, string> = {};
+  for (const city of cities) {
+    const zone = (customMappings && customMappings[city]) || resolveTimeZone(city);
+    cityZones[city] = zone;
+    cityOffsetNames[city] = baseTime.setZone(zone).offsetNameShort || '';
+  }
+
   for (let h = 0; h < 24; h++) {
     const refTime = baseTime.plus({ hours: h });
     const citiesData: Record<string, TimeMatrixCell> = {};
     
     for (const city of cities) {
-      const zone = (customMappings && customMappings[city]) || resolveTimeZone(city);
+      const zone = cityZones[city];
       const localTime = refTime.setZone(zone);
       
-      const formattedLocal = localTime.toFormat('hh:mm a');
-      const formattedLocal24 = localTime.toFormat('HH:mm');
-      const offsetVal = localTime.toFormat('ZZ'); // Format e.g., -05:00 or +01:00
+      const hr = localTime.hour;
+      const min = localTime.minute;
+      const minStr = String(min).padStart(2, '0');
+      
+      const formattedLocal24 = `${String(hr).padStart(2, '0')}:${minStr}`;
+      
+      const period = hr >= 12 ? 'PM' : 'AM';
+      const hr12 = hr % 12 === 0 ? 12 : hr % 12;
+      const formattedLocal = `${String(hr12).padStart(2, '0')}:${minStr} ${period}`;
+      
+      const offsetMinutes = localTime.offset;
+      const absOffsetMinutes = Math.abs(offsetMinutes);
+      const offsetHours = Math.floor(absOffsetMinutes / 60);
+      const offsetMinsRemainder = absOffsetMinutes % 60;
+      const sign = offsetMinutes >= 0 ? '+' : '-';
+      const offsetVal = `UTC${sign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinsRemainder).padStart(2, '0')}`;
       
       citiesData[city] = {
         localTime: formattedLocal,
         localTime24: formattedLocal24,
-        offset: `UTC${offsetVal}`,
-        offsetName: localTime.offsetNameShort || '',
-        isWorking: isWorkingHour(formattedLocal, workStart, workEnd),
-        localHour: localTime.hour,
+        offset: offsetVal,
+        offsetName: cityOffsetNames[city],
+        isWorking: isWorkingHour(hr, min, workStart, workEnd),
+        localHour: hr,
         cityName: city,
         ianaZone: zone,
       };
     }
     
+    const refHour = refTime.hour;
+    const refMin = refTime.minute;
+    const refPeriod = refHour >= 12 ? 'PM' : 'AM';
+    const refHour12 = refHour % 12 === 0 ? 12 : refHour % 12;
+    const refFormattedTime = `${String(refHour12).padStart(2, '0')}:${String(refMin).padStart(2, '0')} ${refPeriod} (${referenceCity})`;
+
     matrix.push({
       utcHour: h, // The column index (0 to 23 local to reference city)
-      formattedUtcTime: refTime.toFormat('hh:mm a') + ` (${referenceCity})`,
+      formattedUtcTime: refFormattedTime,
       cities: citiesData,
     });
   }

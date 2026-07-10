@@ -12,6 +12,19 @@ export default function OverlapTable({ zones }: OverlapTableProps) {
   const refZone = zones[0];
   const targetZones = zones.slice(1);
 
+  const now = DateTime.now();
+  const refTime = now.setZone(refZone.zoneName);
+
+  // Pre-calculate target zones and offset differences once
+  const targetZonesData = targetZones.map((z) => {
+    const targetTime = now.setZone(z.zoneName);
+    const offsetDiffHours = (targetTime.offset - refTime.offset) / 60;
+    return {
+      zone: z,
+      offsetDiffHours
+    };
+  });
+
   // Generate rows for local hours 9 AM to 5 PM in refZone
   const rows = Array.from({ length: 9 }).map((_, index) => {
     const refHour24 = 9 + index; // 9 to 17
@@ -21,15 +34,9 @@ export default function OverlapTable({ zones }: OverlapTableProps) {
     const refHour12 = refHour24 % 12 === 0 ? 12 : refHour24 % 12;
     const refLabel = `${refHour12}:00 ${refPeriod}`;
 
-    const now = DateTime.now();
-    const refTime = now.setZone(refZone.zoneName);
-
     // Calculate times for each target zone
     let isAllWorking = true;
-    const targetLabels = targetZones.map((z) => {
-      const targetTime = now.setZone(z.zoneName);
-      const offsetDiffHours = (targetTime.offset - refTime.offset) / 60;
-      
+    const targetLabels = targetZonesData.map(({ offsetDiffHours }) => {
       // Calculate local hour and minute precisely using minutes offset
       const totalMinutes = refHour24 * 60 + Math.round(offsetDiffHours * 60);
       const positiveMinutes = (totalMinutes % 1440 + 1440) % 1440;

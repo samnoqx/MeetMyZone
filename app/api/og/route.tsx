@@ -65,6 +65,9 @@ export async function GET(request: Request) {
       .slice(0, 1);
 
     const bestSlot = recommendedSlots.length > 0 ? recommendedSlots[0] : null;
+    const bestSlotIdx = bestSlot 
+      ? matrix.findIndex(r => r.formattedUtcTime === bestSlot.formattedUtc)
+      : -1;
 
     // Render image
     return new ImageResponse(
@@ -84,7 +87,7 @@ export async function GET(request: Request) {
           }}
         >
           {/* Header Row */}
-          <div style={{ display: 'flex', justifyContent: 'between', alignItems: 'center', width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <div
                 style={{
@@ -111,7 +114,7 @@ export async function GET(request: Request) {
           </div>
 
           {/* Main Content Area */}
-          <div style={{ display: 'flex', width: '100%', justifyContent: 'between', alignItems: 'center', marginTop: '20px' }}>
+          <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
             {/* Left side: Info & Overlap */}
             <div style={{ display: 'flex', flexDirection: 'column', width: '480px' }}>
               <span style={{ fontSize: '40px', fontWeight: '800', color: '#ffffff', lineHeight: '1.2' }}>
@@ -167,25 +170,23 @@ export async function GET(request: Request) {
               }}
             >
               {citiesList.slice(0, 4).map((city, idx) => {
-                const zone = customMappings[city] || resolveTimeZone(city);
-                const zoneObj = DateTime.now().setZone(zone);
-                const offsetStr = `UTC${zoneObj.toFormat('ZZ')}`;
+                const cellAtSlot = bestSlotIdx !== -1 
+                  ? matrix[bestSlotIdx]?.cities[city] 
+                  : matrix[9]?.cities[city] || matrix[0]?.cities[city];
                 
-                // Show localized time at the suggested best slot, or local current hour
-                const localTimeStr = bestSlot 
-                  ? matrix[matrix.findIndex(r => r.formattedUtcTime === bestSlot.formattedUtc)]?.cities[city]?.localTime || zoneObj.toFormat('hh:mm a')
-                  : zoneObj.toFormat('hh:mm a');
+                if (!cellAtSlot) return null;
 
-                const isWorkingAtSlot = bestSlot
-                  ? matrix[matrix.findIndex(r => r.formattedUtcTime === bestSlot.formattedUtc)]?.cities[city]?.isWorking ?? true
-                  : true;
+                const zone = cellAtSlot.ianaZone;
+                const offsetStr = cellAtSlot.offset;
+                const localTimeStr = cellAtSlot.localTime;
+                const isWorkingAtSlot = cellAtSlot.isWorking;
 
                 return (
                   <div
                     key={`og-city-${city}`}
                     style={{
                       display: 'flex',
-                      justifyContent: 'between',
+                      justifyContent: 'space-between',
                       alignItems: 'center',
                       padding: '12px 0',
                       borderBottom: idx === Math.min(citiesList.length, 4) - 1 ? 'none' : '1px solid rgba(30, 41, 59, 0.5)',
@@ -239,7 +240,7 @@ export async function GET(request: Request) {
           <div
             style={{
               display: 'flex',
-              justifyContent: 'between',
+              justifyContent: 'space-between',
               alignItems: 'center',
               width: '100%',
               borderTop: '1px solid #1e293b',

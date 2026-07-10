@@ -1,11 +1,20 @@
 "use client";
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DateTime } from 'luxon';
 import { ZONE_SEARCH_INDEX } from '@/utils/timezone';
 
 interface ClockCity {
   label: string;
   timezone: string;
+}
+
+interface WorldClockProps {
+  initialCity1?: string;
+  initialZone1?: string;
+  initialCity2?: string;
+  initialZone2?: string;
+  onSelectionChange?: (index: 1 | 2, cityName: string, timezone: string) => void;
+  isConverterPage?: boolean;
 }
 
 const ClockIcon = () => (
@@ -26,12 +35,19 @@ const SearchIcon = () => (
   </svg>
 );
 
-export default function WorldClock() {
+export default function WorldClock({
+  initialCity1,
+  initialZone1,
+  initialCity2,
+  initialZone2,
+  onSelectionChange,
+  isConverterPage = false
+}: WorldClockProps) {
   // Cities & Timezones
-  const [city1, setCity1] = useState('London');
-  const [zone1, setZone1] = useState('Europe/London');
-  const [city2, setCity2] = useState('New York');
-  const [zone2, setZone2] = useState('America/New_York');
+  const [city1, setCity1] = useState(initialCity1 || 'London');
+  const [zone1, setZone1] = useState(initialZone1 || 'Europe/London');
+  const [city2, setCity2] = useState(initialCity2 || 'New York');
+  const [zone2, setZone2] = useState(initialZone2 || 'America/New_York');
 
   // Real-time values without seconds
   const [time1, setTime1] = useState('');
@@ -68,21 +84,36 @@ export default function WorldClock() {
   const containerRef1 = useRef<HTMLDivElement>(null);
   const containerRef2 = useRef<HTMLDivElement>(null);
 
-  // Load preferences on mount
+  // Synchronize initial prop values to state
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
+    if (initialCity1) setCity1(initialCity1);
+    if (initialZone1) setZone1(initialZone1);
+  }, [initialCity1, initialZone1]);
+
+  useEffect(() => {
+    if (initialCity2) setCity2(initialCity2);
+    if (initialZone2) setZone2(initialZone2);
+  }, [initialCity2, initialZone2]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Load preferences on mount (homepage only)
+  useEffect(() => {
+    if (isConverterPage) return;
     if (typeof window !== 'undefined') {
       const savedCity1 = localStorage.getItem('wc_c1');
       const savedZone1 = localStorage.getItem('wc_z1');
       const savedCity2 = localStorage.getItem('wc_c2');
       const savedZone2 = localStorage.getItem('wc_z2');
 
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      /* eslint-disable react-hooks/set-state-in-effect */
       if (savedCity1) setCity1(savedCity1);
       if (savedZone1) setZone1(savedZone1);
       if (savedCity2) setCity2(savedCity2);
       if (savedZone2) setZone2(savedZone2);
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
-  }, []);
+  }, [isConverterPage]);
 
   // Update time ticks (every 10 seconds since seconds are removed)
   useEffect(() => {
@@ -168,13 +199,23 @@ export default function WorldClock() {
     if (activeCard === 1) {
       setCity1(cityObj.label);
       setZone1(cityObj.timezone);
-      localStorage.setItem('wc_c1', cityObj.label);
-      localStorage.setItem('wc_z1', cityObj.timezone);
+      if (!isConverterPage) {
+        localStorage.setItem('wc_c1', cityObj.label);
+        localStorage.setItem('wc_z1', cityObj.timezone);
+      }
+      if (onSelectionChange) {
+        onSelectionChange(1, cityObj.label, cityObj.timezone);
+      }
     } else if (activeCard === 2) {
       setCity2(cityObj.label);
       setZone2(cityObj.timezone);
-      localStorage.setItem('wc_c2', cityObj.label);
-      localStorage.setItem('wc_z2', cityObj.timezone);
+      if (!isConverterPage) {
+        localStorage.setItem('wc_c2', cityObj.label);
+        localStorage.setItem('wc_z2', cityObj.timezone);
+      }
+      if (onSelectionChange) {
+        onSelectionChange(2, cityObj.label, cityObj.timezone);
+      }
     }
     setActiveCard(null);
   };
@@ -189,18 +230,41 @@ export default function WorldClock() {
     }
   };
 
+  // Helper to calculate the time difference text dynamically
+  const diffText = useMemo(() => {
+    try {
+      const now = DateTime.now();
+      const timeA = now.setZone(zone1);
+      const timeB = now.setZone(zone2);
+      const offsetA = timeA.offset;
+      const offsetB = timeB.offset;
+      const diffMinutes = offsetB - offsetA;
+      const absMinutes = Math.abs(diffMinutes);
+      const diffHours = Math.floor(absMinutes / 60);
+      const diffMinsRemaining = absMinutes % 60;
+      if (diffMinutes === 0) return '0 hours difference';
+      const direction = diffMinutes > 0 ? 'ahead of' : 'behind';
+      const minPart = diffMinsRemaining > 0 ? ` ${diffMinsRemaining}m` : '';
+      return `${diffHours}h${minPart} ${direction}`;
+    } catch {
+      return '0 hours difference';
+    }
+  }, [zone1, zone2]);
+
   return (
     <section className="w-full flex flex-col font-sans mb-1 select-none">
       
-      {/* Title */}
-      <h2 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mb-2.5">
-        <ClockIcon />
-        <span>World Clock</span>
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
-      </h2>
+      {/* Title (homepage only) */}
+      {!isConverterPage && (
+        <h2 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mb-2.5">
+          <ClockIcon />
+          <span>World Clock</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
+        </h2>
+      )}
 
-      {/* Two Horizontal Cards Container */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+      {/* Grid Container */}
+      <div className={`grid grid-cols-1 ${isConverterPage ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4 w-full`}>
         
         {/* Card 1 */}
         <div ref={containerRef1} className="relative w-full">
@@ -217,7 +281,6 @@ export default function WorldClock() {
             aria-label="Change city for clock 1"
             className="w-full h-20 sm:h-22 premium-card rounded-2xl px-5 flex items-center justify-between hover:border-teal-500/40 dark:hover:border-teal-500/35 hover:scale-[1.005] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-teal-500/35 transition-all duration-200 cursor-pointer group"
           >
-            {/* Left Side: City & Info */}
             <div className="flex flex-col justify-center gap-1 min-w-0 flex-1 mr-3">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="font-extrabold text-sm sm:text-base tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-600 dark:from-white dark:to-cyan-400 truncate">
@@ -232,7 +295,6 @@ export default function WorldClock() {
               </span>
             </div>
 
-            {/* Right Side: Large Time & Zone Abbr */}
             <div className="flex items-center gap-3 shrink-0">
               <span className="text-2xl sm:text-3xl font-black tracking-tighter text-slate-900 dark:text-white font-mono tabular-nums leading-none">
                 {time1 || '--:--'}
@@ -243,9 +305,8 @@ export default function WorldClock() {
             </div>
           </div>
 
-          {/* Inline Dropdown Popover 1 */}
           {activeCard === 1 && (
-            <div className="absolute top-[105%] left-0 right-0 premium-card rounded-2xl p-4 shadow-2xl z-40 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute top-[105%] left-0 right-0 premium-card rounded-2xl p-4 shadow-2xl z-[9999] flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-150">
               <div className="relative flex items-center">
                 <input
                   type="text"
@@ -306,7 +367,6 @@ export default function WorldClock() {
             aria-label="Change city for clock 2"
             className="w-full h-20 sm:h-22 premium-card rounded-2xl px-5 flex items-center justify-between hover:border-teal-500/40 dark:hover:border-teal-500/35 hover:scale-[1.005] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-teal-500/35 transition-all duration-200 cursor-pointer group"
           >
-            {/* Left Side: City & Info */}
             <div className="flex flex-col justify-center gap-1 min-w-0 flex-1 mr-3">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="font-extrabold text-sm sm:text-base tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-600 dark:from-white dark:to-cyan-400 truncate">
@@ -321,7 +381,6 @@ export default function WorldClock() {
               </span>
             </div>
 
-            {/* Right Side: Large Time & Zone Abbr */}
             <div className="flex items-center gap-3 shrink-0">
               <span className="text-2xl sm:text-3xl font-black tracking-tighter text-slate-900 dark:text-white font-mono tabular-nums leading-none">
                 {time2 || '--:--'}
@@ -332,9 +391,8 @@ export default function WorldClock() {
             </div>
           </div>
 
-          {/* Inline Dropdown Popover 2 */}
           {activeCard === 2 && (
-            <div className="absolute top-[105%] left-0 right-0 premium-card rounded-2xl p-4 shadow-2xl z-40 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute top-[105%] left-0 right-0 premium-card rounded-2xl p-4 shadow-2xl z-[9999] flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-150">
               <div className="relative flex items-center">
                 <input
                   type="text"
@@ -379,6 +437,18 @@ export default function WorldClock() {
             </div>
           )}
         </div>
+
+        {/* Card 3: Time Difference Summary (converter page only) */}
+        {isConverterPage && (
+          <div className="premium-card p-5 rounded-2xl flex flex-col justify-center gap-3 border border-emerald-500/30 dark:border-emerald-500/40 bg-emerald-50/20 dark:bg-emerald-950/20 md:col-span-1 shadow-sm">
+            <span className="text-[10px] font-mono tracking-widest text-emerald-700 dark:text-emerald-400 uppercase font-extrabold block">
+              Time Difference
+            </span>
+            <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">
+              {city2.split(',')[0]} is currently <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{diffText}</span> compared to {city1.split(',')[0]}.
+            </p>
+          </div>
+        )}
 
       </div>
     </section>

@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import ContactForm from '../../components/ContactForm';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export const metadata: Metadata = {
   title: "Contact Us | MeetMyZone",
@@ -52,10 +53,13 @@ export default function ContactUsPage() {
           <ArrowLeftIcon size={16} />
           <span>Back to Planner</span>
         </Link>
-        <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition font-medium">
-          <HomeIcon size={16} />
-          <span>Home</span>
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition font-medium">
+            <HomeIcon size={16} />
+            <span>Home</span>
+          </Link>
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16 flex flex-col items-center gap-6">
