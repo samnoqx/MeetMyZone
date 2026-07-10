@@ -15,8 +15,47 @@ interface PageProps {
   }>;
 }
 
+export const revalidate = 86400; // Cache pages for 24 hours (1 day)
+
 export async function generateStaticParams() {
-  return [];
+  return [
+    { cities: 'est-to-ist' },
+    { cities: 'ist-to-est' },
+    { cities: 'pst-to-est' },
+    { cities: 'est-to-pst' },
+    { cities: 'utc-to-ist' },
+    { cities: 'ist-to-utc' },
+    { cities: 'gmt-to-est' },
+    { cities: 'est-to-gmt' },
+    { cities: 'cet-to-est' },
+    { cities: 'est-to-cet' },
+    { cities: 'london-to-new-york' },
+    { cities: 'new-york-to-london' },
+    { cities: 'singapore-to-est' },
+    { cities: 'est-to-singapore' },
+    { cities: 'sgt-to-est' },
+    { cities: 'est-to-sgt' },
+    { cities: 'mst-to-est' },
+    { cities: 'est-to-mst' },
+    { cities: 'cst-to-est' },
+    { cities: 'est-to-cst' },
+    { cities: 'ast-to-est' },
+    { cities: 'est-to-ast' },
+    { cities: 'jst-to-aest' },
+    { cities: 'aest-to-jst' },
+    { cities: 'kst-to-jst' },
+    { cities: 'jst-to-kst' },
+    { cities: 'tokyo-to-london' },
+    { cities: 'london-to-tokyo' },
+    { cities: 'paris-to-new-york' },
+    { cities: 'new-york-to-paris' },
+    { cities: 'singapore-to-london' },
+    { cities: 'london-to-singapore' },
+    { cities: 'sydney-to-tokyo' },
+    { cities: 'tokyo-to-sydney' },
+    { cities: 'los-angeles-to-new-york' },
+    { cities: 'new-york-to-los-angeles' }
+  ];
 }
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
