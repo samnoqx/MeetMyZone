@@ -1,7 +1,8 @@
 import HomeClient from '../../HomeClient';
-import { parseCitiesSlug } from '../../../utils/seoResolver';
+import { parseCitiesSlug, isTimezonePairing } from '../../../utils/seoResolver';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 interface PageProps {
   params: Promise<{
@@ -131,8 +132,6 @@ export default async function Page({ params, searchParams }: PageProps) {
   if (resolved.length === 0) {
     notFound();
   }
-
-
   
   const initialParams = {
     cities: resolved.map(c => c.cityName).join(','),
@@ -142,11 +141,69 @@ export default async function Page({ params, searchParams }: PageProps) {
     workEnd: sParams.workEnd,
     date: sParams.date,
   };
+
+  const isTz = resolved.length === 2 && isTimezonePairing(`${resolved[0].cityName.toLowerCase()}-to-${resolved[1].cityName.toLowerCase()}`);
+  const citiesDisplay = resolved.map(c => c.cityName).join(' to ');
+
+  const breadcrumbPrefix = (
+    <nav aria-label="Breadcrumb" className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 mb-1">
+      <ol className="flex flex-wrap items-center gap-2">
+        <li>
+          <Link href="/" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+            Home
+          </Link>
+        </li>
+        <li>
+          <span className="text-slate-400 dark:text-slate-650">/</span>
+        </li>
+        <li>
+          <Link href={isTz ? "/timezone-converter" : "/city-time-converter"} className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+            {isTz ? "Time Zone Converter" : "City Time Converter"}
+          </Link>
+        </li>
+        <li>
+          <span className="text-slate-400 dark:text-slate-650">/</span>
+        </li>
+        <li aria-current="page" className="text-teal-600 dark:text-teal-400 font-bold truncate max-w-[200px] sm:max-w-none">
+          {resolved.map(c => c.cityName).join(' to ')}
+        </li>
+      </ol>
+    </nav>
+  );
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "@id": `https://meetmyzone.com/timezone/${cities}/#breadcrumb`,
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://meetmyzone.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": isTz ? "Time Zone Converter" : "City Time Converter",
+        "item": isTz ? "https://meetmyzone.com/timezone-converter" : "https://meetmyzone.com/city-time-converter"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": citiesDisplay,
+        "item": `https://meetmyzone.com/timezone/${cities}`
+      }
+    ]
+  };
   
-  // Use first two resolved cities for the SEO pairing details if available
   return (
     <>
-      <HomeClient initialParams={initialParams} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema).replace(/</g, '\\u003c') }}
+      />
+      <HomeClient initialParams={initialParams} headerPrefix={breadcrumbPrefix} />
     </>
   );
 }

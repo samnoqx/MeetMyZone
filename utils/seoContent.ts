@@ -410,3 +410,232 @@ export function generateRelatedCities(zoneA: ResolvedTimezone, zoneB: ResolvedTi
   
   return links.slice(0, 5);
 }
+
+export interface CityGeoInfo {
+  country: string;
+  region: string;
+  lat: number;
+  lng: number;
+}
+
+export const POPULAR_CITIES_GEO: Record<string, CityGeoInfo> = {
+  'london': { country: 'United Kingdom', region: 'England', lat: 51.5074, lng: -0.1278 },
+  'new-york': { country: 'United States', region: 'New York', lat: 40.7128, lng: -74.0060 },
+  'tokyo': { country: 'Japan', region: 'Tokyo', lat: 35.6762, lng: 139.6503 },
+  'sydney': { country: 'Australia', region: 'New South Wales', lat: -33.8688, lng: 151.2093 },
+  'paris': { country: 'France', region: 'Île-de-France', lat: 48.8566, lng: 2.3522 },
+  'dubai': { country: 'United Arab Emirates', region: 'Dubai', lat: 25.2048, lng: 55.2708 },
+  'los-angeles': { country: 'United States', region: 'California', lat: 34.0522, lng: -118.2437 },
+  'chicago': { country: 'United States', region: 'Illinois', lat: 41.8781, lng: -87.6298 },
+  'hong-kong': { country: 'Hong Kong', region: 'Hong Kong', lat: 22.3193, lng: 114.1694 },
+  'singapore': { country: 'Singapore', region: 'Central Region', lat: 1.3521, lng: 103.8198 },
+  'mumbai': { country: 'India', region: 'Maharashtra', lat: 19.0760, lng: 72.8777 },
+  'kolkata': { country: 'India', region: 'West Bengal', lat: 22.5726, lng: 88.3639 },
+  'new-delhi': { country: 'India', region: 'Delhi', lat: 28.6139, lng: 77.2090 },
+  'delhi': { country: 'India', region: 'Delhi', lat: 28.7041, lng: 77.1025 },
+  'san-francisco': { country: 'United States', region: 'California', lat: 37.7749, lng: -122.4194 },
+  'seoul': { country: 'South Korea', region: 'Seoul Capital Area', lat: 37.5665, lng: 126.9780 },
+  'berlin': { country: 'Germany', region: 'Berlin', lat: 52.5200, lng: 13.4050 },
+  'denver': { country: 'United States', region: 'Colorado', lat: 39.7392, lng: -104.9903 },
+  'halifax': { country: 'Canada', region: 'Nova Scotia', lat: 44.6488, lng: -63.5752 }
+};
+
+export function getCountryForTimezone(zone: string): string {
+  const zoneLower = zone.toLowerCase();
+  if (zoneLower.includes('kolkata') || zoneLower.includes('delhi') || zoneLower.includes('mumbai') || zoneLower.includes('calcutta')) return 'India';
+  if (zoneLower.includes('london')) return 'United Kingdom';
+  if (zoneLower.includes('tokyo')) return 'Japan';
+  if (zoneLower.includes('sydney') || zoneLower.includes('melbourne') || zoneLower.includes('brisbane') || zoneLower.includes('adelaide') || zoneLower.includes('perth') || zoneLower.includes('hobart')) return 'Australia';
+  if (zoneLower.includes('paris')) return 'France';
+  if (zoneLower.includes('dubai')) return 'United Arab Emirates';
+  if (zoneLower.includes('seoul')) return 'South Korea';
+  if (zoneLower.includes('singapore')) return 'Singapore';
+  if (zoneLower.includes('hong_kong') || zoneLower.includes('hongkong')) return 'Hong Kong';
+  if (zoneLower.includes('berlin') || zoneLower.includes('frankfurt') || zoneLower.includes('munich')) return 'Germany';
+  if (zoneLower.includes('rome') || zoneLower.includes('milan')) return 'Italy';
+  if (zoneLower.includes('madrid') || zoneLower.includes('barcelona')) return 'Spain';
+  if (zoneLower.includes('toronto') || zoneLower.includes('montreal') || zoneLower.includes('vancouver') || zoneLower.includes('halifax') || zoneLower.includes('winnipeg') || zoneLower.includes('calgary')) return 'Canada';
+  if (zoneLower.includes('new_york') || zoneLower.includes('los_angeles') || zoneLower.includes('chicago') || zoneLower.includes('denver') || zoneLower.includes('phoenix') || zoneLower.includes('anchorage') || zoneLower.includes('honolulu')) return 'United States';
+  
+  if (zone.startsWith('America/')) {
+    if (zone.includes('Argentina')) return 'Argentina';
+    if (zone.includes('Brazil') || zone.includes('Sao_Paulo') || zone.includes('Rio')) return 'Brazil';
+    if (zone.includes('Mexico')) return 'Mexico';
+    return 'United States';
+  }
+  if (zone.startsWith('Europe/')) {
+    if (zone.includes('Dublin')) return 'Ireland';
+    if (zone.includes('Amsterdam')) return 'Netherlands';
+    if (zone.includes('Brussels')) return 'Belgium';
+    if (zone.includes('Vienna')) return 'Austria';
+    if (zone.includes('Zurich')) return 'Switzerland';
+    if (zone.includes('Stockholm')) return 'Sweden';
+    if (zone.includes('Oslo')) return 'Norway';
+    if (zone.includes('Copenhagen')) return 'Denmark';
+    if (zone.includes('Warsaw')) return 'Poland';
+    return 'Europe';
+  }
+  if (zone.startsWith('Asia/')) {
+    if (zone.includes('Shanghai') || zone.includes('Beijing')) return 'China';
+    if (zone.includes('Bangkok')) return 'Thailand';
+    if (zone.includes('Jakarta')) return 'Indonesia';
+    if (zone.includes('Manila')) return 'Philippines';
+    if (zone.includes('Kuala_Lumpur')) return 'Malaysia';
+    if (zone.includes('Taipei')) return 'Taiwan';
+    return 'Asia';
+  }
+  if (zone.startsWith('Australia/')) return 'Australia';
+  if (zone.startsWith('Africa/')) return 'Africa';
+  if (zone.startsWith('Pacific/')) return 'Pacific';
+  if (zone === 'UTC' || zone === 'GMT') return 'Coordinated Universal Time';
+  return 'Global';
+}
+
+export function generateTimeInIntro(zone: ResolvedTimezone, country: string): string {
+  const cityName = zone.cityName;
+  const zoneName = zone.zoneName;
+  
+  const introTemplates = [
+    `Welcome to the live time resource for **${cityName}**, ${country}. Currently, the local time in ${cityName} is determined by the ${zoneName} timezone rules. Whether you are scheduling an international business call, coordinating project handovers with remote team members, or planning your next vacation, keeping track of time zone differences is essential. Our digital clock displays the current local time in ${cityName} with high precision, updating in real time. Below, you will find a full breakdown of standard UTC offsets, daylight saving status, standard working hours, and comparative tables linking ${cityName} with other key global cities.`,
+    `Need to know the current local time in **${cityName}**, ${country} right now? MeetMyZone coordinates live time metrics for the ${zoneName} timezone. Correctly calculating offsets is critical for remote coordinators, global investors, and travelers trying to avoid late-night calendar errors. The live-updating clock above shows the exact standard or daylight time for ${cityName}. In addition to the current time and date, this guide outlines the area's local working hours, daylight saving rules, and features shortcuts to popular converters so you can align team meetings without timezone friction.`,
+    `Staying aligned with **${cityName}**, ${country} is easy with our real-time world clock tracker. Clocks in ${cityName} run on the official ${zoneName} database parameters, which adjust automatically for local daylight saving transitions. If you manage client relations, remote software development pipelines, or are calling friends abroad, checking local hours avoids disruptive disruptions. Explore our summary tables below to find standard business hours, coordinates, travel gateway information, and dynamic answers to frequently asked questions about ${cityName} time.`
+  ];
+
+  // Deterministically select template based on city name length
+  const seed = cityName.length % 3;
+  return introTemplates[seed];
+}
+
+export function generateCityFAQs(zone: ResolvedTimezone, dst: DstDetail): FAQItem[] {
+  const cityName = zone.cityName;
+  
+  const now = DateTime.now();
+  const dtCity = now.setZone(zone.zoneName);
+  const dtLondon = now.setZone('Europe/London');
+  const dtNY = now.setZone('America/New_York');
+  
+  const diffLondon = (dtCity.offset - dtLondon.offset) / 60;
+  let ansLondon = "";
+  if (diffLondon > 0) {
+    ansLondon = `Yes, ${cityName} is ${diffLondon} ${diffLondon === 1 ? 'hour' : 'hours'} ahead of London.`;
+  } else if (diffLondon < 0) {
+    ansLondon = `No, ${cityName} is ${Math.abs(diffLondon)} ${Math.abs(diffLondon) === 1 ? 'hour' : 'hours'} behind London.`;
+  } else {
+    ansLondon = `No, ${cityName} is currently at the same time as London.`;
+  }
+  
+  const diffNY = (dtCity.offset - dtNY.offset) / 60;
+  let ansNY = "";
+  if (diffNY > 0) {
+    ansNY = `Yes, ${cityName} is ${diffNY} ${diffNY === 1 ? 'hour' : 'hours'} ahead of New York.`;
+  } else if (diffNY < 0) {
+    ansNY = `No, ${cityName} is ${Math.abs(diffNY)} ${Math.abs(diffNY) === 1 ? 'hour' : 'hours'} behind New York.`;
+  } else {
+    ansNY = `No, ${cityName} is currently at the same time as New York.`;
+  }
+
+  // Get current offset formatting (e.g. UTC+05:30)
+  const offsetMinutes = dtCity.offset;
+  const absOffsetMinutes = Math.abs(offsetMinutes);
+  const offsetHours = Math.floor(absOffsetMinutes / 60);
+  const offsetMinsRemainder = absOffsetMinutes % 60;
+  const sign = offsetMinutes >= 0 ? '+' : '-';
+  const offsetVal = `UTC${sign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinsRemainder).padStart(2, '0')}`;
+
+  return [
+    {
+      question: `What time is it in ${cityName} right now?`,
+      answer: `You can view the exact live local time in ${cityName} on our interactive digital clock above. The clock updates continuously to ensure accuracy for business planning and travel.`
+    },
+    {
+      question: `Does ${cityName} observe Daylight Saving Time (DST)?`,
+      answer: dst.description
+    },
+    {
+      question: `What UTC offset is used in ${cityName}?`,
+      answer: `${cityName} currently uses the offset ${offsetVal} based on its standard timezone (${zone.displayName}).`
+    },
+    {
+      question: `Is ${cityName} ahead of London?`,
+      answer: `${ansLondon} When London shifts for British Summer Time (BST) or standard Greenwich Mean Time (GMT), this relationship may change depending on local daylight saving transitions.`
+    },
+    {
+      question: `Is ${cityName} ahead of New York?`,
+      answer: `${ansNY} This difference is calculated dynamically using live timezone database rules and automatically updates for Eastern Standard Time (EST) or Eastern Daylight Time (EDT) shifts.`
+    }
+  ];
+}
+
+export function generateRelatedLinksForCity(zone: ResolvedTimezone): { converters: RelatedLink[]; currentTimes: RelatedLink[] } {
+  const slugify = (city: string) => city.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+  const citySlug = slugify(zone.cityName);
+  const currentCity = zone.cityName;
+  
+  const converters: RelatedLink[] = [];
+  const currentTimes: RelatedLink[] = [];
+  
+  const isEurope = zone.zoneName.startsWith('Europe/');
+  const isAmerica = zone.zoneName.startsWith('America/');
+  const isAsiaOrIndian = zone.zoneName.startsWith('Asia/') || zone.zoneName.startsWith('Indian/');
+  const isAusOrPacific = zone.zoneName.startsWith('Australia/') || zone.zoneName.startsWith('Pacific/');
+  
+  if (isEurope) {
+    converters.push(
+      { label: `${currentCity} to New York Converter`, url: `/convert/${citySlug}-to-new-york` },
+      { label: `${currentCity} to London Converter`, url: `/convert/${citySlug}-to-london` },
+      { label: `${currentCity} to Sydney Converter`, url: `/convert/${citySlug}-to-sydney` },
+      { label: `${currentCity} to Tokyo Converter`, url: `/convert/${citySlug}-to-tokyo` }
+    );
+    const citiesList = ['Paris', 'Berlin', 'Rome', 'Amsterdam', 'Madrid', 'London'].filter(c => c !== currentCity);
+    citiesList.slice(0, 4).forEach(c => {
+      currentTimes.push({ label: `Current Time in ${c}`, url: `/time-in/${slugify(c)}` });
+    });
+  } else if (isAmerica) {
+    converters.push(
+      { label: `${currentCity} to London Converter`, url: `/convert/${citySlug}-to-london` },
+      { label: `${currentCity} to Tokyo Converter`, url: `/convert/${citySlug}-to-tokyo` },
+      { label: `${currentCity} to Sydney Converter`, url: `/convert/${citySlug}-to-sydney` },
+      { label: `${currentCity} to Los Angeles Converter`, url: `/convert/${citySlug}-to-los-angeles` }
+    );
+    const citiesList = ['New York', 'Los Angeles', 'Chicago', 'Denver', 'Halifax', 'Toronto', 'San Francisco'].filter(c => c !== currentCity);
+    citiesList.slice(0, 4).forEach(c => {
+      currentTimes.push({ label: `Current Time in ${c}`, url: `/time-in/${slugify(c)}` });
+    });
+  } else if (isAsiaOrIndian) {
+    converters.push(
+      { label: `${currentCity} to London Converter`, url: `/convert/${citySlug}-to-london` },
+      { label: `${currentCity} to New York Converter`, url: `/convert/${citySlug}-to-new-york` },
+      { label: `${currentCity} to Sydney Converter`, url: `/convert/${citySlug}-to-sydney` },
+      { label: `${currentCity} to Paris Converter`, url: `/convert/${citySlug}-to-paris` }
+    );
+    const citiesList = ['Tokyo', 'Seoul', 'Singapore', 'Hong Kong', 'Mumbai', 'Dubai', 'Beijing'].filter(c => c !== currentCity);
+    citiesList.slice(0, 4).forEach(c => {
+      currentTimes.push({ label: `Current Time in ${c}`, url: `/time-in/${slugify(c)}` });
+    });
+  } else if (isAusOrPacific) {
+    converters.push(
+      { label: `${currentCity} to Tokyo Converter`, url: `/convert/${citySlug}-to-tokyo` },
+      { label: `${currentCity} to London Converter`, url: `/convert/${citySlug}-to-london` },
+      { label: `${currentCity} to New York Converter`, url: `/convert/${citySlug}-to-new-york` },
+      { label: `${currentCity} to Singapore Converter`, url: `/convert/${citySlug}-to-singapore` }
+    );
+    const citiesList = ['Sydney', 'Melbourne', 'Brisbane', 'Auckland', 'Singapore', 'Tokyo'].filter(c => c !== currentCity);
+    citiesList.slice(0, 4).forEach(c => {
+      currentTimes.push({ label: `Current Time in ${c}`, url: `/time-in/${slugify(c)}` });
+    });
+  } else {
+    // Fallback
+    converters.push(
+      { label: `${currentCity} to New York Converter`, url: `/convert/${citySlug}-to-new-york` },
+      { label: `${currentCity} to London Converter`, url: `/convert/${citySlug}-to-london` },
+      { label: `${currentCity} to Tokyo Converter`, url: `/convert/${citySlug}-to-tokyo` },
+      { label: `${currentCity} to Sydney Converter`, url: `/convert/${citySlug}-to-sydney` }
+    );
+    const citiesList = ['London', 'New York', 'Tokyo', 'Sydney', 'Paris'].filter(c => c !== currentCity);
+    citiesList.slice(0, 4).forEach(c => {
+      currentTimes.push({ label: `Current Time in ${c}`, url: `/time-in/${slugify(c)}` });
+    });
+  }
+
+  return { converters, currentTimes };
+}

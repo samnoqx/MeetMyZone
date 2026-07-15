@@ -1,4 +1,6 @@
 import { MetadataRoute } from 'next';
+import { ALL_PAIRINGS } from '../utils/seoResolver';
+import { getAllBlogSlugs } from '@/lib/blogData';
 
 export const dynamic = "force-static";
 
@@ -13,7 +15,37 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
     {
+      url: `${baseUrl}/meeting-planner`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/timezone-converter`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/city-time-converter`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/current-time`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/tools`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.9,
@@ -44,64 +76,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const pairingSlugs = [
-    'est-to-ist',
-    'ist-to-est',
-    'pst-to-est',
-    'est-to-pst',
-    'utc-to-ist',
-    'ist-to-utc',
-    'gmt-to-est',
-    'est-to-gmt',
-    'cet-to-est',
-    'est-to-cet',
-    'london-to-new-york',
-    'new-york-to-london',
-    'singapore-to-est',
-    'est-to-singapore',
-    'sgt-to-est',
-    'est-to-sgt',
-    'mst-to-est',
-    'est-to-mst',
-    'cst-to-est',
-    'est-to-cst',
-    'ast-to-est',
-    'est-to-ast',
-    'jst-to-aest',
-    'aest-to-jst',
-    'kst-to-jst',
-    'jst-to-kst',
-    'tokyo-to-london',
-    'london-to-tokyo',
-    'paris-to-new-york',
-    'new-york-to-paris',
-    'singapore-to-london',
-    'london-to-singapore',
-    'sydney-to-tokyo',
-    'tokyo-to-sydney'
-  ];
-
-  const pairingPages: MetadataRoute.Sitemap = pairingSlugs.map(slug => ({
+  const pairingPages: MetadataRoute.Sitemap = ALL_PAIRINGS.map(slug => ({
     url: `${baseUrl}/convert/${slug}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.7,
   }));
 
-  const blogSlugs = [
-    'remote-work-hours-overlap-engineering-teams',
-    'managing-global-payroll-deadlines-timezone-shifts',
-    'daylight-saving-time-cron-jobs-server-scheduling',
-    'best-timezone-digital-nomads-usa-clients',
-    'developers-guide-timezone-abbreviations-offsets'
-  ];
-
-  const blogPages: MetadataRoute.Sitemap = blogSlugs.map(slug => ({
+  const blogPages: MetadataRoute.Sitemap = getAllBlogSlugs().map(slug => ({
     url: `${baseUrl}/blog/${slug}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.8,
   }));
 
-  return [...staticPages, ...pairingPages, ...blogPages];
+  const timeInSlugs = [
+    'est', 'ist', 'pst', 'utc', 'gmt', 'cet', 'mst', 'cst', 'ast', 'sgt', 'jst', 'kst', 'aest',
+    'london', 'new-york', 'tokyo', 'sydney', 'paris', 'dubai', 'los-angeles', 'mumbai', 'singapore', 'seoul', 'berlin', 'denver', 'halifax'
+  ];
+
+  const timeInPages: MetadataRoute.Sitemap = timeInSlugs.map(slug => ({
+    url: `${baseUrl}/time-in/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
+
+  return [...staticPages, ...pairingPages, ...blogPages, ...timeInPages];
 }

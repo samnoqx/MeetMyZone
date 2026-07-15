@@ -12,6 +12,7 @@ interface TimezoneTimelineProps {
 
 interface TimelineRowProps {
   city: string;
+  cities: string[];
   matrix: TimeMatrixHour[];
   currentUtcHour: number;
   is24Hour: boolean;
@@ -19,6 +20,7 @@ interface TimelineRowProps {
 
 const TimelineRow = React.memo(function TimelineRow({
   city,
+  cities,
   matrix,
   currentUtcHour,
   is24Hour,
@@ -28,17 +30,17 @@ const TimelineRow = React.memo(function TimelineRow({
   const cityOffsetName = firstRowCell?.offsetName || '';
 
   return (
-    <div className="flex items-stretch hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition-colors">
+    <div className="flex items-stretch hover:bg-surf-2/50 transition-colors">
       {/* Sticky City Name Column */}
-      <div className="w-28 min-w-[7rem] sm:w-56 sm:min-w-[14rem] p-3 sm:p-4 sticky left-0 z-20 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-center">
-        <div className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+      <div className="w-28 min-w-[7rem] sm:w-56 sm:min-w-[14rem] p-3 sm:p-4 sticky left-0 z-20 bg-surf-1 border-r border-border-custom flex flex-col justify-center">
+        <div className="text-xs sm:text-sm font-semibold text-txt-primary truncate">
           {city}
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-1.5 mt-0.5 sm:mt-1 text-[8px] sm:text-[10px] text-slate-500 dark:text-slate-400">
-          <span suppressHydrationWarning className="bg-slate-100 dark:bg-slate-800 px-1 py-0.2 sm:py-0.5 rounded border border-slate-200 dark:border-slate-700 font-mono w-max">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-1.5 mt-0.5 sm:mt-1 text-[8px] sm:text-[10px] text-txt-muted">
+          <span suppressHydrationWarning className="bg-surf-2 px-1 py-0.2 sm:py-0.5 rounded border border-border-custom font-mono w-max text-txt-secondary">
             {cityOffsetName}
           </span>
-          <span className="text-[7px] sm:text-[9px] text-slate-400 dark:text-slate-500 truncate">{cityOffset}</span>
+          <span className="text-[7px] sm:text-[9px] text-txt-muted truncate">{cityOffset}</span>
         </div>
       </div>
 
@@ -46,29 +48,33 @@ const TimelineRow = React.memo(function TimelineRow({
       <div className="flex-1 grid grid-cols-[repeat(24,minmax(42px,1fr))]">
         {matrix.map((row) => {
           const cell = row.cities[city];
-          const isCurrent = row.utcHour === currentUtcHour;
-          
           if (!cell) return null;
 
           // Determine if this cell falls within the city's active work hours
           const isDay = cell.isWorking;
+          const isOverlap = cities.filter(c => row.cities[c]?.isWorking).length >= 2;
+          const isHighlighted = isOverlap && isDay;
 
           return (
             <div
               key={`cell-${city}-${row.utcHour}`}
-              className={`h-14 sm:h-16 flex flex-col items-center justify-center border-r border-slate-200/50 dark:border-slate-800/20 relative transition-all duration-200 ${
+              className={`h-14 sm:h-16 flex flex-col items-center justify-center border-r border-border-custom relative transition-all duration-200 ${
                 isDay
-                  ? 'bg-amber-50/20 dark:bg-white text-slate-950 border-y border-amber-100 dark:border-slate-200 hover:scale-[1.02] hover:z-10 hover:shadow-lg dark:hover:text-black'
-                  : 'bg-slate-100/50 dark:bg-slate-950 text-slate-400 dark:text-slate-400 hover:bg-slate-200/40 dark:hover:bg-slate-800/60'
+                  ? 'bg-surf-1 text-txt-primary border-y border-brand-accent/20 hover:scale-[1.02] hover:z-10 hover:shadow-xs'
+                  : 'bg-surf-2 text-txt-muted hover:bg-surf-3/40'
               } ${
-                isCurrent
-                  ? 'ring-1 ring-red-500 bg-red-500/10 dark:bg-red-500/15 border-x border-red-500/20 z-10'
+                isHighlighted
+                  ? 'bg-brand-accent/10 shadow-[0_0_8px_rgba(251,191,36,0.15)] z-10'
                   : ''
               }`}
             >
               <span
                 className={`text-xs font-mono font-bold ${
-                  isDay ? 'text-slate-900 dark:text-slate-900' : 'text-slate-700 dark:text-slate-200'
+                  isHighlighted
+                    ? 'text-brand-accent font-bold'
+                    : isDay
+                    ? 'text-txt-primary'
+                    : 'text-txt-muted'
                 }`}
               >
                 {is24Hour 
@@ -78,16 +84,15 @@ const TimelineRow = React.memo(function TimelineRow({
               {!is24Hour && (
                 <span
                   className={`text-[8px] tracking-wider uppercase mt-0.5 ${
-                    isDay ? 'text-slate-500 font-medium' : 'text-slate-400 dark:text-slate-500'
+                    isHighlighted
+                      ? 'text-brand-accent/90'
+                      : isDay
+                      ? 'text-txt-secondary font-medium'
+                      : 'text-txt-muted'
                   }`}
                 >
                   {cell.localTime.split(' ')[1]}
                 </span>
-              )}
-
-              {/* Current Hour highlight overlay line */}
-              {isCurrent && (
-                <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-0.5 bg-red-500/40 pointer-events-none" />
               )}
             </div>
           );
@@ -141,21 +146,21 @@ export default function TimezoneTimeline({
   };
 
   return (
-    <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xl dark:shadow-2xl backdrop-blur-md transition-colors duration-200">
+    <div className="w-full bg-surf-1 border border-border-custom rounded-xl overflow-hidden shadow-card transition-colors duration-150">
       {/* Scrollable Container */}
       <div
         ref={scrollContainerRef}
-        className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-slate-100 dark:scrollbar-track-slate-900"
+        className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-350 dark:scrollbar-thumb-slate-700 scrollbar-track-slate-100 dark:scrollbar-track-slate-900"
       >
         <div className="min-w-[750px] sm:min-w-[1200px] select-none">
           {/* Header Row */}
-          <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80">
+          <div className="flex border-b border-border-custom bg-surf-2">
             {/* Sticky Empty Left Cell for Alignment */}
-            <div className="w-28 min-w-[7rem] sm:w-56 sm:min-w-[14rem] p-3 sm:p-4 sticky left-0 z-30 bg-slate-50 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <span className="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase">
+            <div className="w-28 min-w-[7rem] sm:w-56 sm:min-w-[14rem] p-3 sm:p-4 sticky left-0 z-30 bg-surf-2 border-r border-border-custom flex items-center justify-between">
+              <span className="text-[10px] sm:text-xs font-semibold tracking-wider text-txt-muted uppercase">
                 Locations
               </span>
-              <span className="hidden sm:inline text-[9px] text-slate-500 dark:text-slate-500 bg-slate-200/60 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 px-1.5 py-0.5 rounded-full">
+              <span className="hidden sm:inline text-[9px] text-txt-secondary bg-surf-1 border border-border-custom px-1.5 py-0.5 rounded-full font-bold">
                 Aligned
               </span>
             </div>
@@ -163,34 +168,38 @@ export default function TimezoneTimeline({
             {/* Timeline Hours Header */}
             <div className="flex-1 grid grid-cols-[repeat(24,minmax(42px,1fr))]">
               {matrix.map((row) => {
-                const isCurrent = row.utcHour === currentUtcHour;
+                const isOverlap = cities.filter(c => row.cities[c]?.isWorking).length >= 2;
                 return (
                   <div
                     key={`header-utc-${row.utcHour}`}
-                    className={`py-2 sm:py-3 flex flex-col items-center justify-center border-r border-slate-200/60 dark:border-slate-800/40 relative ${
-                      isCurrent
-                        ? 'bg-red-500/5 border-x border-red-500/30'
+                    className={`py-2 sm:py-3 flex flex-col items-center justify-center border-r border-border-custom/50 relative ${
+                      isOverlap
+                        ? 'bg-brand-accent/10 shadow-[0_0_8px_rgba(251,191,36,0.15)] z-10'
                         : ''
                     }`}
                   >
                     <span
                       className={`text-[9px] sm:text-[10px] tracking-wide font-mono ${
-                        isCurrent
-                          ? 'text-red-500 dark:text-red-400 font-semibold'
-                          : 'text-slate-500 dark:text-slate-400'
+                        isOverlap
+                          ? 'text-brand-accent font-bold'
+                          : 'text-txt-muted'
                       }`}
                     >
                       {is24Hour 
                         ? `${String(row.utcHour).padStart(2, '0')}:00` 
                         : getHeaderHourLabel(row.utcHour)}
                     </span>
-                    <span className="text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-600 mt-0.5">
+                    <span
+                      className={`text-[8px] sm:text-[9px] mt-0.5 ${
+                        isOverlap ? 'text-brand-accent/80' : 'text-txt-muted'
+                      }`}
+                    >
                       {is24Hour ? `HR ${row.utcHour}` : `${String(row.utcHour).padStart(2, '0')}:00`}
                     </span>
 
-                    {/* Red marker line at the top of the header if it's the current hour */}
-                    {isCurrent && (
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-red-500 animate-pulse" />
+                    {/* Yellow marker line at the top of the header if it's an overlap hour */}
+                    {isOverlap && (
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-brand-accent animate-pulse" />
                     )}
                   </div>
                 );
@@ -199,11 +208,12 @@ export default function TimezoneTimeline({
           </div>
 
           {/* City Rows */}
-          <div className="divide-y divide-slate-200 dark:divide-slate-800/60">
+          <div className="divide-y divide-border-custom">
             {cities.map((city) => (
               <TimelineRow
                 key={`row-${city}`}
                 city={city}
+                cities={cities}
                 matrix={matrix}
                 currentUtcHour={currentUtcHour}
                 is24Hour={is24Hour}

@@ -2,34 +2,160 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+:root, html[data-theme="light"] {
+  --background: #FFFCF7;
+  --footer-background: #FFFBF4;
+  --background-secondary: #FFF9F0;
+  --surface: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-elevated-secondary: #FFFFFF;
+  
+  --surface-1: var(--surface);
+  --surface-2: var(--background-secondary);
+  --border-color: var(--border);
+
+  --text-primary: #0B132B;
+  --text-heading: #080F24;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --text-subtle: #94A3B8;
+
+  --border: #E5E7EB;
+  --border-soft: #EEF0F3;
+  --border-interactive: #CBD5E1;
+
+  --accent: #FFB000;
+  --accent-hover: #F59E0B;
+  --accent-deep: #D97706;
+  --accent-surface: #FFF8E6;
+  --accent-surface-strong: #FFF3CC;
+  --accent-text: #92400E;
+
+  --success: #059669;
+  --success-surface: #ECFDF5;
+
+  --warning: #D97706;
+  --warning-surface: #FFFBEB;
+
+  --danger: #DC2626;
+  --danger-surface: #FEF2F2;
+
+  --shadow-card: 0 4px 16px rgba(17, 24, 39, 0.06);
+  --shadow-card-hover: 0 8px 24px rgba(17, 24, 39, 0.1);
+  --focus-ring: 0 0 0 2px var(--accent);
+  
+  --brand-accent: var(--accent);
+  --brand-accent-hover: var(--accent-deep);
+
+  --gradient-from: #D97706;
+  --gradient-via: #F59E0B;
+  --gradient-to: #FFB000;
+}
+
+
+html[data-theme="dark"] {
+  --background: #080B12;
+  --footer-background: #090D18;
+  --background-secondary: #0B1020;
+  --surface: #0F172A;
+  --surface-elevated: #151D2E;
+  --surface-elevated-secondary: #1A2436;
+
+  --surface-1: var(--surface);
+  --surface-2: var(--surface-elevated);
+  --border-color: var(--border);
+
+  --text-primary: #F8FAFC;
+  --text-heading: #FFFFFF;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-subtle: #7C899D;
+
+  --border: rgba(148, 163, 184, 0.18);
+  --border-soft: rgba(148, 163, 184, 0.10);
+  --border-interactive: rgba(203, 213, 225, 0.28);
+
+  --accent: #FBBF24;
+  --accent-hover: #F59E0B;
+  --accent-deep: #D97706;
+  --accent-surface: rgba(251, 191, 36, 0.09);
+  --accent-surface-strong: rgba(251, 191, 36, 0.14);
+  --accent-text: #FBBF24;
+
+  --success: #34D399;
+  --success-surface: rgba(52, 211, 153, 0.09);
+
+  --warning: #FBBF24;
+  --warning-surface: rgba(251, 191, 36, 0.09);
+
+  --danger: #F87171;
+  --danger-surface: rgba(248, 113, 113, 0.09);
+
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --focus-ring: 0 0 0 2px var(--accent);
+
+  --brand-accent: var(--accent);
+  --brand-accent-hover: var(--accent-hover);
+
+  --gradient-from: #F59E0B;
+  --gradient-via: #FBBF24;
+  --gradient-to: #FDE68A;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-footer-bg: var(--footer-background);
+  --color-background-secondary: var(--background-secondary);
   --color-foreground: var(--foreground);
+  --color-surf-1: var(--surface);
+  --color-surf-2: var(--surface-elevated);
+  --color-surf-3: var(--surface-elevated-secondary);
+  --color-txt-primary: var(--text-primary);
+  --color-txt-heading: var(--text-heading);
+  --color-txt-secondary: var(--text-secondary);
+  --color-txt-muted: var(--text-muted);
+  --color-txt-subtle: var(--text-subtle);
+
+  --color-brand-accent: var(--accent);
+  --color-brand-accent-hover: var(--accent-hover);
+  --color-brand-accent-deep: var(--accent-deep);
+  --color-brand-accent-surface: var(--accent-surface);
+  --color-brand-accent-surface-strong: var(--accent-surface-strong);
+
+  --color-border-custom: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-border-interactive: var(--border-interactive);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
+
+  --color-success: var(--success);
+  --color-success-surface: var(--success-surface);
+  --color-warning: var(--warning);
+  --color-warning-surface: var(--warning-surface);
+  --color-danger: var(--danger);
+  --color-danger-surface: var(--danger-surface);
+
+  --color-grad-from: var(--gradient-from);
+  --color-grad-via: var(--gradient-via);
+  --color-grad-to: var(--gradient-to);
+
   --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-.dark {
-  --background: #020617;
-  --foreground: #ededed;
-}
-
 body {
-  background-color: #ffffff;
-  color: #171717;
+  background-color: var(--background);
+  color: var(--foreground);
   font-family: var(--font-sans);
   transition-property: background-color, color;
   transition-duration: 250ms;
 }
 
 html.dark body {
-  background-color: #020617;
-  color: #ededed;
+  background-color: var(--background);
+  color: var(--foreground);
   position: relative;
 }
 
@@ -51,6 +177,10 @@ html.dark body {
     inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
 }
 
+.premium-card:not(.premium-card-static):hover {
+  border-color: var(--accent);
+}
+
 /* Spotlight Glow Effect (Dark Mode only) */
 .spotlight-glow {
   display: none;
@@ -62,12 +192,12 @@ html.dark .spotlight-glow {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.10) 0%, transparent 50%);
+  background: radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.04) 0%, transparent 50%);
 }
 
 @media (min-width: 768px) {
   html.dark .spotlight-glow {
-    background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.15) 0%, transparent 50%);
+    background: radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.06) 0%, transparent 50%);
   }
 }
 
@@ -92,4 +222,31 @@ nextjs-portal,
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
+}
+
+/* Reusable Premium Interactive Card (used for Meeting Slots and Premium Hub Cards) */
+.premium-interactive-card {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.premium-interactive-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-card-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-interactive-card {
+    transition: none;
+    transform: none !important;
+  }
 }

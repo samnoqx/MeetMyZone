@@ -9,11 +9,10 @@ import {
 } from '@/utils/timezone';
 import TimezoneTimeline from '@/components/TimezoneTimeline';
 import ShareMenu from '@/components/ShareMenu';
-import Link from 'next/link';
 import WorldClock from '@/components/WorldClock';
 import SEOSection from '@/components/SEOSection';
 import { ResolvedTimezone } from '@/utils/seoResolver';
-import ThemeToggle from '@/components/ThemeToggle';
+import Header from '@/components/Header';
 
 interface GeocodeSuggestion {
   label: string;
@@ -30,9 +29,27 @@ interface HomeClientProps {
     workEnd?: string;
     date?: string;
   };
+  headerPrefix?: React.ReactNode;
+}
+function buildLocationLabel(name?: string, admin1?: string, country?: string): string {
+  const parts: string[] = [];
+  const seen = new Set<string>();
+
+  [name, admin1, country].forEach((val) => {
+    if (!val) return;
+    const trimmed = val.trim();
+    if (!trimmed) return;
+    const lower = trimmed.toLowerCase();
+    if (!seen.has(lower)) {
+      seen.add(lower);
+      parts.push(trimmed);
+    }
+  });
+
+  return parts.join(', ');
 }
 
-export default function Home({ initialParams = {} }: HomeClientProps) {
+export default function Home({ initialParams = {}, headerPrefix }: HomeClientProps) {
   // Parse initial parameters on client initialization
   const parsedCities = initialParams.cities
     ? initialParams.cities.split(',').map((c) => decodeURIComponent(c.trim())).filter(Boolean)
@@ -366,15 +383,48 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
       };
       const citiesSlug = cities.map(slugifyCity).join('-to-');
 
+      const isHomepage = window.location.pathname === '/';
+      const isPlanner = window.location.pathname === '/meeting-planner';
       const isConvertRoute = window.location.pathname.startsWith('/convert/');
+      const isTimezoneRoute = window.location.pathname.startsWith('/timezone/');
+
       let expectedPathname = window.location.pathname;
-      if (!isConvertRoute) {
+      if (isHomepage) {
+        expectedPathname = '/';
+        if (cities.length > 0) {
+          const isDefault = cities.length === 2 && cities[0] === 'London' && cities[1] === 'New York';
+          if (!isDefault) {
+            params.set('cities', cities.join(','));
+            const resolvedZonesList = cities.map(city => cityTimezones[city] || resolveTimeZone(city));
+            params.set('zones', resolvedZonesList.join(','));
+          } else {
+            params.delete('cities');
+            params.delete('zones');
+          }
+        }
+      } else if (isPlanner) {
+        expectedPathname = '/meeting-planner';
+        if (cities.length > 0) {
+          const isDefault = cities.length === 2 && cities[0] === 'London' && cities[1] === 'New York';
+          if (!isDefault) {
+            params.set('cities', cities.join(','));
+            const resolvedZonesList = cities.map(city => cityTimezones[city] || resolveTimeZone(city));
+            params.set('zones', resolvedZonesList.join(','));
+          } else {
+            params.delete('cities');
+            params.delete('zones');
+          }
+        }
+      } else if (isTimezoneRoute) {
         expectedPathname = `/timezone/${citiesSlug}`;
+        params.delete('cities');
+        params.delete('zones');
+      } else if (!isConvertRoute) {
+        expectedPathname = `/timezone/${citiesSlug}`;
+        params.delete('cities');
+        params.delete('zones');
       }
 
-      // Clean up old query params and temporary UI state
-      params.delete('cities');
-      params.delete('zones');
       params.delete('reference');
       params.delete('workStart');
       params.delete('workEnd');
@@ -429,11 +479,10 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
         .then((data) => {
           if (data && data.results) {
             const list = data.results.map((item: { name: string; admin1?: string; country?: string; timezone?: string }) => {
-              const region = item.admin1 ? `, ${item.admin1}` : '';
-              const country = item.country ? `, ${item.country}` : '';
+              const fullLabel = buildLocationLabel(item.name, item.admin1, item.country);
               const timezone = item.timezone || 'UTC';
               return {
-                label: `${item.name}${region}${country}`,
+                label: fullLabel,
                 timezone: timezone,
                 name: item.name
               };
@@ -467,6 +516,13 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
   const matrix = useMemo(() => {
     return generateTimezoneMatrix(cities, referenceCity, workHourStart, workHourEnd, selectedDate, cityTimezones);
   }, [cities, referenceCity, workHourStart, workHourEnd, selectedDate, cityTimezones]);
+
+  const orderedCities = useMemo(() => {
+    return [
+      referenceCity,
+      ...cities.filter((c) => c !== referenceCity)
+    ].filter((c) => cities.includes(c));
+  }, [cities, referenceCity]);
 
   // Add a city suggestion to the planner
   const handleSelectSuggestion = (sug: GeocodeSuggestion) => {
@@ -502,9 +558,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
 
       if (data && data.results && data.results.length > 0) {
         const item = data.results[0];
-        const region = item.admin1 ? `, ${item.admin1}` : '';
-        const country = item.country ? `, ${item.country}` : '';
-        const fullLabel = `${item.name}${region}${country}`;
+        const fullLabel = buildLocationLabel(item.name, item.admin1, item.country);
         const timezone = item.timezone || 'UTC';
 
         if (cities.map(c => c.toLowerCase()).includes(fullLabel.toLowerCase())) {
@@ -772,75 +826,57 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#020617] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-200">Loading timezone planner...</p>
+          <div className="w-10 h-10 border-4 border-brand-accent border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-medium text-txt-secondary">Loading timezone planner...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex-1 bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 flex flex-col justify-start pb-20 font-sans selection:bg-teal-500/30 selection:text-teal-600 dark:selection:text-teal-300 transition-colors duration-200 min-h-screen">
+    <div className="min-h-screen bg-background flex flex-col">
+      <div className="flex-1 text-txt-primary flex flex-col justify-start pb-20 font-sans transition-colors duration-150">
 
-        {/* Navigation Bar */}
-        <nav className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-5 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-900">
-          <Link href="/" className="flex items-center gap-1 md:gap-3 group select-none -ml-3 md:ml-0">
-            <img
-              src="/logo.png"
-              alt="MeetMyZone Logo"
-              className="h-20 md:h-24 w-auto object-contain group-hover:scale-105 transition-transform my-auto -mr-8 md:-mr-8"
-            />
-            <span className="font-black text-2xl md:text-3xl tracking-tight leading-normal bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-600 dark:bg-clip-text dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:to-cyan-400 group-hover:opacity-90 transition-opacity">
-              MeetMyZone
-            </span>
-          </Link>
-
-          {/* Action Controls (Share + Theme Toggle) */}
-          <div className="flex items-center gap-2 md:gap-4">
-            <Link
-              href="/blog"
-              className="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-200 font-extrabold text-xs sm:text-sm shadow-sm transition-all active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
-            >
-              Blog
-            </Link>
+        {/* Consolidated Header Navigation */}
+        <Header
+          actions={
             <div className="hidden md:block">
               <ShareMenu cities={cities} matrix={matrix} selectedDate={selectedDate} isCompact={true} />
             </div>
-
-            <ThemeToggle />
-          </div>
-        </nav>
+          }
+        />
 
         {/* Hero Section */}
         <header className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-4 md:pt-12 md:pb-2 flex flex-col items-start gap-3 md:gap-4">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300">
+          {headerPrefix}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-txt-heading leading-tight">
+            <span className="from-grad-from via-grad-via to-grad-to bg-linear-to-r text-transparent bg-clip-text">
               Global Time Zone Converter. Plan Perfect Meetings.
             </span>
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-3xl leading-relaxed">
+          <p className="text-sm sm:text-base text-txt-secondary max-w-3xl leading-relaxed">
             Instantly check live times across 190+ countries with our precision World Clock, or visualize working hour overlaps to find the perfect meeting slot. Save your favorite locations, share schedules with one click, and coordinate global teams — all free, no login required.
           </p>
 
           <div className="hidden md:flex md:flex-row gap-4 w-full max-w-2xl mt-6 mb-2 mx-auto">
             <a
               href="#world-clock"
-              className="group h-14 flex items-center justify-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 focus:text-cyan-600 dark:focus:text-cyan-400 active:text-cyan-600 dark:active:text-cyan-400 shadow-md shadow-cyan-500/15 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-[0.98] active:bg-cyan-500/30 transition-all duration-300 ease-in-out outline-none rounded-xl w-full backdrop-blur-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] shadow-black/20 text-base font-semibold cursor-pointer text-center"
+              className="group h-14 flex items-center justify-center gap-2 bg-surf-2 hover:bg-surf-3 border border-border-custom hover:border-brand-accent hover:-translate-y-1 hover:shadow-card-hover text-txt-primary focus:text-txt-primary active:text-txt-primary shadow-xs active:scale-[0.98] transition-all duration-200 outline-none rounded-xl w-full text-base font-semibold cursor-pointer text-center"
+              title="Jump down to interactive World Clock converter"
             >
-              <svg className="w-5 h-5 text-cyan-600 dark:text-cyan-400 group-focus:text-cyan-600 dark:group-focus:text-cyan-400 group-active:text-cyan-600 dark:group-active:text-cyan-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-txt-muted group-focus:text-txt-primary group-active:text-txt-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>Open World Clock ↓</span>
             </a>
             <a
               href="#meeting-planner"
-              className="group h-14 flex items-center justify-center gap-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-600 dark:text-blue-400 focus:text-blue-600 dark:focus:text-blue-400 active:text-blue-600 dark:active:text-blue-400 shadow-md shadow-blue-500/15 hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] active:bg-blue-600/30 transition-all duration-300 ease-in-out outline-none rounded-xl w-full backdrop-blur-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] shadow-black/20 text-base font-semibold cursor-pointer text-center"
+              className="group h-14 flex items-center justify-center gap-2 bg-surf-2 hover:bg-surf-3 border border-border-custom hover:border-brand-accent hover:-translate-y-1 hover:shadow-card-hover text-txt-primary focus:text-txt-primary active:text-txt-primary shadow-xs active:scale-[0.98] transition-all duration-200 outline-none rounded-xl w-full text-base font-semibold cursor-pointer text-center"
             >
-              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 group-focus:text-blue-600 dark:group-focus:text-blue-400 group-active:text-blue-600 dark:group-active:text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-txt-muted group-focus:text-txt-primary group-active:text-txt-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <span>Start Meeting Planner ↓</span>
@@ -866,10 +902,10 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
             <div className="lg:col-span-1 flex flex-col gap-6 sm:gap-8">
 
               {/* Year/Month Calendar Widget */}
-              <div className="premium-card p-6 rounded-2xl transition-colors duration-200 flex flex-col gap-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                  <span className="text-sm font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <svg className="w-4 h-4 text-teal-500 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="premium-card p-6 rounded-2xl flex flex-col gap-4 transition-all duration-200 hover:border-brand-accent hover:-translate-y-1 hover:shadow-card-hover">
+                <div className="flex items-center justify-between border-b border-border-custom pb-2">
+                  <span className="text-sm font-extrabold text-txt-primary flex items-center gap-1.5">
+                    <svg className="w-4 h-4 text-brand-accent-hover" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     {viewDate.toFormat('MMMM yyyy')}
@@ -879,7 +915,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                   <div className="flex gap-1">
                     <button
                       onClick={() => setViewDate(viewDate.minus({ months: 1 }))}
-                      className="p-1.5 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/90 hover:text-teal-500 dark:hover:text-white text-slate-600 dark:text-slate-200 text-xs font-bold leading-none cursor-pointer transition-colors"
+                      className="p-1.5 rounded-md bg-surf-2 border border-border-custom hover:bg-surf-3 hover:text-brand-accent-hover text-txt-secondary text-xs font-bold leading-none cursor-pointer transition-colors"
                       title="Previous Month"
                     >
                       &larr;
@@ -890,13 +926,13 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                         setViewDate(today.startOf('month'));
                         setSelectedDate(today.toISODate() || '');
                       }}
-                      className="px-2.5 py-1.5 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/90 hover:text-teal-500 dark:hover:text-white text-slate-600 dark:text-slate-200 text-[10px] font-bold cursor-pointer transition-colors"
+                      className="px-2.5 py-1.5 rounded-md bg-surf-2 border border-border-custom hover:bg-surf-3 hover:text-brand-accent-hover text-txt-secondary text-[10px] font-bold cursor-pointer transition-colors"
                     >
                       Today
                     </button>
                     <button
                       onClick={() => setViewDate(viewDate.plus({ months: 1 }))}
-                      className="p-1.5 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/90 hover:text-teal-500 dark:hover:text-white text-slate-600 dark:text-slate-200 text-xs font-bold leading-none cursor-pointer transition-colors"
+                      className="p-1.5 rounded-md bg-surf-2 border border-border-custom hover:bg-surf-3 hover:text-brand-accent-hover text-txt-secondary text-xs font-bold leading-none cursor-pointer transition-colors"
                       title="Next Month"
                     >
                       &rarr;
@@ -907,7 +943,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                 {/* Day Labels & Grid */}
                 <div className="grid grid-cols-7 gap-1 text-center font-semibold">
                   {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((wd, i) => (
-                    <span key={`wd-lbl-${i}`} className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase py-1">
+                    <span key={`wd-lbl-${i}`} className="text-[10px] font-bold text-txt-muted uppercase py-1">
                       {wd}
                     </span>
                   ))}
@@ -923,10 +959,10 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                         key={`grid-day-${day.toISODate()}`}
                         onClick={() => setSelectedDate(day.toISODate() || '')}
                         className={`h-7 w-7 rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${isSelected
-                          ? 'bg-teal-600 dark:bg-teal-700 text-white shadow-md scale-105'
+                          ? 'bg-brand-accent text-slate-955 shadow-xs scale-105 font-black'
                           : isToday
-                            ? 'border border-teal-600 text-teal-600 dark:text-teal-400'
-                            : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200'
+                            ? 'border border-brand-accent text-brand-accent-hover font-black'
+                            : 'hover:bg-surf-2 text-txt-primary font-medium'
                           }`}
                       >
                         {day.day}
@@ -936,18 +972,18 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                 </div>
 
                 {/* Active Selection Details */}
-                <div className="mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-2.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-bold">
+                <div className="mt-1 border-t border-border-custom pt-2.5 flex items-center justify-between text-[11px] text-txt-secondary font-bold">
                   <span>Selected Date:</span>
-                  <span className="text-teal-600 dark:text-teal-400">
+                  <span className="text-brand-accent-hover font-black">
                     {selectedDate ? DateTime.fromISO(selectedDate).toFormat('cccc, LLL dd') : ''}
                   </span>
                 </div>
               </div>
 
               {/* Controls & Add City Widget */}
-              <div className="premium-card p-6 rounded-2xl flex flex-col gap-4 transition-colors duration-200">
-                <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-teal-500 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="premium-card p-6 rounded-2xl flex flex-col gap-4 transition-all duration-200 hover:border-brand-accent hover:-translate-y-1 hover:shadow-card-hover">
+                <h2 className="text-sm sm:text-base font-bold text-txt-heading flex items-center gap-2">
+                  <svg className="w-4 h-4 text-brand-accent-hover" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -967,11 +1003,11 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                         setErrorMsg('');
                       }}
                       onKeyDown={(e) => e.key === 'Enter' && handleAddCity(newCity)}
-                      className="flex-1 min-w-0 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/30 transition-all"
+                      className="flex-1 min-w-0 bg-surf-2 border border-border-custom rounded-lg px-3 py-2 text-xs sm:text-sm text-txt-primary placeholder:text-txt-subtle focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/30 transition-all"
                     />
                     <button
                       onClick={() => handleAddCity(newCity)}
-                      className="bg-teal-600 hover:bg-teal-500 text-white dark:text-slate-900 font-bold px-4 py-2 rounded-lg text-xs sm:text-sm transition-colors shadow-md cursor-pointer"
+                      className="bg-brand-accent hover:bg-brand-accent-hover text-slate-955 font-extrabold px-4 py-2 rounded-lg text-xs sm:text-sm transition-all shadow-xs cursor-pointer active:scale-[0.98] border border-slate-950/5"
                     >
                       Add
                     </button>
@@ -979,15 +1015,15 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
 
                   {/* Dynamic Suggestions dropdown from Geocoding API */}
                   {suggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-900 max-h-56 overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-surf-1 border border-border-custom rounded-lg shadow-xl z-50 overflow-hidden divide-y divide-border-soft max-h-56 overflow-y-auto">
                       {suggestions.map((sug) => (
                         <button
                           key={sug.label}
                           onClick={() => handleSelectSuggestion(sug)}
-                          className="w-full text-left px-3 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors flex flex-col gap-0.5"
+                          className="w-full text-left px-3 py-2.5 hover:bg-surf-2 transition-colors flex flex-col gap-0.5"
                         >
-                          <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{sug.label}</span>
-                          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold tracking-wide">{sug.timezone}</span>
+                          <span className="font-bold text-xs text-txt-primary">{sug.label}</span>
+                          <span className="text-[9px] text-txt-muted font-bold tracking-wide">{sug.timezone}</span>
                         </button>
                       ))}
                     </div>
@@ -996,7 +1032,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
 
                 {/* Error Message */}
                 {errorMsg && (
-                  <span className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-955/30 border border-red-200 dark:border-red-900/30 px-3 py-2 rounded-lg">
+                  <span className="text-xs text-danger border border-danger/20 bg-danger-surface px-3 py-2 rounded-lg">
                     {errorMsg}
                   </span>
                 )}
@@ -1006,12 +1042,12 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                   {cities.map((city) => (
                     <div
                       key={city}
-                      className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-950 hover:bg-slate-200/60 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800/80 pl-2.5 pr-1.5 py-1 rounded-full text-xs text-slate-700 dark:text-slate-300 transition-colors"
+                      className="flex items-center gap-1.5 bg-surf-2 border border-border-custom pl-2.5 pr-1.5 py-1 rounded-full text-xs text-txt-primary transition-colors"
                     >
                       <span className="max-w-[12rem] truncate">{city}</span>
                       <button
                         onClick={() => handleRemoveCity(city)}
-                        className="h-4 w-4 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all font-bold"
+                        className="h-4 w-4 rounded-full flex items-center justify-center text-txt-muted hover:text-red-500 transition-all font-bold cursor-pointer"
                       >
                         &times;
                       </button>
@@ -1023,12 +1059,12 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
             </div>
 
             {/* Overlap Planner / Recommendation Widget */}
-            <div className="lg:col-span-2 premium-card p-6 rounded-2xl flex flex-col gap-4 transition-colors duration-200">
+            <div className="lg:col-span-2 premium-card premium-card-static p-6 rounded-2xl flex flex-col gap-4">
 
               {/* Header + Selectors */}
-              <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-3">
-                <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-emerald-500 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-border-custom pb-3">
+                <h2 className="text-sm sm:text-base font-bold text-txt-heading flex items-center gap-2">
+                  <svg className="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   Best Meeting Slots (Working Hours Overlap)
@@ -1037,15 +1073,15 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                 {/* Working Hours Settings Panel */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   {/* Reference City */}
-                  <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 px-2 py-0.5 rounded-lg focus-within:ring-2 focus-within:ring-teal-500/20 focus-within:border-teal-500/50">
-                    <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-200 font-semibold">Local Time For:</span>
+                  <div className="flex items-center gap-1.5 bg-surf-2 border border-border-custom px-2 py-0.5 rounded-lg focus-within:ring-2 focus-within:ring-brand-accent/25 focus-within:border-brand-accent transition-all duration-200 hover:border-brand-accent hover:-translate-y-1 hover:shadow-card-hover">
+                    <span className="text-[10px] sm:text-xs text-txt-secondary font-semibold">Local Time For:</span>
                     <select
                       value={referenceCity}
                       onChange={(e) => setReferenceCity(e.target.value)}
-                      className="bg-transparent text-xs text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer font-semibold border-none"
+                      className="bg-transparent text-xs text-txt-primary focus:outline-none cursor-pointer font-semibold border-none"
                     >
                       {cities.map((city) => (
-                        <option key={`ref-city-${city}`} value={city} className="bg-white dark:bg-slate-950">
+                        <option key={`ref-city-${city}`} value={city} className="bg-surf-1 text-txt-primary">
                           {city}
                         </option>
                       ))}
@@ -1053,27 +1089,27 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                   </div>
 
                   {/* Customizable Workday range */}
-                  <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 px-2 py-0.5 rounded-lg focus-within:ring-2 focus-within:ring-teal-500/20 focus-within:border-teal-500/50">
-                    <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-200 font-semibold">Work Hours:</span>
+                  <div className="flex items-center gap-1.5 bg-surf-2 border border-border-custom px-2 py-0.5 rounded-lg focus-within:ring-2 focus-within:ring-brand-accent/25 focus-within:border-brand-accent transition-all duration-200 hover:border-brand-accent hover:-translate-y-1 hover:shadow-card-hover">
+                    <span className="text-[10px] sm:text-xs text-txt-secondary font-semibold">Work Hours:</span>
                     <select
                       value={workHourStart}
                       onChange={(e) => setWorkHourStart(parseInt(e.target.value))}
-                      className="bg-transparent text-[10px] sm:text-xs text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer font-bold border-none"
+                      className="bg-transparent text-[10px] sm:text-xs text-txt-primary focus:outline-none cursor-pointer font-bold border-none"
                     >
                       {Array.from({ length: 24 }).map((_, i) => (
-                        <option key={`start-h-${i}`} value={i} className="bg-white dark:bg-slate-950">
+                        <option key={`start-h-${i}`} value={i} className="bg-surf-1 text-txt-primary">
                           {formatHourLabel(i)}
                         </option>
                       ))}
                     </select>
-                    <span className="text-[10px] sm:text-xs text-slate-400 font-bold">to</span>
+                    <span className="text-[10px] sm:text-xs text-txt-muted font-bold">to</span>
                     <select
                       value={workHourEnd}
                       onChange={(e) => setWorkHourEnd(parseInt(e.target.value))}
-                      className="bg-transparent text-[10px] sm:text-xs text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer font-bold border-none"
+                      className="bg-transparent text-[10px] sm:text-xs text-txt-primary focus:outline-none cursor-pointer font-bold border-none"
                     >
                       {Array.from({ length: 24 }).map((_, i) => (
-                        <option key={`end-h-${i}`} value={i} className="bg-white dark:bg-slate-950">
+                        <option key={`end-h-${i}`} value={i} className="bg-surf-1 text-txt-primary">
                           {formatHourLabel(i)}
                         </option>
                       ))}
@@ -1083,7 +1119,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
               </div>
 
               {recommendedSlots.length === 0 ? (
-                <div className="text-xs text-slate-500 py-6 text-center">
+                <div className="text-xs text-txt-muted py-6 text-center">
                   No overlapping working hour slots found.
                 </div>
               ) : (
@@ -1093,31 +1129,31 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                     return (
                       <div
                         key={`slot-${slot.utcHour}`}
-                        className="p-4 border rounded-xl flex flex-col justify-between gap-2.5 transition-all bg-gradient-to-br from-emerald-500/5 to-slate-50/50 dark:from-emerald-500/10 dark:to-slate-900 border-emerald-500/20 dark:border-emerald-500/30 ring-1 ring-emerald-500/5 dark:ring-emerald-500/20 shadow-sm hover:scale-[1.01]"
+                        className="premium-card p-5 border border-border-custom rounded-2xl flex flex-col justify-between gap-3 bg-surf-1 shadow-card transition-all duration-200 hover:border-brand-accent hover:-translate-y-1 hover:shadow-card-hover"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-slate-900 dark:text-white tracking-wide">
+                          <span className="text-sm font-bold text-txt-primary tracking-wide">
                             {slot.formattedUtc}
                           </span>
-                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${isPerfect
-                            ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60 font-semibold'
-                            : 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-200 border-slate-200 dark:border-slate-800'
+                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border transition-colors ${isPerfect
+                            ? 'bg-brand-accent-surface text-brand-accent-deep dark:text-brand-accent border-brand-accent-surface-strong font-black'
+                            : 'bg-surf-2 text-txt-secondary border-border-custom font-medium'
                             }`}>
                             {slot.score}/{cities.length} Cities
                           </span>
                         </div>
 
                         {/* Display city times for this slot */}
-                        <div className="flex flex-col gap-1.5 border-t border-slate-100 dark:border-slate-800/30 pt-2">
-                          {cities.map((city) => {
+                        <div className="flex flex-col gap-1.5 border-t border-border-soft pt-2">
+                          {orderedCities.map((city) => {
                             const cell = matrix[slot.utcHour]?.cities[city];
                             if (!cell) return null;
                             return (
                               <div key={`slot-city-${city}`} className="flex items-center justify-between text-xs">
-                                <span className="text-slate-500 dark:text-slate-200 max-w-[8rem] truncate" title={city}>{city}</span>
+                                <span className="text-txt-secondary max-w-[8rem] truncate" title={city}>{city}</span>
                                 <span className={`font-mono ${cell.isWorking
-                                  ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
-                                  : 'text-slate-400 dark:text-slate-400'
+                                  ? 'text-success font-semibold'
+                                  : 'text-txt-muted'
                                   }`}>
                                   {cell.localTime}
                                 </span>
@@ -1127,10 +1163,10 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                         </div>
 
                         {/* Streamlined Schedule Meeting trigger launches the Modal */}
-                        <div className="border-t border-slate-100 dark:border-slate-800/20 pt-2 mt-1">
+                        <div className="border-t border-border-soft pt-2 mt-1">
                           <button
                             onClick={() => handleOpenSchedulerModal(slot)}
-                            className="w-full text-center py-1.5 px-3 bg-slate-100 hover:bg-teal-50/50 dark:bg-slate-900 dark:hover:bg-teal-900/20 border border-slate-200 hover:border-teal-500/50 dark:border-slate-800 dark:hover:border-teal-500/30 text-[10px] text-slate-700 hover:text-teal-600 dark:text-slate-300 dark:hover:text-teal-400 font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="w-full text-center py-1.5 px-3 bg-surf-2 hover:bg-brand-accent-surface border border-border-custom hover:border-brand-accent/35 text-[10px] text-txt-primary hover:text-brand-accent-hover font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1140,8 +1176,8 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                         </div>
 
                         {index === 0 && (
-                          <div className="mt-1 flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-500 font-semibold">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <div className="mt-1 flex items-center gap-1.5 text-[10px] text-brand-accent-deep dark:text-brand-accent font-extrabold">
+                            <span className="h-1.5 w-1.5 rounded-full bg-brand-accent-deep dark:bg-brand-accent animate-pulse" />
                             Top Recommended Option
                           </div>
                         )}
@@ -1158,20 +1194,20 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
           <div className="w-full flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 px-1">
               <div className="flex flex-col sm:flex-row sm:items-center gap-3.5">
-                <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-teal-500 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <h2 className="text-sm sm:text-base font-bold text-txt-heading flex items-center gap-2">
+                  <svg className="w-4 h-4 text-brand-accent-hover" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   24-Hour Timeline Comparison
                 </h2>
 
                 {/* 12/24H Toggle */}
-                <div className="flex bg-slate-200/80 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-300 dark:border-slate-700/60 shadow-sm w-fit text-[9px] sm:text-[10px] font-bold">
+                <div className="flex bg-surf-2 rounded-lg p-0.5 border border-border-custom shadow-xs w-fit text-[9px] sm:text-[10px] font-bold">
                   <button
                     onClick={() => setIs24Hour(true)}
                     className={`px-2.5 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${is24Hour
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                      ? 'bg-brand-accent text-slate-955 shadow-xs'
+                      : 'text-txt-muted hover:text-txt-primary'
                       }`}
                   >
                     24H
@@ -1179,8 +1215,8 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                   <button
                     onClick={() => setIs24Hour(false)}
                     className={`px-2.5 py-0.5 sm:py-1 rounded-md transition-all cursor-pointer ${!is24Hour
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                      ? 'bg-brand-accent text-slate-955 shadow-xs'
+                      : 'text-txt-muted hover:text-txt-primary'
                       }`}
                   >
                     12H
@@ -1189,24 +1225,16 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
               </div>
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] sm:text-xs">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 bg-amber-50/20 dark:bg-white border border-amber-200/60 dark:border-slate-200 rounded-sm" />
-                  <span className="text-slate-500 dark:text-slate-200">
+                  <span className="w-3 h-3 bg-brand-accent border border-brand-accent rounded-sm" />
+                  <span className="text-txt-secondary font-bold">
                     Work Hours ({formatHourLabel(workHourStart)} - {formatHourLabel(workHourEnd)})
                   </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 bg-slate-100 dark:bg-slate-900 rounded-sm border border-slate-300 dark:border-slate-800" />
-                  <span className="text-slate-500 dark:text-slate-200">Night</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 bg-red-500/25 border border-red-500 rounded-sm" />
-                  <span className="text-slate-500 dark:text-slate-200">Current Hour</span>
                 </div>
               </div>
             </div>
 
             <TimezoneTimeline
-              cities={cities}
+              cities={orderedCities}
               matrix={matrix}
               currentUtcHour={currentRefHour}
               is24Hour={is24Hour}
@@ -1218,34 +1246,34 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
         {/* Event Scheduler Dialog Modal */}
         {isScheduleModalOpen && activeSchedulingSlot && (
           <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200 text-slate-900 dark:text-slate-100">
+            <div className="bg-surf-1 border border-border-custom rounded-2xl max-w-lg w-full p-6 shadow-xl flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-150 text-txt-primary">
 
               {/* Modal Header */}
-              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                <h3 className="text-base font-extrabold flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex items-center justify-between border-b border-border-custom pb-3">
+                <h3 className="text-base font-extrabold text-txt-heading flex items-center gap-2">
+                  <svg className="w-5 h-5 text-brand-accent-hover" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   Configure Calendar Event
                 </h3>
                 <button
                   onClick={() => setIsScheduleModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors text-xl font-bold leading-none"
+                  className="text-txt-muted hover:text-txt-primary p-1 hover:bg-surf-2 rounded-lg cursor-pointer transition-colors text-xl font-bold leading-none"
                 >
                   &times;
                 </button>
               </div>
 
               {/* Aligned times preview */}
-              <div className="bg-teal-500/5 dark:bg-teal-950/20 border border-teal-500/10 rounded-xl p-3.5 flex flex-col gap-1.5">
-                <span className="text-[9px] font-mono tracking-widest text-teal-600 dark:text-teal-400 uppercase font-extrabold flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-pulse" />
+              <div className="bg-success-surface border border-success rounded-xl p-3.5 flex flex-col gap-1.5">
+                <span className="text-[9px] font-mono tracking-widest text-success uppercase font-extrabold flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                   Proposed Meeting Time
                 </span>
-                <div className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-relaxed">
+                <div className="text-xs font-bold text-txt-primary leading-relaxed">
                   {activeSchedulingSlot.formattedUtc}
                 </div>
-                <div className="flex flex-wrap gap-x-3.5 gap-y-1 mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="flex flex-wrap gap-x-3.5 gap-y-1 mt-1 text-[10px] text-txt-muted">
                   {cities.map((city) => {
                     const refZone = cityTimezones[referenceCity] || resolveTimeZone(referenceCity);
                     const startLocal = DateTime.fromISO(selectedDate, { zone: refZone }).startOf('day').plus({ hours: activeSchedulingSlot.utcHour });
@@ -1253,7 +1281,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                     const cityLocal = startLocal.setZone(cityZone);
                     return (
                       <span key={`modal-city-${city}`} className="font-mono">
-                        {city.split(',')[0]}: <span className="font-bold text-slate-700 dark:text-slate-200">{cityLocal.toFormat('h:mm a')}</span>
+                        {city.split(',')[0]}: <span className="font-bold text-txt-primary">{cityLocal.toFormat('h:mm a')}</span>
                       </span>
                     );
                   })}
@@ -1263,7 +1291,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
               {/* Form Inputs */}
               <div className="flex flex-col gap-3.5">
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="event-title-input" className="text-[10px] font-mono tracking-wider font-extrabold text-slate-400 dark:text-slate-500 uppercase">
+                  <label htmlFor="event-title-input" className="text-[10px] font-mono tracking-wider font-extrabold text-txt-muted uppercase">
                     Event Title
                   </label>
                   <input
@@ -1272,19 +1300,19 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                     value={eventTitle}
                     onChange={(e) => setEventTitle(e.target.value)}
                     placeholder="e.g. Project Sync Aligned"
-                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20"
+                    className="bg-surf-2 border border-border-custom rounded-lg px-3 py-2 text-xs sm:text-sm text-txt-primary focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/25"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="meeting-duration-select" className="text-[10px] font-mono tracking-wider font-extrabold text-slate-400 dark:text-slate-500 uppercase">
+                  <label htmlFor="meeting-duration-select" className="text-[10px] font-mono tracking-wider font-extrabold text-txt-muted uppercase">
                     Meeting Duration
                   </label>
                   <select
                     id="meeting-duration-select"
                     value={eventDuration}
                     onChange={(e) => setEventDuration(parseInt(e.target.value))}
-                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20 cursor-pointer font-semibold"
+                    className="bg-surf-2 border border-border-custom rounded-lg px-3 py-2 text-xs sm:text-sm text-txt-primary focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/25 cursor-pointer font-semibold"
                   >
                     <option value={30}>30 Minutes</option>
                     <option value={60}>1 Hour</option>
@@ -1295,7 +1323,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="meeting-description-textarea" className="text-[10px] font-mono tracking-wider font-extrabold text-slate-400 dark:text-slate-500 uppercase">
+                  <label htmlFor="meeting-description-textarea" className="text-[10px] font-mono tracking-wider font-extrabold text-txt-muted uppercase">
                     Description / Notes
                   </label>
                   <textarea
@@ -1304,34 +1332,34 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                     value={eventDescription}
                     onChange={(e) => setEventDescription(e.target.value)}
                     placeholder="Add meeting links, agendas, or dial-in details..."
-                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20 resize-none font-sans"
+                    className="bg-surf-2 border border-border-custom rounded-lg px-3 py-2 text-xs sm:text-sm text-txt-primary focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/25 placeholder:text-txt-subtle resize-none font-sans"
                   />
                 </div>
               </div>
 
               {/* Actions Footer */}
-              <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-150 dark:border-slate-800 pt-4 mt-2">
+              <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border-custom pt-4 mt-2">
                 <button
                   onClick={() => setIsScheduleModalOpen(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold transition-colors cursor-pointer text-slate-700 dark:text-slate-300"
+                  className="px-4 py-2 bg-surf-2 hover:bg-surf-3 border border-border-custom rounded-lg text-xs font-bold transition-colors cursor-pointer text-txt-primary"
                 >
                   Cancel
                 </button>
 
                 <button
                   onClick={handleShareEvent}
-                  className="px-4 py-2 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-slate-700 dark:text-slate-200 shadow-sm"
+                  className="px-4 py-2 bg-surf-1 hover:bg-surf-2 border border-border-custom rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-txt-primary shadow-xs"
                 >
                   {isShareCopied ? (
                     <>
-                      <svg className="w-3.5 h-3.5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-3.5 h-3.5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                       Copied!
                     </>
                   ) : (
                     <>
-                      <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-3.5 h-3.5 text-txt-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 10.742L12 9.085l3.316 1.657m-6.632 0l-3.316-1.657m0 0a2 2 0 100-3.316 2 2 0 000 3.316zm10.79 0l3.316-1.657m0 0a2 2 0 100-3.316 2 2 0 000 3.316zm-7.474 6.632a2 2 0 100-3.316 2 2 0 000 3.316z" />
                       </svg>
                       Share
@@ -1340,7 +1368,7 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                 </button>
                 <button
                   onClick={handleDownloadInvite}
-                  className="px-4 py-2 bg-slate-100 hover:bg-teal-50/50 dark:bg-slate-955 dark:hover:bg-teal-900/20 border border-slate-200 hover:border-teal-500/50 dark:border-slate-800 dark:hover:border-teal-500/30 rounded-lg text-xs font-bold transition-all cursor-pointer text-slate-700 dark:text-slate-305"
+                  className="px-4 py-2 bg-surf-2 hover:bg-brand-accent-surface border border-border-custom hover:border-brand-accent/35 rounded-lg text-xs font-bold transition-all cursor-pointer text-txt-primary"
                 >
                   Download
                 </button>
@@ -1349,9 +1377,9 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                   href={getGoogleCalendarUrl(activeSchedulingSlot)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-slate-100 hover:bg-blue-50/50 dark:bg-slate-955 dark:hover:bg-blue-950/20 border border-slate-200 hover:border-blue-500/50 dark:border-slate-800 dark:hover:border-blue-500/30 rounded-lg text-xs font-bold transition-all cursor-pointer text-slate-700 dark:text-slate-305 flex items-center gap-1.5"
+                  className="px-4 py-2 bg-surf-2 hover:bg-brand-accent-surface border border-border-custom hover:border-brand-accent/35 rounded-lg text-xs font-bold transition-all cursor-pointer text-txt-primary flex items-center gap-1.5"
                 >
-                  <svg className="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-3.5 h-3.5 text-brand-accent-hover" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                   <span>Google Calendar</span>
@@ -1361,8 +1389,8 @@ export default function Home({ initialParams = {} }: HomeClientProps) {
                   onClick={handleSaveSettings}
                   disabled={eventTitle.trim() === ''}
                   className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${eventTitle.trim() !== ''
-                    ? 'bg-teal-750 hover:bg-teal-600 text-white dark:text-slate-900 cursor-pointer shadow-md shadow-teal-900/10'
-                    : 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 border border-slate-200 dark:border-slate-800 cursor-not-allowed opacity-50'
+                    ? 'bg-brand-accent hover:bg-brand-accent-hover text-slate-955 cursor-pointer shadow-xs border border-slate-950/5'
+                    : 'bg-surf-2 text-txt-muted border border-border-custom cursor-not-allowed opacity-50'
                     }`}
                 >
                   Save

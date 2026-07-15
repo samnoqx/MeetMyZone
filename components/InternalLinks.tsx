@@ -36,7 +36,7 @@ export default function InternalLinks() {
           <Link
             key={pairing.slug}
             href={`/convert/${pairing.slug}`}
-            className="text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-cyan-400 transition duration-150 font-medium hover:underline truncate"
+            className="text-slate-500 hover:text-brand-accent-hover dark:text-slate-400 dark:hover:text-brand-accent transition duration-150 font-medium hover:underline truncate"
           >
             {pairing.label}
           </Link>

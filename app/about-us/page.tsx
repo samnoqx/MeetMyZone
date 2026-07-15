@@ -17,11 +17,6 @@ const ArrowLeftIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
-const HomeIcon = ({ size = 16 }: { size?: number }) => (
-  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: size, height: size }}>
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-  </svg>
-);
 
 export default function AboutUsPage() {
   const aboutSchema = {
@@ -39,7 +34,7 @@ export default function AboutUsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-background text-txt-primary flex flex-col font-sans transition-colors duration-200">
       
       {/* Sanitize and inject JSON-LD schema */}
       <script
@@ -47,16 +42,12 @@ export default function AboutUsPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutSchema).replace(/</g, '\\u003c') }}
       />
       
-      <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
-        <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition">
+      <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 border-b border-border-custom flex justify-between items-center bg-background">
+        <Link href="/" className="flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-brand-accent transition duration-200">
           <ArrowLeftIcon size={16} />
-          <span>Back to Planner</span>
+          <span>Back to Home</span>
         </Link>
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition font-medium">
-            <HomeIcon size={16} />
-            <span>Home</span>
-          </Link>
+        <div className="flex items-center pr-8 sm:pr-10">
           <ThemeToggle />
         </div>
       </header>
@@ -66,100 +57,181 @@ export default function AboutUsPage() {
           
           {/* Logo & Headline */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-6 mb-6">
-            <div className="flex flex-col items-center select-none shrink-0">
-              <img src="/logo.png" alt="MeetMyZone Logo" className="h-20 md:h-24 w-auto object-contain" />
-              <span className="font-black text-2xl md:text-3xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-600 dark:bg-clip-text dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:to-cyan-400 -mt-3 md:-mt-4">
-                MeetMyZone
-              </span>
+            <div className="flex flex-col items-center select-none shrink-0 gap-1">
+              <img src="/logo.png" alt="MeetMyZone Logo" className="h-12 w-auto object-contain" />
+              <div className="h-6 md:h-[30px] flex items-center">
+                <img
+                  src="/wordmark.png"
+                  alt="MeetMyZone"
+                  className="h-6 md:h-[30px] w-auto object-contain dark:hidden"
+                />
+                <img
+                  src="/wordmark-dark.png"
+                  alt="MeetMyZone"
+                  className="h-6 md:h-[30px] w-auto object-contain hidden dark:block"
+                />
+              </div>
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white leading-tight">
-                Built by a Developer, For Remote Teams
+                About Us
               </h1>
-              <p className="text-xs sm:text-sm text-blue-500 dark:text-blue-400 font-medium">
-                Designing visually intuitive solutions for global coordination challenges.
+              <p className="text-sm sm:text-base text-brand-accent font-semibold">
+                Built to Make Global Time Coordination Simple
               </p>
             </div>
           </div>
 
           <div className="flex flex-col gap-6 text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-200">
             
+            <p>
+              MeetMyZone is a software platform dedicated to helping people coordinate time across cities, countries, and time zones with confidence. Whether you&apos;re scheduling an international meeting, planning remote collaboration, comparing business hours, or simply checking the current local time anywhere in the world, MeetMyZone provides reliable tools designed to make global time management easier.
+            </p>
+            <p>
+              Our goal is straightforward: remove the complexity of timezone calculations so individuals, businesses, students, freelancers, and distributed teams can focus on productive communication instead of manual conversions.
+            </p>
+
             <section className="flex flex-col gap-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-xl">
               <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                Core Editorial & Ownership Info
-              </h2>
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                <div className="bg-teal-500/10 dark:bg-teal-600/20 border border-teal-500/20 text-teal-600 dark:text-teal-400 p-4 rounded-xl font-mono text-center w-full sm:w-auto">
-                  <div className="font-extrabold text-sm">samnoqx</div>
-                  <div className="text-[10px] uppercase font-bold tracking-wider mt-0.5 opacity-80">Creator & Systems Engineer</div>
-                </div>
-                <div className="flex-1 text-[11px] sm:text-xs">
-                  <p className="mb-1"><strong>Affiliation:</strong> B.Tech Student in Computer Science and Engineering</p>
-                  <p className="mb-1"><strong>Project Domain:</strong> meetmyzone.com</p>
-                  <p><strong>Support Channel:</strong> <span className="font-semibold text-teal-600 dark:text-teal-400">support@meetmyzone.com</span></p>
-                </div>
-              </div>
-            </section>
-            
-            <section className="flex flex-col gap-3">
-              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                The Origin Story
+                Who We Are
               </h2>
               <p>
-                MeetMyZone was born out of personal frustration during my first year as a B.Tech computer science and engineering student. As part of my coursework and extracurricular open-source projects, I regularly collaborated with other student developers, peers, and mentors across different parts of the world—including regions in San Francisco, London, Frankfurt, and Tokyo. I quickly realized how incredibly difficult it was to arrange simple video calls or coordination syncs without running into timezone calculation confusion.
+                MeetMyZone develops practical tools that simplify global scheduling and time coordination. Our platform combines accuracy, usability, and performance to deliver a modern experience for anyone working across multiple time zones.
               </p>
               <p>
-                Every time we wanted to set up a meeting, we found ourselves wasting time exchanging messages, manually converting hours on our fingers, or searching the web to verify whether a specific location had transitioned to daylight saving time. When I looked for tools online, I found that existing timezone planners were either cluttered with heavy, distracting advertisements, locked behind payment systems, or relied on outdated table layouts designed in the early web era. 
+                We continuously improve our products by refining user experience, expanding features, and ensuring our calculations stay aligned with official timezone standards and daylight saving time (DST) updates.
               </p>
               <p>
-                Instead of searching for a compromise solution, I decided to take it on as an engineering challenge. I wanted to apply the web development concepts I was learning in college to ship a real-world, premium-feeling application. I built this tool to solve my own timezone problems—and hopefully yours too.
+                Every feature is designed with simplicity, speed, and reliability in mind.
               </p>
             </section>
 
             <section className="flex flex-col gap-3">
               <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                Why This Project Matters
+                What We Build
               </h2>
               <p>
-                For a computer science student, it is easy to copy tutorial templates and call it a day. MeetMyZone is different; it represents a commitment to building production-grade software that handles real-world complexity:
+                MeetMyZone offers a growing collection of productivity tools designed for international collaboration, including:
               </p>
-              <ul className="list-disc list-inside ml-2 flex flex-col gap-3">
-                <li>
-                  <strong>🎯 Real-World Problem Solving:</strong> This isn&apos;t an academic clone. The slider matrix and dynamic coordinates system are designed to process complex daylight saving modifications (DST) and multi-city timezone changes on the fly.
-                </li>
-                <li>
-                  <strong>💻 Modern Engineering:</strong> I built the application using Next.js 14 App Router, TypeScript, Tailwind CSS, and Luxon. Working with these industry-standard frameworks taught me how to manage client-side state transitions, handle hydration timing, and write performant web logic.
-                </li>
-                <li>
-                  <strong>🌍 Open & Accessible:</strong> MeetMyZone is free forever, has no paywalls, and does not require users to register or sign up. It is made for students, freelancers, independent contractors, and remote teams globally.
-                </li>
-                <li>
-                  <strong>📈 Continuous Learning:</strong> Shipping real code to production has taught me valuable lessons that classroom theory alone cannot cover—from resolving browser back/forward cache inconsistencies to design accessibility.
-                </li>
+              <ul className="list-disc list-inside ml-2 flex flex-col gap-3 text-slate-600 dark:text-slate-200">
+                <li>Meeting Planner</li>
+                <li>Time Zone Converter</li>
+                <li>City Time Converter</li>
+                <li>Current Local Time</li>
+                <li>World Clock</li>
+                <li>Business Hour Overlap Tools</li>
+                <li>Time Difference Comparison</li>
+                <li>Global Scheduling Utilities</li>
               </ul>
+              <p>
+                These tools are built to support professionals, remote teams, freelancers, students, educators, travelers, businesses, and anyone who works across different regions of the world.
+              </p>
             </section>
 
             <section className="flex flex-col gap-3">
               <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                My Commitment as a Student Developer
+                Our Mission
               </h2>
               <p>
-                As a first-year engineering student, I want to prove that you don&apos;t need to be a massive tech corporation to ship software that is reliable, clean, and helpful. Every single feature inside MeetMyZone—from the 12/24-hour timeline display toggle to the carefully checked theme-specific gradients—is built on user feedback, iterative commits, and learning from design principles.
+                Our mission is to make global time coordination accessible, accurate, and effortless.
               </p>
               <p>
-                This application serves as a core piece of my personal engineering portfolio, but it is also a tool I use on a daily basis to connect with classmates, work on hackathons, and plan project meetings. I am dedicated to maintaining this platform, checking timezone database accuracy with official IANA updates, and continually improving the user experience.
+                As work, education, and communication become increasingly international, scheduling across multiple time zones should not be difficult. MeetMyZone is committed to building tools that eliminate confusion and help users make informed scheduling decisions quickly.
+              </p>
+              <p>
+                We believe technology should simplify everyday tasks through clean design, reliable calculations, and an intuitive user experience.
+              </p>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
+                Why MeetMyZone Matters
+              </h2>
+              <p>
+                Modern organizations often collaborate across continents, making accurate timezone coordination essential. Even small scheduling mistakes can affect meetings, project deadlines, customer support, and business communication.
+              </p>
+              <p>
+                MeetMyZone helps reduce these challenges by providing clear visual comparisons, business-hour overlap calculations, current local time information, and reliable timezone conversion tools that support confident decision-making.
+              </p>
+              <p>
+                Our platform is designed to serve both occasional users and professionals who rely on accurate scheduling every day.
+              </p>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
+                Our Commitment
+              </h2>
+              <p>
+                MeetMyZone is committed to delivering a dependable platform that users can trust.
+              </p>
+              <p>
+                We continuously work to:
+              </p>
+              <ul className="list-disc list-inside ml-2 flex flex-col gap-3 text-slate-600 dark:text-slate-200">
+                <li>Maintain accurate timezone calculations.</li>
+                <li>Keep daylight saving time (DST) information up to date.</li>
+                <li>Improve platform performance and accessibility.</li>
+                <li>Expand our collection of scheduling and timezone tools.</li>
+                <li>Deliver a consistent experience across desktop and mobile devices.</li>
+                <li>Build features that solve real-world coordination challenges.</li>
+              </ul>
+              <p>
+                Our focus is on creating practical software that remains simple, reliable, and easy to use.
+              </p>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
+                Accuracy & Reliability
+              </h2>
+              <p>
+                Timezone data changes periodically as governments update regional time policies and daylight saving rules.
+              </p>
+              <p>
+                MeetMyZone is designed to reflect these changes using recognized timezone standards, helping users access reliable scheduling information whenever possible. While every effort is made to maintain accuracy, we continuously monitor improvements and refine the platform to provide dependable results.
+              </p>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
+                Privacy & User Trust
+              </h2>
+              <p>
+                User trust is an important part of everything we build.
+              </p>
+              <p>
+                MeetMyZone is committed to respecting user privacy and providing a transparent experience. Our platform is designed to deliver useful tools without unnecessary complexity, and we continually work to improve security, performance, and overall reliability.
+              </p>
+              <p>
+                For detailed information about how information is handled, please review our <Link href="/privacy-policy" className="text-brand-accent hover:text-brand-accent-hover hover:underline font-semibold">Privacy Policy</Link> and <Link href="/terms-of-service" className="text-brand-accent hover:text-brand-accent-hover hover:underline font-semibold">Terms of Service</Link>.
+              </p>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
+                Looking Ahead
+              </h2>
+              <p>
+                MeetMyZone continues to evolve as new tools, improvements, and features are introduced.
+              </p>
+              <p>
+                Our long-term vision is to become a trusted destination for global time coordination by providing accurate, user-friendly solutions that help individuals and organizations schedule confidently across time zones.
+              </p>
+              <p>
+                We remain committed to continuous improvement, thoughtful product development, and delivering practical value to users around the world.
               </p>
             </section>
 
             <section className="flex flex-col gap-3 border-t border-slate-100 dark:border-slate-800 pt-6">
               <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                Let&apos;s Connect
+                Contact Us
               </h2>
               <p>
-                Do you have feedback on the timeline sliders? Found an edge-case calculation bug for a particular location? Or perhaps you are a fellow developer who wants to collaborate on open-source web projects? 
+                We welcome feedback, suggestions, partnership inquiries, and support requests.
               </p>
               <p>
-                I review every message and support request personally. You can read more about how to get in touch on the dedicated <Link href="/contact-us" className="text-teal-600 hover:underline font-semibold">Contact Us</Link> page.
+                If you have questions about MeetMyZone or need assistance using any of our tools, please visit our <Link href="/contact-us" className="text-brand-accent hover:text-brand-accent-hover hover:underline font-semibold">Contact Us</Link> page. Our team reviews inquiries carefully and values feedback that helps improve the platform.
               </p>
             </section>
 

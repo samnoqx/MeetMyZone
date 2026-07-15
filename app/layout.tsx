@@ -8,6 +8,15 @@ export const metadata: Metadata = {
   title: "MeetMyZone — Global Time Zone Converter & Plan Perfect Meetings Worldwide",
   description: "Instantly check live times across 190+ countries with MeetMyZone's precision World Clock, or visualize working-hour overlaps to find the perfect meeting slot. Save your favorite locations, share schedules with one click, and coordinate global teams—all for free, with no login required.",
   manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" }
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }
+    ]
+  },
   appleWebApp: {
     title: "MeetMyZone"
   },
@@ -47,12 +56,12 @@ export default function RootLayout({
           (function() {
             function applyTheme() {
               try {
-                var t = localStorage.getItem('theme');
-                if (t === 'light') {
-                  document.documentElement.classList.remove('dark');
-                } else {
-                  // Default to dark mode for everyone
+                var t = localStorage.getItem('meetmyzone-theme') || localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+                if (t === 'dark') {
                   document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
                 }
               } catch(e) {}
             }
@@ -72,7 +81,7 @@ export default function RootLayout({
           })();
         `}} />
       </head>
-      <body className="min-h-full flex flex-col bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+      <body className="min-h-full flex flex-col bg-background text-txt-primary transition-colors duration-150 font-sans">
         {/* Google AdSense / CMP Integration */}
         <Script
           async

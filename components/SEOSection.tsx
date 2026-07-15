@@ -131,7 +131,7 @@ export default function SEOSection({ zoneA: propZoneA, zoneB: propZoneB, zones =
   };
 
   return (
-    <section id="how-it-works" className="w-full bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-12 sm:py-16 transition-colors duration-200">
+    <section id="how-it-works" className="w-full bg-background border-t border-slate-200 dark:border-slate-900 py-12 sm:py-16 transition-colors duration-200">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(getCombinedSchema()).replace(/</g, '\\u003c') }}
@@ -182,7 +182,7 @@ export default function SEOSection({ zoneA: propZoneA, zoneB: propZoneB, zones =
               </h3>
               <div className="flex flex-col border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden divide-y divide-slate-200 dark:divide-slate-800 shadow-sm">
                 <details className="group p-4 sm:p-5 cursor-pointer">
-                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-teal-500 transition-colors">
+                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-brand-accent-hover transition-colors">
                     <span>How do I convert {zoneA.displayName} to {zoneB.displayName}?</span>
                     <span className="transition-transform duration-300 group-open:rotate-180">
                       <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -196,7 +196,7 @@ export default function SEOSection({ zoneA: propZoneA, zoneB: propZoneB, zones =
                 </details>
 
                 <details className="group p-4 sm:p-5 cursor-pointer">
-                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-teal-500 transition-colors">
+                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-brand-accent-hover transition-colors">
                     <span>What is the time difference?</span>
                     <span className="transition-transform duration-300 group-open:rotate-180">
                       <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -331,7 +331,7 @@ export default function SEOSection({ zoneA: propZoneA, zoneB: propZoneB, zones =
               <div className="flex flex-col border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden divide-y divide-slate-200 dark:divide-slate-800 shadow-sm">
 
                 <details className="group p-4 sm:p-5 cursor-pointer">
-                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-teal-500 transition-colors">
+                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-brand-accent-hover transition-colors">
                     <span>What is MeetMyZone?</span>
                     <span className="transition-transform duration-300 group-open:rotate-180">
                       <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -345,7 +345,7 @@ export default function SEOSection({ zoneA: propZoneA, zoneB: propZoneB, zones =
                 </details>
 
                 <details className="group p-4 sm:p-5 cursor-pointer">
-                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-teal-500 transition-colors">
+                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-brand-accent-hover transition-colors">
                     <span>How does the timezone overlap planner work?</span>
                     <span className="transition-transform duration-300 group-open:rotate-180">
                       <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -359,7 +359,7 @@ export default function SEOSection({ zoneA: propZoneA, zoneB: propZoneB, zones =
                 </details>
 
                 <details className="group p-4 sm:p-5 cursor-pointer">
-                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-teal-500 transition-colors">
+                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-brand-accent-hover transition-colors">
                     <span>Why is UTC reference important for global meetings?</span>
                     <span className="transition-transform duration-300 group-open:rotate-180">
                       <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -373,7 +373,7 @@ export default function SEOSection({ zoneA: propZoneA, zoneB: propZoneB, zones =
                 </details>
 
                 <details className="group p-4 sm:p-5 cursor-pointer">
-                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-teal-500 transition-colors">
+                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-brand-accent-hover transition-colors">
                     <span>Can I customize the working hours in the timeline?</span>
                     <span className="transition-transform duration-300 group-open:rotate-180">
                       <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -387,7 +387,7 @@ export default function SEOSection({ zoneA: propZoneA, zoneB: propZoneB, zones =
                 </details>
 
                 <details className="group p-4 sm:p-5 cursor-pointer">
-                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-teal-500 transition-colors">
+                  <summary className="flex justify-between items-center list-none font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 hover:text-brand-accent-hover transition-colors">
                     <span>How do I share meeting times with my team?</span>
                     <span className="transition-transform duration-300 group-open:rotate-180">
                       <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -139,3 +139,20 @@ export function getSlugForCityAndZone(cityName: string, zoneName: string): strin
   return cityName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
 
+export const ALL_PAIRINGS = [
+  'est-to-ist', 'ist-to-est', 'pst-to-est', 'est-to-pst', 'utc-to-ist', 'ist-to-utc',
+  'gmt-to-est', 'est-to-gmt', 'cet-to-est', 'est-to-cet', 'london-to-new-york',
+  'new-york-to-london', 'singapore-to-est', 'est-to-singapore', 'sgt-to-est',
+  'est-to-sgt', 'mst-to-est', 'est-to-mst', 'cst-to-est', 'est-to-cst',
+  'ast-to-est', 'est-to-ast', 'jst-to-aest', 'aest-to-jst', 'kst-to-jst',
+  'jst-to-kst', 'tokyo-to-london', 'london-to-tokyo', 'paris-to-new-york',
+  'new-york-to-paris', 'singapore-to-london', 'london-to-singapore',
+  'sydney-to-tokyo', 'tokyo-to-sydney'
+];
+
+export function isTimezonePairing(pairingSlug: string): boolean {
+  const parts = pairingSlug.toLowerCase().split('-to-');
+  if (parts.length !== 2) return false;
+  return !!(TIMEZONE_ABBR_MAP[parts[0]] && TIMEZONE_ABBR_MAP[parts[1]]);
+}
+
