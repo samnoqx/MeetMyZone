@@ -14,11 +14,18 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     const syncThemeState = () => {
-      const savedTheme = localStorage.getItem('meetmyzone-theme') || localStorage.getItem('theme');
+      const savedTheme = sessionStorage.getItem('meetmyzone-theme');
       if (savedTheme === 'light' || savedTheme === 'dark') {
         setTheme(savedTheme as ThemeType);
       } else {
         setTheme('light');
+      }
+    };
+
+    const handleCustomEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<ThemeType>;
+      if (customEvent.detail === 'light' || customEvent.detail === 'dark') {
+        setTheme(customEvent.detail);
       }
     };
 
@@ -28,13 +35,13 @@ export default function ThemeToggle() {
       setMounted(true);
     });
 
-    window.addEventListener('storage', syncThemeState);
     window.addEventListener('pageshow', syncThemeState);
+    window.addEventListener('meetmyzone-theme-change', handleCustomEvent);
 
     return () => {
       cancelAnimationFrame(animFrame);
-      window.removeEventListener('storage', syncThemeState);
       window.removeEventListener('pageshow', syncThemeState);
+      window.removeEventListener('meetmyzone-theme-change', handleCustomEvent);
     };
   }, []);
 
@@ -80,9 +87,8 @@ export default function ThemeToggle() {
 
     // Persist user selection
     try {
-      localStorage.setItem('meetmyzone-theme', newTheme);
-      // Deprecate legacy key
-      localStorage.removeItem('theme');
+      sessionStorage.setItem('meetmyzone-theme', newTheme);
+      window.dispatchEvent(new CustomEvent('meetmyzone-theme-change', { detail: newTheme }));
     } catch {}
   };
 

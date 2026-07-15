@@ -316,3 +316,21 @@ export function generateTimezoneMatrix(
   
   return matrix;
 }
+
+/**
+ * Deduplicates search suggestions based on both their display label and IANA timezone.
+ * Preserves the original ordering of the first occurrence.
+ */
+export function deduplicateSuggestions<T extends { label: string; timezone: string }>(list: T[]): T[] {
+  const uniqueList: T[] = [];
+  const seen = new Set<string>();
+  for (const item of list) {
+    const key = `${item.label.trim().toLowerCase()}|${item.timezone}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueList.push(item);
+    }
+  }
+  return uniqueList;
+}
+

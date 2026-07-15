@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { DateTime } from 'luxon';
-import { ZONE_SEARCH_INDEX } from '@/utils/timezone';
+import { ZONE_SEARCH_INDEX, deduplicateSuggestions } from '@/utils/timezone';
 
 export interface ClockState {
   city: string;
@@ -228,13 +228,13 @@ export function useTimezoneClock({
       setMounted(true);
       setCurrentTime(DateTime.now());
 
-      // Read initial local storage safely
+      // Read initial session storage safely
       try {
         if (persistSelection) {
-          const c1 = localStorage.getItem(c1Key);
-          const ct1 = localStorage.getItem(ct1Key);
-          const z1 = localStorage.getItem(z1Key);
-          const r1 = localStorage.getItem(`${storageKeyPrefix}_r1`);
+          const c1 = sessionStorage.getItem(c1Key);
+          const ct1 = sessionStorage.getItem(ct1Key);
+          const z1 = sessionStorage.getItem(z1Key);
+          const r1 = sessionStorage.getItem(`${storageKeyPrefix}_r1`);
           if (c1 && z1) {
             setClock1({ city: c1, country: ct1 || '', timezone: z1, region: r1 || undefined });
           } else if (initialClock1) {
@@ -289,10 +289,10 @@ export function useTimezoneClock({
         }
 
         if (persistSelection) {
-          const c2 = localStorage.getItem(c2Key);
-          const ct2 = localStorage.getItem(ct2Key);
-          const z2 = localStorage.getItem(z2Key);
-          const r2 = localStorage.getItem(`${storageKeyPrefix}_r2`);
+          const c2 = sessionStorage.getItem(c2Key);
+          const ct2 = sessionStorage.getItem(ct2Key);
+          const z2 = sessionStorage.getItem(z2Key);
+          const r2 = sessionStorage.getItem(`${storageKeyPrefix}_r2`);
           if (c2 && z2) {
             setClock2({ city: c2, country: ct2 || '', timezone: z2, region: r2 || undefined });
           } else if (initialClock2) {
@@ -363,47 +363,37 @@ export function useTimezoneClock({
         .then(res => res.json())
         .then(data => {
           if (data && data.results) {
-            const seen = new Set<string>();
-            const list: { label: string; timezone: string }[] = [];
-            for (const item of data.results) {
+            const list = data.results.map((item: { name: string; admin1?: string; country?: string; timezone?: string }) => {
               const tz = item.timezone || 'UTC';
-              if (seen.has(tz.toLowerCase())) continue;
-              seen.add(tz.toLowerCase());
-
               let name = item.name;
               if (name.toLowerCase() === 'calcutta') {
                 name = 'Kolkata';
               }
-              list.push({
+              return {
                 label: `${name}${item.admin1 ? `, ${item.admin1}` : ''}${item.country ? `, ${item.country}` : ''}`,
                 timezone: tz
-              });
-            }
-            setSuggestions(list);
+              };
+            });
+            setSuggestions(deduplicateSuggestions(list));
           } else {
             setSuggestions([]);
           }
           setIsLoading(false);
         })
         .catch(() => {
-          const seen = new Set<string>();
-          const matches: { label: string; timezone: string }[] = [];
-          const filtered = ZONE_SEARCH_INDEX.filter(item => item.key.includes(q) || item.zone.toLowerCase().includes(q));
-          for (const item of filtered) {
-            if (seen.has(item.zone.toLowerCase())) continue;
-            seen.add(item.zone.toLowerCase());
-
-            let label = item.label;
-            if (label.toLowerCase() === 'calcutta') {
-              label = 'Kolkata';
-            }
-            matches.push({
-              label: `${label} (${item.zone})`,
-              timezone: item.zone
+          const matches = ZONE_SEARCH_INDEX
+            .filter(item => item.key.includes(q) || item.zone.toLowerCase().includes(q))
+            .map(item => {
+              let label = item.label;
+              if (label.toLowerCase() === 'calcutta') {
+                label = 'Kolkata';
+              }
+              return {
+                label: `${label} (${item.zone})`,
+                timezone: item.zone
+              };
             });
-            if (matches.length >= 5) break;
-          }
-          setSuggestions(matches);
+          setSuggestions(deduplicateSuggestions(matches).slice(0, 5));
           setIsLoading(false);
         });
     }, 300);
@@ -452,11 +442,11 @@ export function useTimezoneClock({
       setClock1(targetState);
       if (persistSelection) {
         try {
-          localStorage.setItem(c1Key, targetState.city);
-          localStorage.setItem(ct1Key, targetState.country);
-          localStorage.setItem(z1Key, targetState.timezone);
+          sessionStorage.setItem(c1Key, targetState.city);
+          sessionStorage.setItem(ct1Key, targetState.country);
+          sessionStorage.setItem(z1Key, targetState.timezone);
           if (targetState.region) {
-            localStorage.setItem(`${storageKeyPrefix}_r1`, targetState.region);
+            sessionStorage.setItem(`${storageKeyPrefix}_r1`, targetState.region);
           }
         } catch {}
       }
@@ -464,11 +454,11 @@ export function useTimezoneClock({
       setClock2(targetState);
       if (persistSelection) {
         try {
-          localStorage.setItem(c2Key, targetState.city);
-          localStorage.setItem(ct2Key, targetState.country);
-          localStorage.setItem(z2Key, targetState.timezone);
+          sessionStorage.setItem(c2Key, targetState.city);
+          sessionStorage.setItem(ct2Key, targetState.country);
+          sessionStorage.setItem(z2Key, targetState.timezone);
           if (targetState.region) {
-            localStorage.setItem(`${storageKeyPrefix}_r2`, targetState.region);
+            sessionStorage.setItem(`${storageKeyPrefix}_r2`, targetState.region);
           }
         } catch {}
       }
@@ -498,22 +488,22 @@ export function useTimezoneClock({
     setClock2(temp1);
     if (persistSelection) {
       try {
-        localStorage.setItem(c1Key, temp2.city);
-        localStorage.setItem(ct1Key, temp2.country);
-        localStorage.setItem(z1Key, temp2.timezone);
+        sessionStorage.setItem(c1Key, temp2.city);
+        sessionStorage.setItem(ct1Key, temp2.country);
+        sessionStorage.setItem(z1Key, temp2.timezone);
         if (temp2.region) {
-          localStorage.setItem(`${storageKeyPrefix}_r1`, temp2.region);
+          sessionStorage.setItem(`${storageKeyPrefix}_r1`, temp2.region);
         } else {
-          localStorage.removeItem(`${storageKeyPrefix}_r1`);
+          sessionStorage.removeItem(`${storageKeyPrefix}_r1`);
         }
 
-        localStorage.setItem(c2Key, temp1.city);
-        localStorage.setItem(ct2Key, temp1.country);
-        localStorage.setItem(z2Key, temp1.timezone);
+        sessionStorage.setItem(c2Key, temp1.city);
+        sessionStorage.setItem(ct2Key, temp1.country);
+        sessionStorage.setItem(z2Key, temp1.timezone);
         if (temp1.region) {
-          localStorage.setItem(`${storageKeyPrefix}_r2`, temp1.region);
+          sessionStorage.setItem(`${storageKeyPrefix}_r2`, temp1.region);
         } else {
-          localStorage.removeItem(`${storageKeyPrefix}_r2`);
+          sessionStorage.removeItem(`${storageKeyPrefix}_r2`);
         }
       } catch {}
     }

@@ -5,7 +5,8 @@ import { DateTime } from 'luxon';
 import {
   generateTimezoneMatrix,
   resolveTimeZone,
-  ZONE_SEARCH_INDEX
+  ZONE_SEARCH_INDEX,
+  deduplicateSuggestions
 } from '@/utils/timezone';
 import TimezoneTimeline from '@/components/TimezoneTimeline';
 import ShareMenu from '@/components/ShareMenu';
@@ -487,7 +488,8 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
                 name: item.name
               };
             });
-            setSuggestions(list);
+            
+            setSuggestions(deduplicateSuggestions(list));
           } else {
             setSuggestions([]);
           }
@@ -505,7 +507,8 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
               name: item.label
             }))
             .slice(0, 8);
-          setSuggestions(matches);
+
+          setSuggestions(deduplicateSuggestions(matches));
         });
     }, 400);
 

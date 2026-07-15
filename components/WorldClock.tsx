@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DateTime } from 'luxon';
-import { ZONE_SEARCH_INDEX } from '@/utils/timezone';
+import { ZONE_SEARCH_INDEX, deduplicateSuggestions } from '@/utils/timezone';
 
 interface ClockCity {
   label: string;
@@ -107,10 +107,10 @@ export default function WorldClock({
   useEffect(() => {
     if (isConverterPage) return;
     if (typeof window !== 'undefined') {
-      const savedCity1 = localStorage.getItem('wc_c1');
-      const savedZone1 = localStorage.getItem('wc_z1');
-      const savedCity2 = localStorage.getItem('wc_c2');
-      const savedZone2 = localStorage.getItem('wc_z2');
+      const savedCity1 = sessionStorage.getItem('wc_c1');
+      const savedZone1 = sessionStorage.getItem('wc_z1');
+      const savedCity2 = sessionStorage.getItem('wc_c2');
+      const savedZone2 = sessionStorage.getItem('wc_z2');
 
       /* eslint-disable react-hooks/set-state-in-effect */
       if (savedCity1) setCity1(savedCity1);
@@ -197,7 +197,8 @@ export default function WorldClock({
               label: `${item.name}${item.admin1 ? `, ${item.admin1}` : ''}${item.country ? `, ${item.country}` : ''}`,
               timezone: item.timezone || 'UTC'
             }));
-            setSuggestions(list);
+
+            setSuggestions(deduplicateSuggestions(list));
           } else {
             setSuggestions([]);
           }
@@ -211,7 +212,8 @@ export default function WorldClock({
               timezone: item.zone
             }))
             .slice(0, 6);
-          setSuggestions(fallbackMatches);
+
+          setSuggestions(deduplicateSuggestions(fallbackMatches));
           setIsLoading(false);
         });
     }, 250);
@@ -237,8 +239,8 @@ export default function WorldClock({
       setZone1(sug.timezone);
       if (!isConverterPage) {
         try {
-          localStorage.setItem('wc_c1', cityName);
-          localStorage.setItem('wc_z1', sug.timezone);
+          sessionStorage.setItem('wc_c1', cityName);
+          sessionStorage.setItem('wc_z1', sug.timezone);
         } catch {}
       }
       if (onSelectionChange) {
@@ -249,8 +251,8 @@ export default function WorldClock({
       setZone2(sug.timezone);
       if (!isConverterPage) {
         try {
-          localStorage.setItem('wc_c2', cityName);
-          localStorage.setItem('wc_z2', sug.timezone);
+          sessionStorage.setItem('wc_c2', cityName);
+          sessionStorage.setItem('wc_z2', sug.timezone);
         } catch {}
       }
       if (onSelectionChange) {

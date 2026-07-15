@@ -56,7 +56,7 @@ export default function RootLayout({
           (function() {
             function applyTheme() {
               try {
-                var t = localStorage.getItem('meetmyzone-theme') || localStorage.getItem('theme') || 'light';
+                var t = sessionStorage.getItem('meetmyzone-theme') || 'light';
                 document.documentElement.setAttribute('data-theme', t);
                 if (t === 'dark') {
                   document.documentElement.classList.add('dark');

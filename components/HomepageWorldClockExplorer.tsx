@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { DateTime } from 'luxon';
-import { ZONE_SEARCH_INDEX } from '@/utils/timezone';
+import { ZONE_SEARCH_INDEX, deduplicateSuggestions } from '@/utils/timezone';
 
 interface ClockState {
   city: string;
@@ -40,30 +40,30 @@ export default function HomepageWorldClockExplorer() {
   const [suggestions, setSuggestions] = useState<{ label: string; timezone: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Load from localStorage and initialize clock ticking
+  // Load from sessionStorage and initialize clock ticking
   useEffect(() => {
     const animFrame = requestAnimationFrame(() => {
       setMounted(true);
     });
 
-    // Check localStorage
+    // Check sessionStorage
     try {
-      const c1 = localStorage.getItem('wc_home_c1');
-      const ct1 = localStorage.getItem('wc_home_ct1');
-      const z1 = localStorage.getItem('wc_home_z1');
+      const c1 = sessionStorage.getItem('wc_home_c1');
+      const ct1 = sessionStorage.getItem('wc_home_ct1');
+      const z1 = sessionStorage.getItem('wc_home_z1');
       if (c1 && z1) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setClock1({ city: c1, country: ct1 || '', timezone: z1 });
       }
 
-      const c2 = localStorage.getItem('wc_home_c2');
-      const ct2 = localStorage.getItem('wc_home_ct2');
-      const z2 = localStorage.getItem('wc_home_z2');
+      const c2 = sessionStorage.getItem('wc_home_c2');
+      const ct2 = sessionStorage.getItem('wc_home_ct2');
+      const z2 = sessionStorage.getItem('wc_home_z2');
       if (c2 && z2) {
         setClock2({ city: c2, country: ct2 || '', timezone: z2 });
       }
     } catch {
-      // Ignore localStorage errors
+      // Ignore sessionStorage errors
     }
 
     setCurrentTime(DateTime.now());
@@ -96,7 +96,8 @@ export default function HomepageWorldClockExplorer() {
               label: `${item.name}${item.admin1 ? `, ${item.admin1}` : ''}${item.country ? `, ${item.country}` : ''}`,
               timezone: item.timezone || 'UTC'
             }));
-            setSuggestions(list);
+
+            setSuggestions(deduplicateSuggestions(list));
           } else {
             setSuggestions([]);
           }
@@ -111,7 +112,8 @@ export default function HomepageWorldClockExplorer() {
               timezone: item.zone
             }))
             .slice(0, 5);
-          setSuggestions(matches);
+
+          setSuggestions(deduplicateSuggestions(matches));
           setIsLoading(false);
         });
     }, 300);
@@ -127,16 +129,16 @@ export default function HomepageWorldClockExplorer() {
     if (activeSearchIndex === 1) {
       setClock1({ city: cityName, country: countryName, timezone: sug.timezone });
       try {
-        localStorage.setItem('wc_home_c1', cityName);
-        localStorage.setItem('wc_home_ct1', countryName);
-        localStorage.setItem('wc_home_z1', sug.timezone);
+        sessionStorage.setItem('wc_home_c1', cityName);
+        sessionStorage.setItem('wc_home_ct1', countryName);
+        sessionStorage.setItem('wc_home_z1', sug.timezone);
       } catch {}
     } else if (activeSearchIndex === 2) {
       setClock2({ city: cityName, country: countryName, timezone: sug.timezone });
       try {
-        localStorage.setItem('wc_home_c2', cityName);
-        localStorage.setItem('wc_home_ct2', countryName);
-        localStorage.setItem('wc_home_z2', sug.timezone);
+        sessionStorage.setItem('wc_home_c2', cityName);
+        sessionStorage.setItem('wc_home_ct2', countryName);
+        sessionStorage.setItem('wc_home_z2', sug.timezone);
       } catch {}
     }
 

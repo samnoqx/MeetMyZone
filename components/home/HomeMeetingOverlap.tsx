@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DateTime } from 'luxon';
 import Link from 'next/link';
-import { ZONE_SEARCH_INDEX } from '@/utils/timezone';
+import { ZONE_SEARCH_INDEX, deduplicateSuggestions } from '@/utils/timezone';
 
 interface ClockState {
   city: string;
@@ -234,7 +234,8 @@ export default function HomeMeetingOverlap() {
               label: `${item.name}${item.admin1 ? `, ${item.admin1}` : ''}${item.country ? `, ${item.country}` : ''}`,
               timezone: item.timezone || 'UTC'
             }));
-            setSuggestions(list);
+
+            setSuggestions(deduplicateSuggestions(list));
           } else {
             setSuggestions([]);
           }
@@ -248,7 +249,8 @@ export default function HomeMeetingOverlap() {
               timezone: item.zone
             }))
             .slice(0, 5);
-          setSuggestions(matches);
+
+          setSuggestions(deduplicateSuggestions(matches));
           setIsLoading(false);
         });
     }, 300);

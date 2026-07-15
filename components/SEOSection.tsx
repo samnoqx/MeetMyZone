@@ -142,9 +142,9 @@ export default function SEOSection({ zoneA: propZoneA, zoneB: propZoneB, zones =
           /* Timezone Pairing Specific Content */
           <div className="w-full flex flex-col gap-8 max-w-4xl mx-auto">
             <div className="flex flex-col gap-3">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
                 {activeZones.map(z => z.displayName).join(' to ')} Time Zone Converter & Meeting Planner
-              </h1>
+              </h2>
               <p className="text-xs sm:text-sm text-blue-500 dark:text-blue-400 font-medium font-mono uppercase tracking-wider">
                 Comparing Timezones: {
                   activeZones.map(z => `${z.cityName.toUpperCase()} (${z.zoneName.toUpperCase()})`).slice(0, -1).join(', ')

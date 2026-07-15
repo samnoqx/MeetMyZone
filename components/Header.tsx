@@ -2,16 +2,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
+import Logo from './Logo';
 
 interface HeaderProps {
   actions?: React.ReactNode;
 }
 
 export default function Header({ actions }: HeaderProps) {
-  const pathname = usePathname();
-  const isHomepage = pathname === '/';
+
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -39,31 +38,7 @@ export default function Header({ actions }: HeaderProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
         
         {/* Brand Logo & Title */}
-        <Link href="/" className="flex items-center gap-2 group select-none">
-          <img
-            src="/logo.png"
-            alt="MeetMyZone Logo"
-            className="h-[38.64px] md:h-12 w-auto object-contain group-hover:scale-105 transition-transform"
-          />
-          {isHomepage ? (
-            <div className="h-[16.56px] md:h-5 flex items-center translate-y-[2px]">
-              <img
-                src="/wordmark.png"
-                alt="MeetMyZone"
-                className="h-[16.56px] md:h-5 w-auto object-contain dark:hidden"
-              />
-              <img
-                src="/wordmark-dark.png"
-                alt="MeetMyZone"
-                className="h-[16.56px] md:h-5 w-auto object-contain hidden dark:block"
-              />
-            </div>
-          ) : (
-            <span className="font-black text-xl tracking-tight text-txt-heading">
-              MeetMyZone
-            </span>
-          )}
-        </Link>
+        <Logo />
 
         {/* Desktop Navigation Links */}
         <nav aria-label="Primary Desktop Nav" className="hidden md:flex items-center gap-6">

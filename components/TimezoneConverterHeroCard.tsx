@@ -3,6 +3,15 @@
 import React from 'react';
 import { useTimezoneClock, getCountryCode, ClockState } from '@/hooks/useTimezoneClock';
 
+const TIMEZONE_PRESETS = [
+  { label: 'UTC', timezone: 'UTC' },
+  { label: 'EST', timezone: 'America/New_York' },
+  { label: 'GMT', timezone: 'Europe/London' },
+  { label: 'PST', timezone: 'America/Los_Angeles' },
+  { label: 'IST', timezone: 'Asia/Kolkata' },
+  { label: 'CET', timezone: 'Europe/Paris' },
+];
+
 export interface TimezoneConverterHeroCardProps {
   initialClock1?: ClockState;
   initialClock2?: ClockState;
@@ -97,13 +106,13 @@ export default function TimezoneConverterHeroCard({
                 <span className="text-[10px] text-txt-muted p-1">No matches</span>
               ) : suggestions.length === 0 ? (
                 <div className="grid grid-cols-2 gap-1 mt-1">
-                  {['London', 'New York', 'Tokyo', 'Sydney', 'Mumbai', 'Paris'].map(city => (
+                  {TIMEZONE_PRESETS.map(preset => (
                     <button
-                      key={city}
-                      onClick={() => handlePresetClick(city)}
+                      key={preset.label}
+                      onClick={() => handleSelectLocation({ label: preset.label, timezone: preset.timezone })}
                       className="text-left text-[10px] font-bold text-txt-primary hover:text-brand-accent-hover hover:bg-surf-2 p-1 rounded transition-colors cursor-pointer"
                     >
-                      {city}
+                      {preset.label}
                     </button>
                   ))}
                 </div>

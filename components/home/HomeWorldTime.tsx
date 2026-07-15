@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DateTime } from 'luxon';
 import Link from 'next/link';
-import { ZONE_SEARCH_INDEX } from '@/utils/timezone';
+import { ZONE_SEARCH_INDEX, deduplicateSuggestions } from '@/utils/timezone';
 
 const COUNTRY_CODES: Record<string, string> = {
   'United Kingdom': 'GB', 'United States': 'US', 'Japan': 'JP', 'Australia': 'AU',
@@ -103,15 +103,15 @@ export default function HomeWorldTime() {
   const [currentTime, setCurrentTime] = useState<DateTime | null>(null);
 
   const [clock1, setClock1] = useState<ClockState>({
-    city: 'Tokyo',
-    country: 'Japan',
-    timezone: 'Asia/Tokyo'
-  });
-
-  const [clock2, setClock2] = useState<ClockState>({
     city: 'London',
     country: 'United Kingdom',
     timezone: 'Europe/London'
+  });
+
+  const [clock2, setClock2] = useState<ClockState>({
+    city: 'Singapore',
+    country: 'Singapore',
+    timezone: 'Asia/Singapore'
   });
 
   const [activeSearchIndex, setActiveSearchIndex] = useState<1 | 2 | null>(null);
@@ -132,19 +132,6 @@ export default function HomeWorldTime() {
     const animFrame = requestAnimationFrame(() => {
       setMounted(true);
       setCurrentTime(DateTime.now());
-      
-      // Default clock1 to user's location on page load
-      try {
-        const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (userTz) {
-          const parsed = parseTimezone(userTz);
-          setClock1({
-            city: parsed.city,
-            country: parsed.country,
-            timezone: userTz
-          });
-        }
-      } catch {}
     });
     const interval = setInterval(() => {
       setCurrentTime(DateTime.now());
@@ -201,7 +188,8 @@ export default function HomeWorldTime() {
               label: `${item.name}${item.admin1 ? `, ${item.admin1}` : ''}${item.country ? `, ${item.country}` : ''}`,
               timezone: item.timezone || 'UTC'
             }));
-            setSuggestions(list);
+
+            setSuggestions(deduplicateSuggestions(list));
           } else {
             setSuggestions([]);
           }
@@ -215,7 +203,8 @@ export default function HomeWorldTime() {
               timezone: item.zone
             }))
             .slice(0, 5);
-          setSuggestions(matches);
+
+          setSuggestions(deduplicateSuggestions(matches));
           setIsLoading(false);
         });
     }, 300);

@@ -86,7 +86,7 @@ export default function HomeHero() {
 
         {/* Right Column: Hero Live Clocks Card */}
         <div className="lg:col-span-5 w-full flex justify-center">
-          <HomeTimePreview />
+          <HomeTimePreview initialClock1={{ city: 'London', country: 'United Kingdom', timezone: 'local' }} />
         </div>
 
       </div>

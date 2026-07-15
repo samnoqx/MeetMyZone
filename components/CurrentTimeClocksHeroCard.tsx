@@ -71,14 +71,14 @@ export default function CurrentTimeClocksHeroCard() {
     persistSelection: false
   });
 
-  // Clear any old selected-clock keys from localStorage during mount initialization
+  // Clear any old selected-clock keys from sessionStorage during mount initialization
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        localStorage.removeItem('wc_current_c1');
-        localStorage.removeItem('wc_current_ct1');
-        localStorage.removeItem('wc_current_z1');
-        localStorage.removeItem('wc_current_r1');
+        sessionStorage.removeItem('wc_current_c1');
+        sessionStorage.removeItem('wc_current_ct1');
+        sessionStorage.removeItem('wc_current_z1');
+        sessionStorage.removeItem('wc_current_r1');
       } catch {}
     }
   }, []);

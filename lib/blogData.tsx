@@ -70,7 +70,7 @@ export const BLOG_POSTS: BlogPost[] = [
         </p>
         <ul className="list-disc list-inside ml-4 flex flex-col gap-1.5 my-3">
           <li>New York may be working while London is already well into the afternoon.</li>
-          <li>London may still be online when Singapore's normal working day has ended.</li>
+          <li>London may still be online when Singapore&apos;s normal working day has ended.</li>
           <li>Singapore may start work while New York is asleep.</li>
         </ul>
         <p>
@@ -114,13 +114,13 @@ export const BLOG_POSTS: BlogPost[] = [
           Each location gets its own row, but every row represents the same moment. Move across the timeline and you can immediately see the local time in New York, London, and Singapore.
         </p>
         <p>
-          This lets you compare the meeting from everyone's perspective at once.
+          This lets you compare the meeting from everyone&apos;s perspective at once.
         </p>
         <p>
           For a single meeting, manual conversion might be manageable. For three or more locations—or a recurring weekly call—a visual comparison saves a lot of unnecessary checking.
         </p>
         <p>
-          MeetMyZone's <Link href="/meeting-planner" className="text-brand-accent-deep dark:text-brand-accent hover:underline font-bold">Meeting Planner</Link> is built around this idea: compare locations together instead of converting them one at a time.
+          MeetMyZone&apos;s <Link href="/meeting-planner" className="text-brand-accent-deep dark:text-brand-accent hover:underline font-bold">Meeting Planner</Link> is built around this idea: compare locations together instead of converting them one at a time.
         </p>
 
         <h2 className="text-lg sm:text-xl font-extrabold text-txt-heading mt-8 mb-3">
@@ -194,7 +194,7 @@ export const BLOG_POSTS: BlogPost[] = [
           People often search for the “best meeting time” as if there is one objectively correct answer.
         </p>
         <p>
-          There often isn't.
+          There often isn&apos;t.
         </p>
         <p>
           If three teams are spread widely across the world, someone may need to join earlier or later than usual.
@@ -285,7 +285,7 @@ export const BLOG_POSTS: BlogPost[] = [
           Another simple improvement is to schedule around locations rather than relying entirely on abbreviations.
         </p>
         <p>
-          “Let's meet at 3 PM CST” can be more confusing than it looks.
+          “Let&apos;s meet at 3 PM CST” can be more confusing than it looks.
         </p>
         <p>
           Time-zone abbreviations are not always globally unique, and daylight saving can change the abbreviation used by a location during the year.
@@ -311,7 +311,7 @@ export const BLOG_POSTS: BlogPost[] = [
           <li><strong>Compare local working hours.</strong> Start with realistic availability such as 9:00 AM to 5:00 PM.</li>
           <li><strong>Find the shared overlap.</strong> If there is no complete overlap, identify the least disruptive window.</li>
           <li><strong>Check the actual meeting date.</strong> Confirm current UTC offsets and daylight saving changes.</li>
-          <li><strong>Review the meeting from everyone's local time.</strong> Before sending the invite, make sure nobody has accidentally been scheduled at an unreasonable hour.</li>
+          <li><strong>Review the meeting from everyone&apos;s local time.</strong> Before sending the invite, make sure nobody has accidentally been scheduled at an unreasonable hour.</li>
         </ol>
         <p>
           For recurring meetings, add one more question:
@@ -330,7 +330,7 @@ export const BLOG_POSTS: BlogPost[] = [
           The difficult part of global scheduling is not knowing the current time in another city.
         </p>
         <p>
-          It is seeing how several people's days fit together.
+          It is seeing how several people&apos;s days fit together.
         </p>
         <p>
           New York, London, and Singapore are a good example because there may be no perfect 9-to-5 overlap across all three. The right answer is not to force a fictional “ideal” slot. It is to compare the real local times, identify the most practical window, and make the trade-off visible before anyone receives the invitation.
@@ -438,16 +438,16 @@ export const BLOG_POSTS: BlogPost[] = [
           Imagine a recurring meeting tied to a specific time zone.
         </p>
         <p>
-          The calendar system still knows the same scheduling rule, but another participant's local UTC offset changes because daylight saving starts or ends.
+          The calendar system still knows the same scheduling rule, but another participant&apos;s local UTC offset changes because daylight saving starts or ends.
         </p>
         <p>
-          From that participant's perspective, the meeting may now appear one hour earlier or later.
+          From that participant&apos;s perspective, the meeting may now appear one hour earlier or later.
         </p>
         <p>
           This can feel like someone changed the invitation when nobody touched it.
         </p>
         <p>
-          The meeting's relationship to one location stayed fixed. The relationship between the locations changed.
+          The meeting&apos;s relationship to one location stayed fixed. The relationship between the locations changed.
         </p>
         <p>
           That distinction matters when you are trying to find the source of the problem.
@@ -463,7 +463,7 @@ export const BLOG_POSTS: BlogPost[] = [
           New York follows United States daylight saving rules.
         </p>
         <p>
-          London follows the United Kingdom's clock-change schedule.
+          London follows the United Kingdom&apos;s clock-change schedule.
         </p>
         <p>
           Because those transitions do not always happen on the same date, there are periods when one city has already changed its UTC offset and the other has not.
@@ -490,7 +490,7 @@ export const BLOG_POSTS: BlogPost[] = [
           If people keep using the memorized five-hour rule, meeting messages become confusing very quickly.
         </p>
         <p>
-          Nothing is wrong with either city's clock.
+          Nothing is wrong with either city&apos;s clock.
         </p>
         <p>
           The problem is the assumption that the offset relationship never changes.
@@ -518,7 +518,7 @@ export const BLOG_POSTS: BlogPost[] = [
           When London changes its clocks, the time difference between London and Singapore changes.
         </p>
         <p>
-          From Singapore's perspective, the clock stayed exactly where it was.
+          From Singapore&apos;s perspective, the clock stayed exactly where it was.
         </p>
         <p>
           The other location changed its UTC offset.
@@ -632,7 +632,7 @@ export const BLOG_POSTS: BlogPost[] = [
           For a quick live comparison, use the <Link href="/timezone-converter" className="text-brand-accent-deep dark:text-brand-accent hover:underline font-bold">MeetMyZone Time Zone Converter</Link>.
         </p>
         <p>
-          For meetings involving several locations and working-hour overlap, the <Link href="/meeting-planner" className="text-brand-accent-deep dark:text-brand-accent hover:underline font-bold">Meeting Planner</Link> gives you a clearer view of each participant's local day.
+          For meetings involving several locations and working-hour overlap, the <Link href="/meeting-planner" className="text-brand-accent-deep dark:text-brand-accent hover:underline font-bold">Meeting Planner</Link> gives you a clearer view of each participant&apos;s local day.
         </p>
 
         <h2 className="text-lg sm:text-xl font-extrabold text-txt-heading mt-8 mb-3">
@@ -654,7 +654,7 @@ export const BLOG_POSTS: BlogPost[] = [
           <li>Which time zone is the event anchored to?</li>
           <li>Did the organizer edit the meeting?</li>
           <li>Did one of the participating locations recently change its UTC offset?</li>
-          <li>Is the calendar displaying the event correctly in each participant's local time?</li>
+          <li>Is the calendar displaying the event correctly in each participant&apos;s local time?</li>
           <li>Was the intended rule “always 9 AM New York time” or “always 2 PM London time”?</li>
         </ul>
         <p>
@@ -716,7 +716,7 @@ export const BLOG_POSTS: BlogPost[] = [
         <ol className="list-decimal list-inside ml-4 flex flex-col gap-2.5 my-3">
           <li><strong>Use city or location names.</strong> Compare New York and London instead of relying only on EST, EDT, GMT, or BST.</li>
           <li><strong>Check the actual meeting date.</strong> Future and past dates may use different UTC offsets.</li>
-          <li><strong>Compare every participant's local time.</strong> Do not stop after checking the organizer's location.</li>
+          <li><strong>Compare every participant&apos;s local time.</strong> Do not stop after checking the organizer&apos;s location.</li>
           <li><strong>Review recurring meetings around clock changes.</strong> Familiar local times can shift.</li>
           <li><strong>Decide which local time the meeting should stay anchored to.</strong> Make that rule clear to the team.</li>
           <li><strong>Use live timezone data.</strong> Do not depend on a time difference memorized months ago.</li>
@@ -735,7 +735,7 @@ export const BLOG_POSTS: BlogPost[] = [
           Sometimes it is.
         </p>
         <p>
-          But often, the explanation is simpler: the UTC offset of one participating location changed while another location's offset stayed the same—or changed on a different date.
+          But often, the explanation is simpler: the UTC offset of one participating location changed while another location&apos;s offset stayed the same—or changed on a different date.
         </p>
         <p>
           New York, London, and Singapore demonstrate the problem clearly. Two cities make seasonal clock changes on their own schedules. One does not change its clocks at all. The local-time relationships between all three can therefore shift during the year.
@@ -821,7 +821,7 @@ export const BLOG_POSTS: BlogPost[] = [
           Imagine one team in London and another in New York.
         </p>
         <p>
-          London begins work several hours before New York. By the time New York reaches the office, London's workday is already well underway.
+          London begins work several hours before New York. By the time New York reaches the office, London&apos;s workday is already well underway.
         </p>
         <p>
           There is still a useful period when both teams are working.
@@ -898,10 +898,10 @@ export const BLOG_POSTS: BlogPost[] = [
           That creates a period where both teams can realistically join a meeting during normal office hours.
         </p>
         <p>
-          From London's perspective, the meeting may happen in the afternoon.
+          From London&apos;s perspective, the meeting may happen in the afternoon.
         </p>
         <p>
-          From New York's perspective, it may happen in the morning.
+          From New York&apos;s perspective, it may happen in the morning.
         </p>
         <p>
           This is usually much easier than asking either team to join late at night.
@@ -910,7 +910,7 @@ export const BLOG_POSTS: BlogPost[] = [
           The exact local hours can shift when daylight saving rules change, so a live comparison should be used for the actual meeting date.
         </p>
         <p>
-          But the general scheduling relationship is clear: <strong>the end of London's workday can overlap with the beginning of New York's workday.</strong>
+          But the general scheduling relationship is clear: <strong>the end of London&apos;s workday can overlap with the beginning of New York&apos;s workday.</strong>
         </p>
         <p>
           That shared window is often where transatlantic meetings fit most naturally.
@@ -1006,13 +1006,13 @@ export const BLOG_POSTS: BlogPost[] = [
           It might seem obvious to choose any time inside that block.
         </p>
         <p>
-          But the position of the meeting inside each person's day still matters.
+          But the position of the meeting inside each person&apos;s day still matters.
         </p>
         <p>
-          A meeting at the exact start of one team's workday may be difficult if people need time to prepare.
+          A meeting at the exact start of one team&apos;s workday may be difficult if people need time to prepare.
         </p>
         <p>
-          A meeting at the final minute of another team's day may regularly run into personal time when calls go over.
+          A meeting at the final minute of another team&apos;s day may regularly run into personal time when calls go over.
         </p>
         <p>
           Lunch breaks, school pickups, handovers, and other recurring commitments can also affect availability.
@@ -1024,7 +1024,7 @@ export const BLOG_POSTS: BlogPost[] = [
           Once you find the overlap, ask:
         </p>
         <ul className="list-disc list-inside ml-4 flex flex-col gap-1.5 my-3">
-          <li>Where does the meeting sit inside each team's day?</li>
+          <li>Where does the meeting sit inside each team&apos;s day?</li>
           <li>Is one group always joining at the edge of working hours?</li>
           <li>How long is the meeting expected to last?</li>
           <li>What happens if the meeting runs 30 minutes over?</li>
@@ -1121,13 +1121,13 @@ export const BLOG_POSTS: BlogPost[] = [
           Singapore does not currently use seasonal daylight saving changes.
         </p>
         <p>
-          As UTC offsets change, the position of one location's working day relative to another can move by an hour.
+          As UTC offsets change, the position of one location&apos;s working day relative to another can move by an hour.
         </p>
         <p>
           That can increase or reduce an overlap window temporarily.
         </p>
         <p>
-          A meeting that sits comfortably inside both teams' workdays during one part of the year may move closer to the edge during another.
+          A meeting that sits comfortably inside both teams&apos; workdays during one part of the year may move closer to the edge during another.
         </p>
         <p>
           This is especially important for recurring meetings.
@@ -1147,7 +1147,7 @@ export const BLOG_POSTS: BlogPost[] = [
         </p>
         <ol className="list-decimal list-inside ml-4 flex flex-col gap-2.5 my-3">
           <li><strong>Add every location involved in the meeting.</strong> Do not compare only the organizer and the largest office.</li>
-          <li><strong>Set realistic working hours for each location.</strong> Use 9-to-5 as a baseline only when it reflects the team's actual schedule.</li>
+          <li><strong>Set realistic working hours for each location.</strong> Use 9-to-5 as a baseline only when it reflects the team&apos;s actual schedule.</li>
           <li><strong>Place the working days on one shared timeline.</strong> Compare the same moment across every location.</li>
           <li><strong>Find the complete shared overlap.</strong> If all locations are working at the same time, identify the usable window.</li>
           <li><strong>Check the edges of the window.</strong> Avoid automatically scheduling at the first or last possible minute.</li>
@@ -1187,7 +1187,7 @@ export const BLOG_POSTS: BlogPost[] = [
           Seeing that relationship clearly helps teams choose better meeting times, distribute inconvenient hours more fairly, and recognize when asynchronous work is the better option.
         </p>
         <p>
-          Use the <Link href="/meeting-planner" className="text-brand-accent-deep dark:text-brand-accent hover:underline font-bold">MeetMyZone Meeting Planner</Link> to compare your team's locations on one timeline and find where their working hours actually overlap.
+          Use the <Link href="/meeting-planner" className="text-brand-accent-deep dark:text-brand-accent hover:underline font-bold">MeetMyZone Meeting Planner</Link> to compare your team&apos;s locations on one timeline and find where their working hours actually overlap.
         </p>
         <p>
           The goal is not to make the clocks agree.
@@ -1228,7 +1228,7 @@ export const BLOG_POSTS: BlogPost[] = [
           “Okay. What time is that in New York?”
         </p>
         <p>
-          A few messages later, someone has converted the wrong hour, another person is looking at yesterday's chat, and the meeting still is not on the calendar.
+          A few messages later, someone has converted the wrong hour, another person is looking at yesterday&apos;s chat, and the meeting still is not on the calendar.
         </p>
         <p>
           This is a surprisingly normal way to schedule international meetings.
@@ -1247,7 +1247,7 @@ export const BLOG_POSTS: BlogPost[] = [
           A Time Without a Location Is Incomplete
         </h2>
         <p>
-          “Let's meet at 3:00 PM.”
+          “Let&apos;s meet at 3:00 PM.”
         </p>
         <p>
           For people in the same city, that sentence is usually enough.
@@ -1335,7 +1335,7 @@ export const BLOG_POSTS: BlogPost[] = [
           Instead of sending one local time and asking everyone to convert it, compare the locations together before proposing the meeting.
         </p>
         <p>
-          The <Link href="/meeting-planner" className="text-brand-accent-deep dark:text-brand-accent hover:underline font-bold">Meeting Planner</Link> lets you place multiple locations on the same timeline so each proposed moment can be viewed from every participant's local time.
+          The <Link href="/meeting-planner" className="text-brand-accent-deep dark:text-brand-accent hover:underline font-bold">Meeting Planner</Link> lets you place multiple locations on the same timeline so each proposed moment can be viewed from every participant&apos;s local time.
         </p>
 
         <h2 className="text-lg sm:text-xl font-extrabold text-txt-heading mt-8 mb-3">
@@ -1369,7 +1369,7 @@ export const BLOG_POSTS: BlogPost[] = [
           <strong>“3:00 PM London time.”</strong>
         </p>
         <p>
-          Better still, once the group agrees on a meeting, send a properly configured calendar invitation that displays the event in each participant's local time.
+          Better still, once the group agrees on a meeting, send a properly configured calendar invitation that displays the event in each participant&apos;s local time.
         </p>
         <p>
           Clear scheduling language should not depend on knowing who the word “your” refers to.
@@ -1437,7 +1437,7 @@ export const BLOG_POSTS: BlogPost[] = [
           The proposed time is simply poor.
         </p>
         <p>
-          Before suggesting an international meeting time, compare the participants' local working hours.
+          Before suggesting an international meeting time, compare the participants&apos; local working hours.
         </p>
         <p>
           Ask:
@@ -1460,7 +1460,7 @@ export const BLOG_POSTS: BlogPost[] = [
           Use One Shared Moment as the Reference
         </h2>
         <p>
-          A useful way to think about global meetings is to stop treating each city's clock as a separate proposal.
+          A useful way to think about global meetings is to stop treating each city&apos;s clock as a separate proposal.
         </p>
         <p>
           There is only one meeting moment.
@@ -1566,7 +1566,7 @@ export const BLOG_POSTS: BlogPost[] = [
           Teams often reuse a time conversion from a previous meeting.
         </p>
         <p>
-          “Last month, 9 AM New York was 2 PM London, so we'll use the same conversion.”
+          “Last month, 9 AM New York was 2 PM London, so we&apos;ll use the same conversion.”
         </p>
         <p>
           That assumption can fail around daylight saving transitions.
@@ -1587,7 +1587,7 @@ export const BLOG_POSTS: BlogPost[] = [
           This matters even more for recurring meetings.
         </p>
         <p>
-          If a weekly meeting crosses a seasonal clock change, review how it appears in every participant's local time.
+          If a weekly meeting crosses a seasonal clock change, review how it appears in every participant&apos;s local time.
         </p>
 
         <h2 className="text-lg sm:text-xl font-extrabold text-txt-heading mt-8 mb-3">
@@ -1621,10 +1621,10 @@ export const BLOG_POSTS: BlogPost[] = [
           The scheduling rule should be explicit.
         </p>
         <p>
-          For some teams, the organizer's local time is the anchor.
+          For some teams, the organizer&apos;s local time is the anchor.
         </p>
         <p>
-          For others, a client's location is fixed.
+          For others, a client&apos;s location is fixed.
         </p>
         <p>
           Global internal teams may review or rotate the schedule.
@@ -1759,7 +1759,7 @@ export const BLOG_POSTS: BlogPost[] = [
           It does not currently make seasonal daylight saving clock changes.
         </p>
         <p>
-          That makes India's own UTC offset relatively straightforward for scheduling.
+          That makes India&apos;s own UTC offset relatively straightforward for scheduling.
         </p>
         <p>
           The relationship with London or New York, however, can still change.
@@ -1777,7 +1777,7 @@ export const BLOG_POSTS: BlogPost[] = [
           When New York changes its UTC offset seasonally, its relationship with India changes too.
         </p>
         <p>
-          India's clock did not move.
+          India&apos;s clock did not move.
         </p>
         <p>
           The international time difference still changed.
@@ -1793,7 +1793,7 @@ export const BLOG_POSTS: BlogPost[] = [
           Geographically and chronologically, London can act as the middle location in an India–UK–US meeting.
         </p>
         <p>
-          India's working day starts first.
+          India&apos;s working day starts first.
         </p>
         <p>
           London comes online several hours later.
@@ -1814,7 +1814,7 @@ export const BLOG_POSTS: BlogPost[] = [
           It means London often sits closer to the middle of the scheduling compromise.
         </p>
         <p>
-          For teams spanning India and the US East Coast, the most practical meeting window frequently appears around the transition between India's late working day and New York's morning.
+          For teams spanning India and the US East Coast, the most practical meeting window frequently appears around the transition between India&apos;s late working day and New York&apos;s morning.
         </p>
         <p>
           The exact local times should be checked for the actual meeting date.
@@ -1902,13 +1902,13 @@ export const BLOG_POSTS: BlogPost[] = [
           Do Not Optimize the Meeting for Headquarters Only
         </h2>
         <p>
-          Global meetings often inherit the working hours of the company's headquarters.
+          Global meetings often inherit the working hours of the company&apos;s headquarters.
         </p>
         <p>
           If the main office is in New York, meetings are scheduled around New York.
         </p>
         <p>
-          If the company is based in London, London's calendar becomes the default.
+          If the company is based in London, London&apos;s calendar becomes the default.
         </p>
         <p>
           This is understandable.
@@ -1961,7 +1961,7 @@ export const BLOG_POSTS: BlogPost[] = [
           Now repeat the same meeting every Tuesday for a year.
         </p>
         <p>
-          The inconvenience becomes part of someone's normal schedule.
+          The inconvenience becomes part of someone&apos;s normal schedule.
         </p>
         <p>
           For recurring India–UK–USA meetings, review the local times from a long-term perspective.
@@ -2071,13 +2071,13 @@ export const BLOG_POSTS: BlogPost[] = [
         <ol className="list-decimal list-inside ml-4 flex flex-col gap-2.5 my-3">
           <li><strong>Identify the actual cities.</strong> Do not use “USA” as if it represents one local time.</li>
           <li><strong>Add every participant location.</strong> Include smaller remote teams, not only headquarters.</li>
-          <li><strong>Compare normal working hours.</strong> Use the team's real schedules where possible.</li>
+          <li><strong>Compare normal working hours.</strong> Use the team&apos;s real schedules where possible.</li>
           <li><strong>Start by checking the US morning.</strong> For India, London, and the US East Coast, this is often a practical area to examine.</li>
-          <li><strong>Review India's local time carefully.</strong> Moving later in the US day can quickly create a late-night meeting in India.</li>
+          <li><strong>Review India&apos;s local time carefully.</strong> Moving later in the US day can quickly create a late-night meeting in India.</li>
           <li><strong>If the US participant is on the West Coast, expect a harder compromise.</strong> Do not pretend a clean overlap exists if it does not.</li>
           <li><strong>Check the actual meeting date.</strong> UK and US daylight saving changes can alter the local-time relationship.</li>
           <li><strong>For recurring meetings, review fairness.</strong> Rotate difficult times when the same location repeatedly carries the inconvenience.</li>
-          <li><strong>Send the final meeting as a properly configured calendar event.</strong> Let each participant's calendar display the event in local time.</li>
+          <li><strong>Send the final meeting as a properly configured calendar event.</strong> Let each participant&apos;s calendar display the event in local time.</li>
         </ol>
         <p>
           This process does not guarantee a perfect meeting hour.
