@@ -1,12 +1,15 @@
 import { ImageResponse } from 'next/og';
+import { parsePlannerList, safeZone, validDate } from '@/utils/planner';
 import { DateTime } from 'luxon';
-import { generateTimezoneMatrix, resolveTimeZone } from '@/utils/timezone';
+import { generateTimezoneMatrix } from '@/utils/timezone';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   try {
+    if (process.env.MMZ_STATIC_OG === '1') return Response.redirect(new URL('/og-default.png', request.url), 307);
     const { searchParams } = new URL(request.url);
+    if (new URL(request.url).search.length > 4096) return new Response('Invalid parameters', { status: 400 });
 
     const citiesParam = searchParams.get('cities');
     const zonesParam = searchParams.get('zones');
@@ -17,16 +20,17 @@ export async function GET(request: Request) {
 
     // Parse parameters
     const citiesList = citiesParam
-      ? citiesParam.split(',').map((c) => decodeURIComponent(c.trim())).filter(Boolean)
+      ? parsePlannerList(citiesParam)
       : ['London', 'New York'];
 
     const zonesList = zonesParam
-      ? zonesParam.split(',').map((z) => decodeURIComponent(z.trim())).filter(Boolean)
+      ? parsePlannerList(zonesParam)
       : [];
 
-    const customMappings: Record<string, string> = {};
+    if (!citiesList.length || (zonesParam && zonesList.length !== citiesList.length) || (refParam && !citiesList.includes(refParam)) || (dateParam && !validDate(dateParam)) || [startParam, endParam].some(value => value !== null && (!/^\d{1,2}$/.test(value) || Number(value) > 23))) return new Response('Invalid parameters', { status: 400 });
+    const customMappings: Record<string, string> = Object.create(null);
     citiesList.forEach((city, idx) => {
-      customMappings[city] = zonesList[idx] || resolveTimeZone(city);
+      customMappings[city] = safeZone(city, zonesList[idx]);
     });
 
     const referenceCity = refParam || citiesList[0] || 'London';
@@ -259,11 +263,12 @@ export async function GET(request: Request) {
       {
         width: 1200,
         height: 630,
+        headers: { 'Cache-Control': 'public, max-age=3600' },
       }
     );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return new Response(`Failed to generate Open Graph image: ${errorMessage}`, {
+    console.error('Open Graph rendering failed', error);
+    return new Response('Unable to generate image', {
       status: 500,
     });
   }

@@ -1,5 +1,7 @@
 'use client';
 
+import { readSession, writeSession } from '@/utils/storage';
+
 import React, { useState, useEffect } from 'react';
 import { DateTime } from 'luxon';
 import { ZONE_SEARCH_INDEX, deduplicateSuggestions } from '@/utils/timezone';
@@ -48,17 +50,17 @@ export default function HomepageWorldClockExplorer() {
 
     // Check sessionStorage
     try {
-      const c1 = sessionStorage.getItem('wc_home_c1');
-      const ct1 = sessionStorage.getItem('wc_home_ct1');
-      const z1 = sessionStorage.getItem('wc_home_z1');
+      const c1 = readSession('wc_home_c1');
+      const ct1 = readSession('wc_home_ct1');
+      const z1 = readSession('wc_home_z1');
       if (c1 && z1) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setClock1({ city: c1, country: ct1 || '', timezone: z1 });
       }
 
-      const c2 = sessionStorage.getItem('wc_home_c2');
-      const ct2 = sessionStorage.getItem('wc_home_ct2');
-      const z2 = sessionStorage.getItem('wc_home_z2');
+      const c2 = readSession('wc_home_c2');
+      const ct2 = readSession('wc_home_ct2');
+      const z2 = readSession('wc_home_z2');
       if (c2 && z2) {
         setClock2({ city: c2, country: ct2 || '', timezone: z2 });
       }
@@ -129,16 +131,16 @@ export default function HomepageWorldClockExplorer() {
     if (activeSearchIndex === 1) {
       setClock1({ city: cityName, country: countryName, timezone: sug.timezone });
       try {
-        sessionStorage.setItem('wc_home_c1', cityName);
-        sessionStorage.setItem('wc_home_ct1', countryName);
-        sessionStorage.setItem('wc_home_z1', sug.timezone);
+        writeSession('wc_home_c1', cityName);
+        writeSession('wc_home_ct1', countryName);
+        writeSession('wc_home_z1', sug.timezone);
       } catch {}
     } else if (activeSearchIndex === 2) {
       setClock2({ city: cityName, country: countryName, timezone: sug.timezone });
       try {
-        sessionStorage.setItem('wc_home_c2', cityName);
-        sessionStorage.setItem('wc_home_ct2', countryName);
-        sessionStorage.setItem('wc_home_z2', sug.timezone);
+        writeSession('wc_home_c2', cityName);
+        writeSession('wc_home_ct2', countryName);
+        writeSession('wc_home_z2', sug.timezone);
       } catch {}
     }
 

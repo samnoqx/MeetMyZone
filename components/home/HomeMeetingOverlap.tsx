@@ -1,5 +1,7 @@
 'use client';
 
+import { readSession } from '@/utils/storage';
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DateTime } from 'luxon';
 import Link from 'next/link';
@@ -281,7 +283,7 @@ export default function HomeMeetingOverlap() {
   let workStart = 9;
   let workEnd = 17;
   try {
-    const savedStateStr = sessionStorage.getItem('mmz_planner_state');
+    const savedStateStr = readSession('mmz_planner_state');
     if (savedStateStr) {
       const saved = JSON.parse(savedStateStr);
       if (typeof saved.workHourStart === 'number' && typeof saved.workHourEnd === 'number') {

@@ -104,7 +104,7 @@ export default function ContactUsPage() {
         {/* The Client Form Component */}
         <ContactForm />
 
-        {/* Detailed Copy & AdSense Compliance Sections */}
+        {/* Support information */}
         <div className="w-full max-w-lg mt-6 text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex flex-col gap-6 border-t border-slate-200 dark:border-slate-800 pt-8 leading-relaxed font-sans">
           <section className="flex flex-col gap-2">
             <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">

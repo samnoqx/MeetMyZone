@@ -1,3 +1,4 @@
+import { normalizeParams, parsePlannerList } from '@/utils/planner';
 import HomeClient from '../HomeClient';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -14,7 +15,7 @@ interface PageProps {
 }
 
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
-  const params = await searchParams;
+  const params = normalizeParams(await searchParams);
   
   let title = "International Meeting Planner | Compare Time Zones | MeetMyZone";
   let description = "Compare multiple time zones, find working-hour overlaps, and plan international meetings with live local times and a visual 24-hour timeline.";
@@ -23,7 +24,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const dateParam = params.date;
   
   if (citiesParam) {
-    const citiesList = citiesParam.split(',').map(c => decodeURIComponent(c.trim())).filter(Boolean);
+    const citiesList = parsePlannerList(citiesParam);
     if (citiesList.length > 0) {
       const formattedCities = citiesList.join(', ');
       title = `Timezone Planner: ${formattedCities} | MeetMyZone`;
@@ -72,7 +73,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 }
 
 export default async function Page({ searchParams }: PageProps) {
-  const resolvedParams = await searchParams;
+  const resolvedParams = normalizeParams(await searchParams);
 
   const breadcrumbPrefix = (
     <nav aria-label="Breadcrumb" className="text-xs sm:text-sm font-semibold text-txt-muted mb-1">
@@ -94,7 +95,7 @@ export default async function Page({ searchParams }: PageProps) {
 
   return (
     <>
-      <HomeClient initialParams={resolvedParams} headerPrefix={breadcrumbPrefix} />
+      <HomeClient initialParams={resolvedParams} headerPrefix={breadcrumbPrefix} meetingOnly />
     </>
   );
 }

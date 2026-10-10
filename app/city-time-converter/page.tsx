@@ -94,7 +94,7 @@ export default async function Page() {
       <Header />
 
       {/* Main Content Area */}
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 mt-8 flex flex-col gap-6 flex-1 pb-16">
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 mt-4 sm:mt-6 flex flex-col gap-4 sm:gap-6 flex-1 pb-16">
         
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="text-xs sm:text-sm font-semibold text-txt-muted">
@@ -114,15 +114,15 @@ export default async function Page() {
         </nav>
 
         {/* Hero Section */}
-        <header className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-6">
+        <header className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 lg:gap-10 items-center mb-2 sm:mb-4">
           
           {/* Left Column: Headline and description */}
-          <div className="lg:col-span-7 flex flex-col gap-3.5 text-left">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-txt-heading leading-tight">
+          <div className="lg:col-span-7 flex flex-col gap-2 text-left">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-txt-heading leading-tight">
               City Time Converter
             </h1>
-            <p className="text-sm sm:text-base text-txt-secondary leading-relaxed font-medium">
-              Compare local times and working-hour overlaps between major cities worldwide. Check live clocks, daylight saving time (DST) status, and plan international meetings easily without timezone coordination mistakes.
+            <p className="max-w-xl text-sm sm:text-base text-txt-secondary leading-relaxed">
+              Compare local times between cities, including differences in the calendar date. Each city follows its own regional time zone and daylight saving rules. Choose a city pair to check the time difference and working-hour overlap. Search by city name or browse the listings to begin.
             </p>
           </div>
 

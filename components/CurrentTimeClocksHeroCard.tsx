@@ -1,8 +1,10 @@
 'use client';
 
+import { removeSession } from '@/utils/storage';
+
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useTimezoneClock, getCountryCode } from '@/hooks/useTimezoneClock';
+import { useTimezoneClock, getCountryCode, type ClockState } from '@/hooks/useTimezoneClock';
 
 const DASHBOARD_CITIES = [
   { city: 'New York', country: 'United States', timezone: 'America/New_York' },
@@ -32,24 +34,14 @@ const IANA_DISPLAY_OVERRIDES: Record<string, string> = {
  * e.g. "Calcutta" -> "Kolkata", "Saigon" -> "Ho Chi Minh"
  */
 function getDisplayCityName(city: string): string {
-  const override = IANA_DISPLAY_OVERRIDES[city.toLowerCase()];
+  const override = Object.hasOwn(IANA_DISPLAY_OVERRIDES, city.toLowerCase()) ? IANA_DISPLAY_OVERRIDES[city.toLowerCase()] : undefined;
   return override || city;
-}
-
-/**
- * Generates a URL-safe slug from a city display name.
- * e.g. "New York" -> "new-york", "Ho Chi Minh" -> "ho-chi-minh", "Kolkata" -> "kolkata"
- */
-function getCitySlug(city: string): string {
-  return city
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
 }
 
 export default function CurrentTimeClocksHeroCard() {
   const [isManuallySelected, setIsManuallySelected] = useState(false);
+  const [activeRow, setActiveRow] = useState(0);
+  const [selectedComparisons, setSelectedComparisons] = useState<ClockState[] | null>(null);
 
   const {
     mounted,
@@ -62,8 +54,7 @@ export default function CurrentTimeClocksHeroCard() {
     suggestions,
     isLoading,
     searchPanelRef,
-    handleSelectLocation,
-    handlePresetClick
+    handleSelectLocation
   } = useTimezoneClock({
     storageKeyPrefix: 'wc_current',
     initialClock1: { city: 'Local Time', country: 'Local Time Zone', timezone: 'local' },
@@ -75,10 +66,10 @@ export default function CurrentTimeClocksHeroCard() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        sessionStorage.removeItem('wc_current_c1');
-        sessionStorage.removeItem('wc_current_ct1');
-        sessionStorage.removeItem('wc_current_z1');
-        sessionStorage.removeItem('wc_current_r1');
+        removeSession('wc_current_c1');
+        removeSession('wc_current_ct1');
+        removeSession('wc_current_z1');
+        removeSession('wc_current_r1');
       } catch {}
     }
   }, []);
@@ -100,31 +91,43 @@ export default function CurrentTimeClocksHeroCard() {
     );
   }
 
-  // Intercept suggestion and preset selection to track manual overrides in the current session
-  const myHandleSelectLocation = (sug: { label: string; timezone: string }) => {
-    setIsManuallySelected(true);
-    handleSelectLocation(sug);
-  };
-
-  const myHandlePresetClick = (city: string) => {
-    setIsManuallySelected(true);
-    handlePresetClick(city);
-  };
-
-  const localCity = getDisplayCityName(clock1.city);
-  const localCitySlug = getCitySlug(localCity);
-
-  // Filter out the first row's timezone/city from the global list to prevent duplicates
-  const comparisonCities = DASHBOARD_CITIES.filter(
-    (c) =>
-      c.timezone.toLowerCase() !== clock1.timezone.toLowerCase() &&
-      c.city.toLowerCase() !== clock1.city.toLowerCase() &&
-      c.city.toLowerCase() !== localCity.toLowerCase()
+  // Freeze comparison slots on the first edit so changing one city never moves another row.
+  const comparisonCities = selectedComparisons ?? DASHBOARD_CITIES.filter(
+    city => city.timezone.toLowerCase() !== clock1.timezone.toLowerCase()
   ).slice(0, 5);
+  const rows = [clock1, ...comparisonCities];
+
+  const selectLocation = (suggestion: { label: string; timezone: string }) => {
+    const parts = suggestion.label.split(',').map(part => part.trim());
+    const selected: ClockState = {
+      city: getDisplayCityName(parts[0]),
+      country: parts.slice(1).join(', ') || '',
+      timezone: suggestion.timezone,
+    };
+    setSelectedComparisons(current => {
+      const comparisons = current ?? comparisonCities;
+      return activeRow === 0 ? comparisons : comparisons.map((city, index) => index === activeRow - 1 ? selected : city);
+    });
+    if (activeRow === 0) {
+      setIsManuallySelected(true);
+      handleSelectLocation(suggestion);
+    } else {
+      setActiveSearchIndex(null);
+      setSearchQuery('');
+    }
+  };
+
+  const selectPreset = (city: string) => {
+    const preset = [...DASHBOARD_CITIES,
+      { city: 'Mumbai', country: 'India', timezone: 'Asia/Kolkata' },
+      { city: 'Paris', country: 'France', timezone: 'Europe/Paris' },
+    ].find(item => item.city === city);
+    if (preset) selectLocation({ label: `${preset.city}, ${preset.country}`, timezone: preset.timezone });
+  };
 
   return (
     <div className="w-full max-w-md bg-surf-1 rounded-2xl border border-border-custom shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden flex flex-col h-[396px]">
-      
+
       <div className="p-5 pb-4 border-b border-border-soft flex flex-col gap-1.5 select-none">
         <div className="flex items-center gap-1.5">
           <svg className="w-4 h-4 text-brand-accent-hover animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -143,114 +146,54 @@ export default function CurrentTimeClocksHeroCard() {
       </div>
 
       <div className="flex-1 overflow-y-auto max-h-[250px] divide-y divide-border-soft/60 scrollbar-none relative">
-        {/* Row 1: The dynamic Local / Selected Clock row */}
-        {(() => {
-          const dt = currentTime ? currentTime.setZone(clock1.timezone) : null;
-          const timeStr = dt ? dt.toFormat('hh:mm a') : '--:--';
-          const countryCode = getCountryCode(clock1.country);
-
-          return (
-            <div className="flex items-center justify-between px-5 py-3 hover:bg-surf-2 transition-all duration-150 border-b border-border-soft/40 group/row">
-              <div className="flex items-center gap-3">
-                <Link
-                  href={`/time-in/${localCitySlug}`}
-                  className="shrink-0"
-                  aria-label={`View full local time details for ${localCity}`}
-                >
-                  <img
-                    src={`https://flagcdn.com/24x18/${countryCode}.png`}
-                    srcSet={`https://flagcdn.com/48x36/${countryCode}.png 2x`}
-                    width="20"
-                    height="15"
-                    alt={`${clock1.country} flag`}
-                    className="rounded-[2px] shadow-xs shrink-0"
-                  />
-                </Link>
-                <div className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <Link
-                      href={`/time-in/${localCitySlug}`}
-                      className="text-xs font-extrabold text-txt-primary hover:text-brand-accent-hover transition-colors font-sans"
-                    >
-                      {localCity}
-                    </Link>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveSearchIndex(1);
-                        setSearchQuery('');
-                      }}
-                      className="group/btn flex items-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent rounded p-0.5"
-                      aria-label="Change local city or timezone"
-                    >
-                      <svg className="w-3.5 h-3.5 text-brand-accent shrink-0 group-hover/btn:translate-y-0.5 group-hover/btn:text-brand-accent-hover group-hover/btn:drop-shadow-[0_0_2px_currentColor] transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                  </div>
-                  <span className="text-[9px] text-txt-subtle font-mono font-bold tracking-wide uppercase">
-                    {isManuallySelected ? 'SELECTED CLOCK' : 'YOUR LOCAL TIME'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {dt && dt.isInDST && (
-                  <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-brand-accent-surface text-brand-accent-deep dark:text-brand-accent font-black tracking-wide uppercase border border-brand-accent/20 select-none">
-                    DST
-                  </span>
-                )}
-                <span className="text-xs sm:text-sm font-black text-txt-heading font-mono select-none" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                  {timeStr}
-                </span>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Comparison Clocks (Rows 2 to 6) */}
-        {comparisonCities.map((city) => {
+        {rows.map((city, rowIndex) => {
           const dt = currentTime ? currentTime.setZone(city.timezone) : null;
           const timeStr = dt ? dt.toFormat('hh:mm a') : '--:--';
           const offsetStr = dt ? dt.toFormat('ZZ') : 'UTC+0';
           const countryCode = getCountryCode(city.country);
           const displayCity = getDisplayCityName(city.city);
-          const citySlug = getCitySlug(displayCity);
-
+          const citySlug = displayCity.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+          const isOpen = activeSearchIndex !== null && activeRow === rowIndex;
           return (
-            <div key={city.city} className="flex items-center justify-between px-5 py-3 hover:bg-surf-2 transition-all duration-150 border-b border-border-soft/40 last:border-b-0 group/row">
-              <Link
-                href={`/time-in/${citySlug}`}
-                className="flex items-center gap-3 cursor-pointer"
-                aria-label={`View full local time details for ${displayCity}`}
-              >
-                <img
-                  src={`https://flagcdn.com/24x18/${countryCode}.png`}
-                  srcSet={`https://flagcdn.com/48x36/${countryCode}.png 2x`}
-                  width="20"
-                  height="15"
-                  alt={`${city.country} flag`}
-                  className="rounded-[2px] shadow-xs shrink-0"
-                />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-xs font-extrabold text-txt-primary group-hover/row:text-brand-accent-hover transition-colors font-sans">
-                    {displayCity}
-                  </span>
+            <div key={rowIndex} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-surf-2 transition-all duration-150 border-b border-border-soft/40 last:border-b-0 group/row">
+              <div className="flex items-center gap-3 min-w-0">
+                <Link href={`/time-in/${citySlug}`} className="shrink-0" aria-label={`View full local time details for ${displayCity}`}>
+                  <img
+                    src={`https://flagcdn.com/24x18/${countryCode}.png`}
+                    srcSet={`https://flagcdn.com/48x36/${countryCode}.png 2x`}
+                    width="20" height="15" alt={`${city.country} flag`}
+                    className="rounded-[2px] shadow-xs shrink-0"
+                  />
+                </Link>
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Link href={`/time-in/${citySlug}`} className="text-xs font-extrabold text-txt-primary hover:text-brand-accent-hover transition-colors font-sans truncate">{displayCity}</Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveRow(rowIndex);
+                        setActiveSearchIndex(isOpen ? null : 1);
+                        setSearchQuery('');
+                      }}
+                      aria-label={`Change city for clock ${rowIndex + 1}: ${displayCity}`}
+                      aria-expanded={isOpen}
+                      aria-haspopup="dialog"
+                      aria-controls={isOpen ? 'current-time-city-search' : undefined}
+                      className="group/btn flex items-center cursor-pointer rounded p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
+                    >
+                      <svg className="w-3.5 h-3.5 text-brand-accent shrink-0 group-hover/btn:translate-y-0.5 group-hover/btn:text-brand-accent-hover transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
                   <span className="text-[9px] text-txt-subtle font-mono font-bold tracking-wide">
-                    Offset: {offsetStr}
+                    {rowIndex === 0 ? (isManuallySelected ? 'SELECTED CLOCK' : 'YOUR LOCAL TIME') : `Offset: ${offsetStr}`}
                   </span>
                 </div>
-              </Link>
-
-              <div className="flex items-center gap-2">
-                {dt && dt.isInDST && (
-                  <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-brand-accent-surface text-brand-accent-deep dark:text-brand-accent font-black tracking-wide uppercase border border-brand-accent/20 select-none">
-                    DST
-                  </span>
-                )}
-                <span className="text-xs sm:text-sm font-black text-txt-heading font-mono select-none" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                  {timeStr}
-                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {dt?.isInDST && <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-brand-accent-surface text-brand-accent-deep dark:text-brand-accent font-black tracking-wide uppercase border border-brand-accent/20 select-none">DST</span>}
+                <span className="text-xs sm:text-sm font-black text-txt-heading font-mono select-none" style={{ fontVariantNumeric: 'tabular-nums' }}>{timeStr}</span>
               </div>
             </div>
           );
@@ -270,24 +213,28 @@ export default function CurrentTimeClocksHeroCard() {
 
       {/* Popover Selector Panel */}
       {activeSearchIndex === 1 && (
-        <div 
-          ref={searchPanelRef} 
-          className="absolute z-30 flex flex-col p-3 rounded-xl border border-border-custom bg-surf-1 shadow-lg w-[260px] top-[102px] left-[44px]"
+        <div
+          ref={searchPanelRef}
+          id="current-time-city-search"
+          role="dialog"
+          aria-label={`Select city for clock ${activeRow + 1}`}
+          className="absolute z-30 flex flex-col p-3 rounded-xl border border-border-custom bg-surf-1 shadow-lg top-[102px] left-4 right-4"
         >
           <div className="flex items-center justify-between mb-2 pb-1 border-b border-border-soft select-none">
-            <span className="text-[9px] font-bold text-txt-muted uppercase tracking-wider">Select Location</span>
-            <button 
+            <span className="text-[9px] font-bold text-txt-muted uppercase tracking-wider">Select Location · Clock {activeRow + 1}</span>
+            <button
               onClick={() => setActiveSearchIndex(null)}
               className="text-[9px] font-bold text-brand-accent-hover uppercase cursor-pointer"
             >
               Close
             </button>
           </div>
-          
+
           <div className="relative">
             <input
               type="text"
               placeholder="Search city..."
+              aria-label={`Search city for clock ${activeRow + 1}`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-6 pr-2 py-1 border border-border-custom bg-surf-2 text-txt-primary rounded-md text-[11px] focus:outline-none focus:border-brand-accent"
@@ -299,7 +246,7 @@ export default function CurrentTimeClocksHeroCard() {
               </svg>
             </span>
           </div>
-          
+
           <div className="mt-2 max-h-[140px] overflow-y-auto flex flex-col gap-1 pr-1 scrollbar-none">
             {isLoading ? (
               <span className="text-[10px] text-txt-muted p-1 animate-pulse">Searching...</span>
@@ -310,7 +257,7 @@ export default function CurrentTimeClocksHeroCard() {
                 {['London', 'New York', 'Tokyo', 'Sydney', 'Mumbai', 'Paris'].map(city => (
                   <button
                     key={city}
-                    onClick={() => myHandlePresetClick(city)}
+                    onClick={() => selectPreset(city)}
                     className="text-left text-[10px] font-bold text-txt-primary hover:text-brand-accent-hover hover:bg-surf-2 p-1 rounded transition-colors cursor-pointer"
                   >
                     {city}
@@ -321,7 +268,7 @@ export default function CurrentTimeClocksHeroCard() {
               suggestions.map((sug, idx) => (
                 <button
                   key={idx}
-                  onClick={() => myHandleSelectLocation(sug)}
+                  onClick={() => selectLocation(sug)}
                   className="text-left text-[10px] font-bold text-txt-primary hover:text-brand-accent-hover hover:bg-surf-2 p-1 rounded transition-all cursor-pointer truncate"
                 >
                   {sug.label}

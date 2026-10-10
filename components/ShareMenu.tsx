@@ -1,18 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DateTime } from 'luxon';
-import { TimeMatrixHour, resolveTimeZone } from '@/utils/timezone';
+import type { TimeMatrixHour } from '@/utils/timezone';
+import { generateMeetingSummary } from '@/utils/meetingSummary';
 
 interface ShareMenuProps {
   cities: string[];
   matrix: TimeMatrixHour[];
   selectedDate?: string;
+  referenceCity?: string;
   isCompact?: boolean;
   isMobileGrid?: boolean;
+  plannerOnly?: boolean;
 }
 
-export default function ShareMenu({ cities, matrix, selectedDate, isCompact = false, isMobileGrid = false }: ShareMenuProps) {
+export default function ShareMenu({ cities, matrix, selectedDate, referenceCity, isCompact = false, isMobileGrid = false, plannerOnly = false }: ShareMenuProps) {
   const [toast, setToast] = useState<{ show: boolean; message: string }>({
     show: false,
     message: '',
@@ -41,81 +43,7 @@ export default function ShareMenu({ cities, matrix, selectedDate, isCompact = fa
 
   // Generate plain-text Slack/Email summary of Golden Hours
   const handleCopySlackSummary = async () => {
-    const currentUrl = window.location.href;
-    const dateObj = selectedDate ? DateTime.fromISO(selectedDate) : DateTime.now();
-    const dateStr = dateObj.toFormat('EEEE, LLLL dd, yyyy');
-
-    // Find UTC hours where ALL cities are in local working hours (using precomputed isWorking status)
-    const goldenHours = matrix.filter((row) => {
-      return cities.every((city) => {
-        const cell = row.cities[city];
-        return cell && cell.isWorking;
-      });
-    });
-
-    // Group sequential hours into meeting slots
-    const ranges: { start: number; end: number }[] = [];
-    let currentRange: { start: number; end: number } | null = null;
-
-    goldenHours.forEach((hour) => {
-      if (!currentRange) {
-        currentRange = { start: hour.utcHour, end: hour.utcHour };
-      } else if (hour.utcHour === currentRange.end + 1) {
-        currentRange.end = hour.utcHour;
-      } else {
-        ranges.push(currentRange);
-        currentRange = { start: hour.utcHour, end: hour.utcHour };
-      }
-    });
-    if (currentRange) {
-      ranges.push(currentRange);
-    }
-
-    const cityListStr = cities.join(', ');
-    let summaryText = '';
-
-    if (ranges.length === 0) {
-      summaryText = [
-        `Hello team,`,
-        ``,
-        `To align our upcoming meeting across our locations (${cityListStr}), we analyzed the timezone differences for ${dateStr}.`,
-        `Currently, there are no overlapping working hours local time across all regions.`,
-        ``,
-        `Please view the interactive timezone timeline comparison below to coordinate a custom slot:`,
-        `${currentUrl}`,
-        ``,
-        `Thank you!`
-      ].join('\n');
-    } else {
-      const baseUtc = DateTime.utc().startOf('day');
-      const rangeListText = ranges.map((r, index) => {
-        const startUtc = baseUtc.plus({ hours: r.start });
-        const endUtc = baseUtc.plus({ hours: r.end + 1 });
-        
-        const cityLocalStrings = cities.map((city) => {
-          const zone = resolveTimeZone(city);
-          const localStart = startUtc.setZone(zone);
-          const localEnd = endUtc.setZone(zone);
-          
-          return `${localStart.toFormat('h:mm a')} - ${localEnd.toFormat('h:mm a')} ${localStart.offsetNameShort} (${city})`;
-        });
-
-        return `• Option ${index + 1}: ${cityLocalStrings.join(' | ')}`;
-      }).join('\n');
-
-      summaryText = [
-        `Hello team,`,
-        ``,
-        `To align our upcoming meeting across our locations (${cityListStr}), we have analyzed the overlapping working hours and identified the following optimal slot options for ${dateStr}:`,
-        ``,
-        rangeListText,
-        ``,
-        `You can view the interactive timezone timeline comparison or customize this schedule at:`,
-        `${currentUrl}`,
-        ``,
-        `Please choose the option that works best for you. Thank you!`
-      ].join('\n');
-    }
+    const summaryText = generateMeetingSummary(cities, matrix, selectedDate, referenceCity || cities[0], window.location.href);
 
     try {
       await navigator.clipboard.writeText(summaryText);
@@ -127,7 +55,7 @@ export default function ShareMenu({ cities, matrix, selectedDate, isCompact = fa
     return (
       <div className="grid grid-cols-2 gap-3 w-full md:hidden mt-5 mb-4">
         {/* Button 1: World Clock (Teal) */}
-        <a
+        {!plannerOnly && <a
           href="#world-clock"
           className="h-12 flex items-center justify-center gap-1.5 bg-brand-accent-surface border border-brand-accent-surface-strong shadow-md dark:shadow-lg dark:shadow-black/20 rounded-xl text-center text-sm active:scale-[0.98] active:bg-brand-accent-surface-strong transition-all duration-200 cursor-pointer w-full px-2 text-brand-accent-deep dark:text-brand-accent font-bold"
         >
@@ -135,10 +63,10 @@ export default function ShareMenu({ cities, matrix, selectedDate, isCompact = fa
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span>World Clock</span>
-        </a>
+        </a>}
 
         {/* Button 2: Start Meeting Planner (Teal) */}
-        <a
+        {!plannerOnly && <a
           href="#meeting-planner"
           className="h-12 flex items-center justify-center gap-1.5 bg-brand-accent-surface border border-brand-accent-surface-strong shadow-md dark:shadow-lg dark:shadow-black/20 rounded-xl text-center text-sm active:scale-[0.98] active:bg-brand-accent-surface-strong transition-all duration-200 cursor-pointer w-full px-2 text-brand-accent-deep dark:text-brand-accent font-bold"
         >
@@ -146,7 +74,7 @@ export default function ShareMenu({ cities, matrix, selectedDate, isCompact = fa
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <span>Planner</span>
-        </a>
+        </a>}
 
         {/* Button 3: Copy Link (Teal) */}
         <button

@@ -108,12 +108,7 @@ export default function SEOSection({ zoneA: propZoneA, zoneB: propZoneB, zones =
         "price": "0.00",
         "priceCurrency": "USD"
       },
-      "description": "MeetMyZone is a premium visual timezone meeting planner and timezone converter that aligns team working hours side-by-side on an interactive timeline grid.",
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.9",
-        "ratingCount": "845"
-      }
+      "description": "MeetMyZone is a premium visual timezone meeting planner and timezone converter that aligns team working hours side-by-side on an interactive timeline grid."
     };
 
     const faqSchema = {

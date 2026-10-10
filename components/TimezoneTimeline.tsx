@@ -1,5 +1,7 @@
 'use client';
 
+import { readSession, writeSession } from '@/utils/storage';
+
 import React from 'react';
 import { TimeMatrixHour } from '@/utils/timezone';
 
@@ -115,7 +117,7 @@ export default function TimezoneTimeline({
     if (!container) return;
 
     // Restore scroll position
-    const savedScrollX = sessionStorage.getItem('mmz_timeline_scroll_x');
+    const savedScrollX = readSession('mmz_timeline_scroll_x');
     if (savedScrollX) {
       container.scrollLeft = parseInt(savedScrollX, 10);
     }
@@ -126,7 +128,7 @@ export default function TimezoneTimeline({
       clearTimeout(debounceTimeout);
       debounceTimeout = setTimeout(() => {
         if (container) {
-          sessionStorage.setItem('mmz_timeline_scroll_x', String(container.scrollLeft));
+          writeSession('mmz_timeline_scroll_x', String(container.scrollLeft));
         }
       }, 200);
     };

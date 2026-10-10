@@ -2132,12 +2132,12 @@ export const BLOG_POSTS: BlogPost[] = [
  * Helper to retrieve a blog post by its slug.
  */
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {
-  return BLOG_POSTS.find((post) => post.slug === slug);
+  return BLOG_POSTS.find((post) => post.slug === slug && Boolean(post.content));
 }
 
 /**
  * Returns all blog slugs for static param generation.
  */
 export function getAllBlogSlugs(): string[] {
-  return BLOG_POSTS.map((post) => post.slug);
+  return BLOG_POSTS.filter((post) => post.content).map((post) => post.slug);
 }

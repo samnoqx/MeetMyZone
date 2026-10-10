@@ -1,5 +1,7 @@
 'use client';
 
+import { readSession, writeSession, removeSession } from '@/utils/storage';
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { DateTime } from 'luxon';
 import { ZONE_SEARCH_INDEX, deduplicateSuggestions } from '@/utils/timezone';
@@ -44,10 +46,10 @@ export const COUNTRY_CODES: Record<string, string> = {
 /** Get the 2-letter ISO country code for a country name */
 export function getCountryCode(country: string): string {
   if (!country) return 'un';
-  if (COUNTRY_CODES[country]) return COUNTRY_CODES[country].toLowerCase();
+  if (Object.hasOwn(COUNTRY_CODES, country)) return COUNTRY_CODES[country].toLowerCase();
   const parts = country.split(',').map(p => p.trim());
   for (let i = parts.length - 1; i >= 0; i--) {
-    if (COUNTRY_CODES[parts[i]]) return COUNTRY_CODES[parts[i]].toLowerCase();
+    if (Object.hasOwn(COUNTRY_CODES, parts[i])) return COUNTRY_CODES[parts[i]].toLowerCase();
   }
   return 'un';
 }
@@ -231,11 +233,11 @@ export function useTimezoneClock({
       // Read initial session storage safely
       try {
         if (persistSelection) {
-          const c1 = sessionStorage.getItem(c1Key);
-          const ct1 = sessionStorage.getItem(ct1Key);
-          const z1 = sessionStorage.getItem(z1Key);
-          const r1 = sessionStorage.getItem(`${storageKeyPrefix}_r1`);
-          if (c1 && z1) {
+          const c1 = readSession(c1Key);
+          const ct1 = readSession(ct1Key);
+          const z1 = readSession(z1Key);
+          const r1 = readSession(`${storageKeyPrefix}_r1`);
+          if (c1 && z1 && DateTime.now().setZone(z1).isValid) {
             setClock1({ city: c1, country: ct1 || '', timezone: z1, region: r1 || undefined });
           } else if (initialClock1) {
             if (initialClock1.timezone === 'local') {
@@ -289,11 +291,11 @@ export function useTimezoneClock({
         }
 
         if (persistSelection) {
-          const c2 = sessionStorage.getItem(c2Key);
-          const ct2 = sessionStorage.getItem(ct2Key);
-          const z2 = sessionStorage.getItem(z2Key);
-          const r2 = sessionStorage.getItem(`${storageKeyPrefix}_r2`);
-          if (c2 && z2) {
+          const c2 = readSession(c2Key);
+          const ct2 = readSession(ct2Key);
+          const z2 = readSession(z2Key);
+          const r2 = readSession(`${storageKeyPrefix}_r2`);
+          if (c2 && z2 && DateTime.now().setZone(z2).isValid) {
             setClock2({ city: c2, country: ct2 || '', timezone: z2, region: r2 || undefined });
           } else if (initialClock2) {
             if (initialClock2.timezone === 'local') {
@@ -352,16 +354,19 @@ export function useTimezoneClock({
   useEffect(() => {
     if (!searchQuery.trim()) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsLoading(false);
       setSuggestions([]);
       return;
     }
+    const controller = new AbortController();
     setIsLoading(true);
     const q = searchQuery.toLowerCase().trim();
 
     const fetchTimer = setTimeout(() => {
-      fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=en&format=json`)
-        .then(res => res.json())
+      fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=en&format=json`, { signal: controller.signal })
+        .then(res => { if (!res.ok) throw new Error('Geocoding failed'); return res.json(); })
         .then(data => {
+          if (controller.signal.aborted) return;
           if (data && data.results) {
             const list = data.results.map((item: { name: string; admin1?: string; country?: string; timezone?: string }) => {
               const tz = item.timezone || 'UTC';
@@ -381,6 +386,7 @@ export function useTimezoneClock({
           setIsLoading(false);
         })
         .catch(() => {
+          if (controller.signal.aborted) return;
           const matches = ZONE_SEARCH_INDEX
             .filter(item => item.key.includes(q) || item.zone.toLowerCase().includes(q))
             .map(item => {
@@ -398,7 +404,7 @@ export function useTimezoneClock({
         });
     }, 300);
 
-    return () => clearTimeout(fetchTimer);
+    return () => { controller.abort(); clearTimeout(fetchTimer); };
   }, [searchQuery]);
 
   const handleSelectLocation = useCallback((sug: { label: string; timezone: string }) => {
@@ -442,11 +448,11 @@ export function useTimezoneClock({
       setClock1(targetState);
       if (persistSelection) {
         try {
-          sessionStorage.setItem(c1Key, targetState.city);
-          sessionStorage.setItem(ct1Key, targetState.country);
-          sessionStorage.setItem(z1Key, targetState.timezone);
+          writeSession(c1Key, targetState.city);
+          writeSession(ct1Key, targetState.country);
+          writeSession(z1Key, targetState.timezone);
           if (targetState.region) {
-            sessionStorage.setItem(`${storageKeyPrefix}_r1`, targetState.region);
+            writeSession(`${storageKeyPrefix}_r1`, targetState.region);
           }
         } catch {}
       }
@@ -454,11 +460,11 @@ export function useTimezoneClock({
       setClock2(targetState);
       if (persistSelection) {
         try {
-          sessionStorage.setItem(c2Key, targetState.city);
-          sessionStorage.setItem(ct2Key, targetState.country);
-          sessionStorage.setItem(z2Key, targetState.timezone);
+          writeSession(c2Key, targetState.city);
+          writeSession(ct2Key, targetState.country);
+          writeSession(z2Key, targetState.timezone);
           if (targetState.region) {
-            sessionStorage.setItem(`${storageKeyPrefix}_r2`, targetState.region);
+            writeSession(`${storageKeyPrefix}_r2`, targetState.region);
           }
         } catch {}
       }
@@ -488,22 +494,22 @@ export function useTimezoneClock({
     setClock2(temp1);
     if (persistSelection) {
       try {
-        sessionStorage.setItem(c1Key, temp2.city);
-        sessionStorage.setItem(ct1Key, temp2.country);
-        sessionStorage.setItem(z1Key, temp2.timezone);
+        writeSession(c1Key, temp2.city);
+        writeSession(ct1Key, temp2.country);
+        writeSession(z1Key, temp2.timezone);
         if (temp2.region) {
-          sessionStorage.setItem(`${storageKeyPrefix}_r1`, temp2.region);
+          writeSession(`${storageKeyPrefix}_r1`, temp2.region);
         } else {
-          sessionStorage.removeItem(`${storageKeyPrefix}_r1`);
+          removeSession(`${storageKeyPrefix}_r1`);
         }
 
-        sessionStorage.setItem(c2Key, temp1.city);
-        sessionStorage.setItem(ct2Key, temp1.country);
-        sessionStorage.setItem(z2Key, temp1.timezone);
+        writeSession(c2Key, temp1.city);
+        writeSession(ct2Key, temp1.country);
+        writeSession(z2Key, temp1.timezone);
         if (temp1.region) {
-          sessionStorage.setItem(`${storageKeyPrefix}_r2`, temp1.region);
+          writeSession(`${storageKeyPrefix}_r2`, temp1.region);
         } else {
-          sessionStorage.removeItem(`${storageKeyPrefix}_r2`);
+          removeSession(`${storageKeyPrefix}_r2`);
         }
       } catch {}
     }

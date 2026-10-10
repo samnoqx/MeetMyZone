@@ -1,5 +1,10 @@
 'use client';
 
+import { readSession, writeSession, removeSession } from '@/utils/storage';
+
+import { parsePlannerList, safeZone, validDate, validSnapshot, normalizeParams } from '@/utils/planner';
+import { escapeCalendarText, foldCalendarLine } from '@/utils/calendar';
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { DateTime } from 'luxon';
 import {
@@ -12,6 +17,7 @@ import TimezoneTimeline from '@/components/TimezoneTimeline';
 import ShareMenu from '@/components/ShareMenu';
 import WorldClock from '@/components/WorldClock';
 import SEOSection from '@/components/SEOSection';
+import MeetingPlannerGuide from '@/components/MeetingPlannerGuide';
 import { ResolvedTimezone } from '@/utils/seoResolver';
 import Header from '@/components/Header';
 
@@ -31,6 +37,7 @@ interface HomeClientProps {
     date?: string;
   };
   headerPrefix?: React.ReactNode;
+  meetingOnly?: boolean;
 }
 function buildLocationLabel(name?: string, admin1?: string, country?: string): string {
   const parts: string[] = [];
@@ -50,30 +57,31 @@ function buildLocationLabel(name?: string, admin1?: string, country?: string): s
   return parts.join(', ');
 }
 
-export default function Home({ initialParams = {}, headerPrefix }: HomeClientProps) {
+export default function Home({ initialParams = {}, headerPrefix, meetingOnly = false }: HomeClientProps) {
+  initialParams = normalizeParams(initialParams);
   // Parse initial parameters on client initialization
   const parsedCities = initialParams.cities
-    ? initialParams.cities.split(',').map((c) => decodeURIComponent(c.trim())).filter(Boolean)
+    ? parsePlannerList(initialParams.cities)
     : [];
 
   const parsedZones = initialParams.zones
-    ? initialParams.zones.split(',').map((z) => decodeURIComponent(z.trim())).filter(Boolean)
+    ? parsePlannerList(initialParams.zones)
     : [];
 
   const initialCities = parsedCities.length > 0 ? parsedCities : ['London', 'New York'];
 
-  const initialCityTimezones: Record<string, string> = {};
+  const initialCityTimezones: Record<string, string> = Object.create(null);
   if (parsedCities.length > 0) {
     parsedCities.forEach((city, idx) => {
-      initialCityTimezones[city] = parsedZones[idx] || resolveTimeZone(city);
+      initialCityTimezones[city] = safeZone(city, parsedZones[idx]);
     });
   } else {
     initialCityTimezones['London'] = 'Europe/London';
     initialCityTimezones['New York'] = 'America/New_York';
   }
 
-  const initialReferenceCity = initialParams.reference
-    ? decodeURIComponent(initialParams.reference.trim())
+  const initialReferenceCity = initialParams.reference && initialCities.includes(initialParams.reference)
+    ? initialParams.reference.trim()
     : (parsedCities.length > 0 ? parsedCities[0] : 'London');
 
   const initialWorkHourStart = (() => {
@@ -98,8 +106,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
 
   const initialSelectedDate = (() => {
     if (initialParams.date) {
-      const dt = DateTime.fromISO(initialParams.date);
-      if (dt.isValid) {
+      if (validDate(initialParams.date)) {
         return initialParams.date;
       }
     }
@@ -159,7 +166,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
       let restoredWorkStart = initialWorkHourStart;
       let restoredWorkEnd = initialWorkHourEnd;
       let restoredDate = initialSelectedDate;
-      let restoredViewDate = initialViewDate;
+      let restoredViewDate: DateTime = initialViewDate;
       let restoredIs24Hour = true;
       let restoredNewCity = '';
       let restoredEventTitle = 'Aligned Sync Meeting';
@@ -169,13 +176,13 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
       let restoredActiveSchedulingSlot = null;
       let wasRestored = false;
 
-      const savedStateStr = sessionStorage.getItem('mmz_planner_state');
+      const savedStateStr = readSession('mmz_planner_state');
       if (savedStateStr) {
         try {
           const saved = JSON.parse(savedStateStr);
           
           // Check if session has expired (older than 24 hours)
-          const isExpired = typeof saved.timestamp === 'number' && (Date.now() - saved.timestamp > 24 * 60 * 60 * 1000);
+          const isExpired = !validSnapshot(saved);
           
           if (!isExpired) {
             if (Array.isArray(saved.cities) && saved.cities.length > 0) {
@@ -200,12 +207,12 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
             if (typeof saved.eventDescription === 'string') restoredEventDescription = saved.eventDescription;
             if (typeof saved.eventDuration === 'number') restoredEventDuration = saved.eventDuration;
             if (typeof saved.isScheduleModalOpen === 'boolean') restoredIsScheduleModalOpen = saved.isScheduleModalOpen;
-            if (saved.activeSchedulingSlot) restoredActiveSchedulingSlot = saved.activeSchedulingSlot;
+            if (saved.activeSchedulingSlot && typeof saved.activeSchedulingSlot.formattedUtc === 'string' && Number.isInteger(saved.activeSchedulingSlot.utcHour) && saved.activeSchedulingSlot.utcHour >= 0 && saved.activeSchedulingSlot.utcHour < 24) restoredActiveSchedulingSlot = saved.activeSchedulingSlot;
             
             wasRestored = true;
           } else {
             // Discard expired state
-            sessionStorage.removeItem('mmz_planner_state');
+            removeSession('mmz_planner_state');
           }
         } catch (e) {
           console.error('Failed to parse saved planner state from sessionStorage:', e);
@@ -213,19 +220,19 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
       }
 
       // URL Parameter Overrides (URL parameters always take precedence over sessionStorage)
-      if (initialParams.cities) {
-        restoredCities = initialParams.cities.split(',').map((c) => decodeURIComponent(c.trim())).filter(Boolean);
-        restoredCityTimezones = {};
+      if (parsedCities.length > 0) {
+        restoredCities = parsePlannerList(initialParams.cities);
+        restoredCityTimezones = Object.create(null);
         const parsedZones = initialParams.zones
-          ? initialParams.zones.split(',').map((z) => decodeURIComponent(z.trim())).filter(Boolean)
+          ? parsePlannerList(initialParams.zones)
           : [];
         restoredCities.forEach((city, idx) => {
-          restoredCityTimezones[city] = parsedZones[idx] || resolveTimeZone(city);
+          restoredCityTimezones[city] = safeZone(city, parsedZones[idx]);
         });
       }
 
-      if (initialParams.reference) {
-        restoredRef = decodeURIComponent(initialParams.reference.trim());
+      if (initialParams.reference && restoredCities.includes(initialParams.reference)) {
+        restoredRef = initialParams.reference.trim();
       } else if (initialParams.cities && restoredCities.length > 0) {
         restoredRef = restoredCities[0];
       }
@@ -246,7 +253,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
 
       if (initialParams.date) {
         const dt = DateTime.fromISO(initialParams.date);
-        if (dt.isValid) {
+        if (validDate(initialParams.date)) {
           restoredDate = initialParams.date;
           restoredViewDate = dt.startOf('month');
         }
@@ -301,7 +308,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
         isScheduleModalOpen,
         activeSchedulingSlot
       };
-      sessionStorage.setItem('mmz_planner_state', JSON.stringify(stateToSave));
+      writeSession('mmz_planner_state', JSON.stringify(stateToSave));
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
@@ -363,90 +370,25 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
 
 
 
-  // Update URL search parameters and path when state parameters change
+  // Preserve full labels, explicit time zones and all planner settings in shared URLs.
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-
-      // Auto-fallback if current referenceCity is removed
-      if (!cities.includes(referenceCity) && cities.length > 0) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setReferenceCity(cities[0]);
-      }
-
-      // Generate the clean slug path for cities
-      const slugifyCity = (cityName: string) => {
-        const namePart = cityName.split(',')[0].trim();
-        return namePart
-          .toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, '')
-          .replace(/\s+/g, '-');
-      };
-      const citiesSlug = cities.map(slugifyCity).join('-to-');
-
-      const isHomepage = window.location.pathname === '/';
-      const isPlanner = window.location.pathname === '/meeting-planner';
-      const isConvertRoute = window.location.pathname.startsWith('/convert/');
-      const isTimezoneRoute = window.location.pathname.startsWith('/timezone/');
-
-      let expectedPathname = window.location.pathname;
-      if (isHomepage) {
-        expectedPathname = '/';
-        if (cities.length > 0) {
-          const isDefault = cities.length === 2 && cities[0] === 'London' && cities[1] === 'New York';
-          if (!isDefault) {
-            params.set('cities', cities.join(','));
-            const resolvedZonesList = cities.map(city => cityTimezones[city] || resolveTimeZone(city));
-            params.set('zones', resolvedZonesList.join(','));
-          } else {
-            params.delete('cities');
-            params.delete('zones');
-          }
-        }
-      } else if (isPlanner) {
-        expectedPathname = '/meeting-planner';
-        if (cities.length > 0) {
-          const isDefault = cities.length === 2 && cities[0] === 'London' && cities[1] === 'New York';
-          if (!isDefault) {
-            params.set('cities', cities.join(','));
-            const resolvedZonesList = cities.map(city => cityTimezones[city] || resolveTimeZone(city));
-            params.set('zones', resolvedZonesList.join(','));
-          } else {
-            params.delete('cities');
-            params.delete('zones');
-          }
-        }
-      } else if (isTimezoneRoute) {
-        expectedPathname = `/timezone/${citiesSlug}`;
-        params.delete('cities');
-        params.delete('zones');
-      } else if (!isConvertRoute) {
-        expectedPathname = `/timezone/${citiesSlug}`;
-        params.delete('cities');
-        params.delete('zones');
-      }
-
-      params.delete('reference');
-      params.delete('workStart');
-      params.delete('workEnd');
-
-      // Only set date if it's not the default (today)
-      const todayISO = DateTime.now().toISODate();
-      if (selectedDate === todayISO) {
-        params.delete('date');
-      } else if (selectedDate) {
-        params.set('date', selectedDate);
-      }
-
-      const queryString = params.toString();
-      const newUrl = `${expectedPathname}${queryString ? `?${queryString}` : ''}`;
-      const currentUrlPath = window.location.pathname + window.location.search;
-
-      if (currentUrlPath !== newUrl) {
-        window.history.replaceState(window.history.state, '', newUrl);
-      }
+    if (!restored || !cities.length) return;
+    const reference = cities.includes(referenceCity) ? referenceCity : cities[0];
+    // Recover the reference selection after a location is removed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (reference !== referenceCity) setReferenceCity(reference);
+    const params = new URLSearchParams();
+    params.set('cities', JSON.stringify(cities));
+    params.set('zones', JSON.stringify(cities.map(city => safeZone(city, cityTimezones[city]))));
+    params.set('reference', reference);
+    params.set('workStart', String(workHourStart));
+    params.set('workEnd', String(workHourEnd));
+    params.set('date', selectedDate);
+    const nextUrl = `/meeting-planner?${params.toString()}`;
+    if (window.location.pathname + window.location.search !== nextUrl) {
+      window.history.replaceState(window.history.state, '', nextUrl);
     }
-  }, [cities, referenceCity, workHourStart, workHourEnd, selectedDate]);
+  }, [restored, cities, cityTimezones, referenceCity, workHourStart, workHourEnd, selectedDate]);
 
   // Update current reference city local hour periodically
   useEffect(() => {
@@ -472,12 +414,14 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
       setSuggestions([]);
       return;
     }
+    const controller = new AbortController();
     const query = newCity.toLowerCase().trim();
 
     const delayDebounceFn = setTimeout(() => {
-      fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=en&format=json`)
-        .then((res) => res.json())
+      fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=en&format=json`, { signal: controller.signal })
+        .then((res) => { if (!res.ok) throw new Error('Geocoding failed'); return res.json(); })
         .then((data) => {
+          if (controller.signal.aborted) return;
           if (data && data.results) {
             const list = data.results.map((item: { name: string; admin1?: string; country?: string; timezone?: string }) => {
               const fullLabel = buildLocationLabel(item.name, item.admin1, item.country);
@@ -495,6 +439,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
           }
         })
         .catch((err) => {
+          if (controller.signal.aborted) return;
           console.error("Geocoding fetch error:", err);
           const matches = ZONE_SEARCH_INDEX
             .filter(item =>
@@ -512,7 +457,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
         });
     }, 400);
 
-    return () => clearTimeout(delayDebounceFn);
+    return () => { controller.abort(); clearTimeout(delayDebounceFn); };
   }, [newCity, cities]);
 
   // Generate matrix based on active cities and custom parameters
@@ -529,6 +474,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
 
   // Add a city suggestion to the planner
   const handleSelectSuggestion = (sug: GeocodeSuggestion) => {
+    if (cities.length >= 16) { setErrorMsg('You can compare up to 16 locations.'); return; }
     if (cities.map(c => c.toLowerCase()).includes(sug.label.toLowerCase())) {
       setErrorMsg(`"${sug.label}" is already added.`);
       return;
@@ -549,6 +495,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
   const handleAddCity = async (cityName: string) => {
     const trimmed = cityName.trim();
     if (!trimmed) return;
+    if (cities.length >= 16 || trimmed.length > 120) { setErrorMsg('Use up to 16 locations with names under 120 characters.'); return; }
 
     if (cities.map(c => c.toLowerCase()).includes(trimmed.toLowerCase())) {
       setErrorMsg(`"${trimmed}" is already added.`);
@@ -675,7 +622,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
         isScheduleModalOpen: false,
         activeSchedulingSlot
       };
-      sessionStorage.setItem('mmz_planner_state', JSON.stringify(stateToSave));
+      writeSession('mmz_planner_state', JSON.stringify(stateToSave));
     }
     setIsScheduleModalOpen(false);
   };
@@ -759,7 +706,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
     const icsContent = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//Antigravity//MeetMyZone//EN',
+      'PRODID:-//MeetMyZone//Meeting Planner//EN',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
       'BEGIN:VEVENT',
@@ -767,11 +714,11 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
       `DTSTAMP:${DateTime.utc().toFormat("yyyyMMdd'T'HHmmss'Z'")}`,
       `DTSTART:${startUtcStr}`,
       `DTEND:${endUtcStr}`,
-      `SUMMARY:${eventTitle || "Aligned Sync Meeting"}`,
-      `DESCRIPTION:${eventDescription || ("MeetMyZone: " + window.location.href)}`,
+      `SUMMARY:${escapeCalendarText(eventTitle || "Aligned Sync Meeting")}`,
+      `DESCRIPTION:${escapeCalendarText(eventDescription || ("MeetMyZone: " + window.location.href))}`,
       'END:VEVENT',
       'END:VCALENDAR'
-    ].join('\r\n');
+    ].map(foldCalendarLine).join('\r\n') + '\r\n';
 
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -781,6 +728,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   // recommendedSlots is defined via useMemo above
@@ -832,7 +780,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-brand-accent border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-medium text-txt-secondary">Loading timezone planner...</p>
+          <p className="text-sm font-medium text-txt-secondary">Loading meeting planner...</p>
         </div>
       </div>
     );
@@ -846,26 +794,26 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
         <Header
           actions={
             <div className="hidden md:block">
-              <ShareMenu cities={cities} matrix={matrix} selectedDate={selectedDate} isCompact={true} />
+              <ShareMenu cities={cities} matrix={matrix} selectedDate={selectedDate} referenceCity={referenceCity} isCompact={true} />
             </div>
           }
         />
 
         {/* Hero Section */}
-        <header className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-4 md:pt-12 md:pb-2 flex flex-col items-start gap-3 md:gap-4">
+        <header className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-3 sm:pt-6 sm:pb-4 flex flex-col items-start gap-2">
           {headerPrefix}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-txt-heading leading-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-txt-heading leading-tight">
             <span className="from-grad-from via-grad-via to-grad-to bg-linear-to-r text-transparent bg-clip-text">
-              Global Time Zone Converter. Plan Perfect Meetings.
+              Meeting Planner
             </span>
           </h1>
 
-          <p className="text-sm sm:text-base text-txt-secondary max-w-3xl leading-relaxed">
-            Instantly check live times across 190+ countries with our precision World Clock, or visualize working hour overlaps to find the perfect meeting slot. Save your favorite locations, share schedules with one click, and coordinate global teams — all free, no login required.
+          <p className="max-w-xl text-sm sm:text-base text-txt-secondary leading-relaxed">
+            Plan a meeting around your participants’ local working hours. Add their cities, choose a date, and review the shared availability. The timeline accounts for daylight saving time on your selected date. Pick a meeting slot, then share the plan or export a calendar invitation.
           </p>
 
-          <div className="hidden md:flex md:flex-row gap-4 w-full max-w-2xl mt-6 mb-2 mx-auto">
-            <a
+          {!meetingOnly && <div className="hidden md:flex md:flex-row gap-4 w-full max-w-2xl mt-6 mb-2 mx-auto">
+            {!meetingOnly && <a
               href="#world-clock"
               className="group h-14 flex items-center justify-center gap-2 bg-surf-2 hover:bg-surf-3 border border-border-custom hover:border-brand-accent hover:-translate-y-1 hover:shadow-card-hover text-txt-primary focus:text-txt-primary active:text-txt-primary shadow-xs active:scale-[0.98] transition-all duration-200 outline-none rounded-xl w-full text-base font-semibold cursor-pointer text-center"
               title="Jump down to interactive World Clock converter"
@@ -874,7 +822,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>Open World Clock ↓</span>
-            </a>
+            </a>}
             <a
               href="#meeting-planner"
               className="group h-14 flex items-center justify-center gap-2 bg-surf-2 hover:bg-surf-3 border border-border-custom hover:border-brand-accent hover:-translate-y-1 hover:shadow-card-hover text-txt-primary focus:text-txt-primary active:text-txt-primary shadow-xs active:scale-[0.98] transition-all duration-200 outline-none rounded-xl w-full text-base font-semibold cursor-pointer text-center"
@@ -884,19 +832,19 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
               </svg>
               <span>Start Meeting Planner ↓</span>
             </a>
-          </div>
+          </div>}
 
           {/* 4-Tile Grid for Mobile Only (World Clock, Planner, Copy Link, Copy Text) */}
-          <ShareMenu cities={cities} matrix={matrix} selectedDate={selectedDate} isMobileGrid={true} />
+          <ShareMenu cities={cities} matrix={matrix} selectedDate={selectedDate} referenceCity={referenceCity} isMobileGrid={true} plannerOnly={meetingOnly} />
 
         </header>
 
         {/* Main Area */}
         <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 mt-2 md:mt-2 flex flex-col gap-6 sm:gap-8">
 
-          <div id="world-clock" className="w-full">
+          {!meetingOnly && <div id="world-clock" className="w-full">
             <WorldClock />
-          </div>
+          </div>}
 
           {/* Top Widgets Grid */}
           <div id="meeting-planner" className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
@@ -1405,7 +1353,7 @@ export default function Home({ initialParams = {}, headerPrefix }: HomeClientPro
         )}
 
         {/* Dynamic SEO Section */}
-        {memoizedSEOSection}
+        {meetingOnly ? <MeetingPlannerGuide zones={resolvedZones} selectedDate={selectedDate} /> : memoizedSEOSection}
 
         {/* Restored Session Toast Notification */}
         {showRestoredToast && (

@@ -4,22 +4,22 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 
 export const metadata: Metadata = {
-  title: "Time Zone Tools for Global Coordination | MeetMyZone",
-  description: "Compare time zones, check current local times, find overlapping working hours, and plan meetings across cities worldwide.",
+  title: "Time Zone Tools | MeetMyZone",
+  description: "Convert times, compare live clocks, and plan global meetings.",
   alternates: {
     canonical: "https://meetmyzone.com/tools",
   },
   openGraph: {
-    title: "Time Zone Tools for Global Coordination | MeetMyZone",
-    description: "Compare time zones, check current local times, find overlapping working hours, and plan meetings across cities worldwide.",
+    title: "Time Zone Tools | MeetMyZone",
+    description: "Convert times, compare live clocks, and plan global meetings.",
     type: "website",
     siteName: "MeetMyZone",
     url: "https://meetmyzone.com/tools"
   },
   twitter: {
     card: "summary_large_image",
-    title: "Time Zone Tools for Global Coordination | MeetMyZone",
-    description: "Compare time zones, check current local times, find overlapping working hours, and plan meetings across cities worldwide."
+    title: "Time Zone Tools | MeetMyZone",
+    description: "Convert times, compare live clocks, and plan global meetings."
   }
 };
 
@@ -71,15 +71,15 @@ export default function ToolsPage() {
     <>
       <Header />
       <main className="min-h-screen bg-background text-txt-primary transition-colors">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
 
           {/* Page Header */}
-          <div className="text-center mb-14">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-txt-heading leading-tight mb-4">
-              Time Zone Tools for Global Coordination
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-txt-heading leading-tight mb-2">
+              Time Zone Tools
             </h1>
-            <p className="text-sm sm:text-base text-txt-secondary font-bold leading-relaxed max-w-2xl mx-auto">
-              Compare time zones, check current local times, find overlapping working hours, and plan meetings across cities worldwide.
+            <p className="max-w-xl mx-auto text-sm sm:text-base text-txt-secondary leading-relaxed">
+              Choose the right tool for your time-related task. Convert between time zones or compare local times in two cities. Check live clocks when you need the current time. Use the meeting planner to find shared availability and prepare an invitation.
             </p>
           </div>
 

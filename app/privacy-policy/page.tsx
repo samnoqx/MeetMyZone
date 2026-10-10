@@ -5,7 +5,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 
 export const metadata: Metadata = {
   title: "Privacy Policy | MeetMyZone",
-  description: "Learn how MeetMyZone protects your privacy, minimizes data collection, manages cookies, supports Google AdSense compliance, and safeguards your information while using our global timezone planning platform.",
+  description: "Learn how MeetMyZone protects your privacy, minimizes data collection, manages cookies, handles optional analytics, and safeguards your information while using our global timezone planning platform.",
   alternates: {
     canonical: "https://meetmyzone.com/privacy-policy"
   }
@@ -22,7 +22,7 @@ export default function PrivacyPolicyPage() {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "Privacy Policy | MeetMyZone",
-    "description": "Learn how MeetMyZone protects your privacy, minimizes data collection, manages cookies, supports Google AdSense compliance, and safeguards your information while using our global timezone planning platform.",
+    "description": "Learn how MeetMyZone protects your privacy, minimizes data collection, manages cookies, handles optional analytics, and safeguards your information while using our global timezone planning platform.",
     "url": "https://meetmyzone.com/privacy-policy"
   };
 
@@ -87,7 +87,7 @@ export default function PrivacyPolicyPage() {
                 1. General Overview & Privacy Commitment
               </h2>
               <p>
-                At MeetMyZone, we follow a privacy-first philosophy. Our platform is designed to help users coordinate time zones globally while processing only the minimum information required to deliver our services. Most of our tools and functionalities operate fully without requiring user registration or account creation. We process data in strict compliance with applicable privacy laws, including the General Data Protection Regulation (GDPR), the California Consumer Privacy Act (CCPA), and Google AdSense publisher policies.
+                At MeetMyZone, we follow a privacy-first philosophy. Our platform is designed to help users coordinate time zones globally while processing only the minimum information required to deliver our services. Most of our tools and functionalities operate fully without requiring user registration or account creation. Planner settings are saved in browser session storage. Searching for a location sends your search text to Open-Meteo, our geocoding provider. Hosting providers may process request information needed to serve the website.
               </p>
               <p>
                 If you have questions regarding this Privacy Policy or our practices, please contact us at <a href="mailto:support@meetmyzone.com" className="text-brand-accent hover:text-brand-accent-hover hover:underline transition duration-150 font-semibold">support@meetmyzone.com</a> or visit our <Link href="/contact-us" className="text-brand-accent hover:text-brand-accent-hover hover:underline transition duration-150 font-semibold">Contact Us</Link> page.
@@ -96,38 +96,34 @@ export default function PrivacyPolicyPage() {
 
             <section className="flex flex-col gap-2">
               <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                2. Timezone Calculations & Zero Data Storage
+                2. Timezone Calculations & Planner Storage
               </h2>
               <p>
-                MeetMyZone operates on a privacy-by-design architecture. The platform operates without mandatory user accounts, and all timezone conversions, timelines, and meeting layout calculations occur locally inside your browser sandbox.
+                MeetMyZone operates on a privacy-by-design architecture. The platform operates without mandatory user accounts, and interactive timezone calculations run in your browser. Initial page rendering and local dynamic share images can also be generated on the server.
               </p>
               <p>
-                No planner history, added cities, or timeline sessions are permanently stored on MeetMyZone servers. Meeting layouts remain strictly in your browser memory. When you share a timeline layout, the layout parameters are compressed and encoded directly into the share link parameters. Because this configuration resides entirely within the generated URL itself, it is never transmitted to a database.
+                Planner preferences are saved in your browser session storage, with saved planner snapshots expiring after 24 hours. Shared links encode location labels, time zones, working hours and dates in URL parameters. Opening a link sends those parameters to the hosting provider; they may appear in request logs and browsing history. The application does not use a database for planner history.
               </p>
             </section>
 
             <section className="flex flex-col gap-2">
               <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                3. Google AdSense & Third-Party Cookies
+                3. Optional Analytics & Cookies
               </h2>
               <p>
-                Advertising helps keep MeetMyZone free. To support platform development, we integrate third-party ad networks, primarily Google AdSense. Google and other vendors may display relevant advertisements using tracking tools like cookies and web beacons in accordance with Google&apos;s advertising policies.
+                Advertising scripts are currently disabled. If optional Google Analytics is configured, it loads only after you choose Allow analytics. You can decline and continue using all planner tools.
               </p>
               <p>
-                Google uses the DoubleClick DART cookie to serve personalized ads. You can opt out of the use of DART cookies by visiting the Google Advertising Privacy Policy:
-                <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:text-brand-accent-hover hover:underline inline-block ml-1 font-semibold transition duration-150">https://policies.google.com/technologies/ads</a>.
-              </p>
-              <p className="mt-1">
-                Please note that MeetMyZone has no access to or control over these advertising cookies managed by third-party vendors.
+                If you allow Google Analytics, Google receives information about your visit and may set cookies. Read <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">how Google uses information from sites that use its services</a> for details.
               </p>
             </section>
 
             <section className="flex flex-col gap-2">
               <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                4. Consent Management Platform (CMP)
+                4. Analytics Preferences
               </h2>
               <p>
-                MeetMyZone implements a Google-certified Consent Management Platform (CMP) to comply with data protection regulations, including the GDPR and UK GDPR. Visitors from the European Economic Area (EEA) and the United Kingdom are presented with a consent banner to customize or refuse data collection for advertising and analytics. Consent choices are stored locally and respected across third-party providers. You can modify your consent preferences at any time by clearing your browser cookies.
+                When optional analytics is configured, all visitors receive a choice to allow or decline it. The choice lasts for the browser session. Clear this site&apos;s session storage or close the session to choose again. This site does not currently integrate a Google-certified advertising Consent Management Platform.
               </p>
             </section>
 

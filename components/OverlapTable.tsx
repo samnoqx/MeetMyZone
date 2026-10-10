@@ -4,26 +4,18 @@ import { DateTime } from 'luxon';
 
 interface OverlapTableProps {
   zones: ResolvedTimezone[];
+  selectedDate?: string;
 }
 
-export default function OverlapTable({ zones }: OverlapTableProps) {
+export default function OverlapTable({ zones, selectedDate }: OverlapTableProps) {
   if (zones.length === 0) return null;
 
   const refZone = zones[0];
   const targetZones = zones.slice(1);
 
-  const now = DateTime.now();
-  const refTime = now.setZone(refZone.zoneName);
-
-  // Pre-calculate target zones and offset differences once
-  const targetZonesData = targetZones.map((z) => {
-    const targetTime = now.setZone(z.zoneName);
-    const offsetDiffHours = (targetTime.offset - refTime.offset) / 60;
-    return {
-      zone: z,
-      offsetDiffHours
-    };
-  });
+  const refDate = selectedDate
+    ? DateTime.fromISO(selectedDate, { zone: refZone.zoneName }).startOf('day')
+    : DateTime.now().setZone(refZone.zoneName).startOf('day');
 
   // Generate rows for local hours 9 AM to 5 PM in refZone
   const rows = Array.from({ length: 9 }).map((_, index) => {
@@ -36,12 +28,10 @@ export default function OverlapTable({ zones }: OverlapTableProps) {
 
     // Calculate times for each target zone
     let isAllWorking = true;
-    const targetLabels = targetZonesData.map(({ offsetDiffHours }) => {
-      // Calculate local hour and minute precisely using minutes offset
-      const totalMinutes = refHour24 * 60 + Math.round(offsetDiffHours * 60);
-      const positiveMinutes = (totalMinutes % 1440 + 1440) % 1440;
-      const toHour24 = Math.floor(positiveMinutes / 60);
-      const toMinutes = positiveMinutes % 60;
+    const targetLabels = targetZones.map((zone) => {
+      const localTime = refDate.set({ hour: refHour24 }).setZone(zone.zoneName);
+      const toHour24 = localTime.hour;
+      const toMinutes = localTime.minute;
 
       const toPeriod = toHour24 >= 12 ? 'PM' : 'AM';
       const toHour12 = toHour24 % 12 === 0 ? 12 : toHour24 % 12;

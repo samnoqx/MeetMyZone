@@ -492,18 +492,17 @@ export function getCountryForTimezone(zone: string): string {
 }
 
 export function generateTimeInIntro(zone: ResolvedTimezone, country: string): string {
-  const cityName = zone.cityName;
-  const zoneName = zone.zoneName;
-  
-  const introTemplates = [
-    `Welcome to the live time resource for **${cityName}**, ${country}. Currently, the local time in ${cityName} is determined by the ${zoneName} timezone rules. Whether you are scheduling an international business call, coordinating project handovers with remote team members, or planning your next vacation, keeping track of time zone differences is essential. Our digital clock displays the current local time in ${cityName} with high precision, updating in real time. Below, you will find a full breakdown of standard UTC offsets, daylight saving status, standard working hours, and comparative tables linking ${cityName} with other key global cities.`,
-    `Need to know the current local time in **${cityName}**, ${country} right now? MeetMyZone coordinates live time metrics for the ${zoneName} timezone. Correctly calculating offsets is critical for remote coordinators, global investors, and travelers trying to avoid late-night calendar errors. The live-updating clock above shows the exact standard or daylight time for ${cityName}. In addition to the current time and date, this guide outlines the area's local working hours, daylight saving rules, and features shortcuts to popular converters so you can align team meetings without timezone friction.`,
-    `Staying aligned with **${cityName}**, ${country} is easy with our real-time world clock tracker. Clocks in ${cityName} run on the official ${zoneName} database parameters, which adjust automatically for local daylight saving transitions. If you manage client relations, remote software development pipelines, or are calling friends abroad, checking local hours avoids disruptive disruptions. Explore our summary tables below to find standard business hours, coordinates, travel gateway information, and dynamic answers to frequently asked questions about ${cityName} time.`
-  ];
+  const { cityName, zoneName } = zone;
 
-  // Deterministically select template based on city name length
-  const seed = cityName.length % 3;
-  return introTemplates[seed];
+  if (zoneName === 'UTC') {
+    return 'UTC is the global reference for local time offsets. The live clock shows the current UTC time and date. UTC stays at UTC+00:00 and does not observe daylight saving time. Use this reference when checking a timestamp or confirming a time given in UTC.';
+  }
+
+  const daylightInfo = getDstDetail(zone).observeDst
+    ? 'Seasonal daylight saving changes its UTC offset during the year.'
+    : 'Its time zone does not currently observe seasonal daylight saving changes.';
+
+  return `${cityName}, ${country} follows the ${zoneName} time zone. The live clock shows ${cityName}’s local time and date. ${daylightInfo} Check ${cityName}’s UTC offset and daylight saving details before arranging a call or visit.`;
 }
 
 export function generateCityFAQs(zone: ResolvedTimezone, dst: DstDetail): FAQItem[] {

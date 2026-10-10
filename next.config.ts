@@ -1,8 +1,26 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Cloudflare Pages utilizes next-on-pages edge functions for dynamic API routes (like /api/og) and SSR.
-  // Static HTML exports ('output: export') are disabled to keep dynamic OG image generation functional.
+  // Build separately from the live preview when targeting Cloudflare.
+  distDir: process.env.NODE_ENV === 'development' ? '.next-preview' : '.next',
+  poweredByHeader: false,
+  // Proot does not provide the syscall used by Next's native directory lock.
+  experimental: { lockDistDir: process.env.MMZ_DISABLE_DIRECTORY_LOCK !== '1' },
+  async headers() {
+    return [{
+      source: '/:path*',
+      headers: [
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'X-Frame-Options', value: 'DENY' },
+        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+      ],
+    }, {
+      source: '/:path*',
+      has: [{ type: 'host', value: '(?:.*\\.(?:workers\\.dev|pages\\.dev|cloudflareworkers\\.com)|.*(?:staging|preview).*|localhost|127\\.0\\.0\\.1)(?::[0-9]+)?' }],
+      headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+    }];
+  },
   images: {
     unoptimized: true,
   },

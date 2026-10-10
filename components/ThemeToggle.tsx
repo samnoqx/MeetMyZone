@@ -1,5 +1,7 @@
 'use client';
 
+import { readSession, writeSession } from '@/utils/storage';
+
 import React, { useState, useEffect, useRef } from 'react';
 
 type ThemeType = 'light' | 'dark';
@@ -14,7 +16,7 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     const syncThemeState = () => {
-      const savedTheme = sessionStorage.getItem('meetmyzone-theme');
+      const savedTheme = readSession('meetmyzone-theme');
       if (savedTheme === 'light' || savedTheme === 'dark') {
         setTheme(savedTheme as ThemeType);
       } else {
@@ -87,7 +89,7 @@ export default function ThemeToggle() {
 
     // Persist user selection
     try {
-      sessionStorage.setItem('meetmyzone-theme', newTheme);
+      writeSession('meetmyzone-theme', newTheme);
       window.dispatchEvent(new CustomEvent('meetmyzone-theme-change', { detail: newTheme }));
     } catch {}
   };

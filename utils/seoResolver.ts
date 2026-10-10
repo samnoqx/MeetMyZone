@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import { resolveTimeZone, ALL_IANA_ZONES } from './timezone';
 
 export interface ResolvedTimezone {
@@ -28,11 +29,12 @@ export const TIMEZONE_ABBR_MAP: Record<string, { displayName: string; cityName: 
  * Handles abbreviations, dynamic city name parsing, and full IANA timezones.
  */
 export function resolveSlug(slug: string): ResolvedTimezone | null {
+  if (!slug.trim() || slug.length > 120) return null;
   const normalized = slug.trim().toLowerCase().replace(/-+/g, ' ');
   
   // 1. Check mapped abbreviations first
   const abbr = normalized.replace(/\s+/g, '');
-  if (TIMEZONE_ABBR_MAP[abbr]) {
+  if (Object.hasOwn(TIMEZONE_ABBR_MAP, abbr)) {
     return {
       slug,
       ...TIMEZONE_ABBR_MAP[abbr]
@@ -109,8 +111,10 @@ export function parsePairing(pairingSlug: string): ResolvedPairing | null {
  * into an array of city name and timezone objects.
  */
 export function parseCitiesSlug(citiesSlug: string): { cityName: string; timezone: string }[] {
+  if (citiesSlug.length > 2000) return [];
   const parts = citiesSlug.toLowerCase().split(/-(?:to|vs|and)-/);
-  return parts.map(part => {
+  if (parts.length > 16 || parts.some(part => !part || part.length > 120)) return [];
+  const result = parts.map(part => {
     const resolvedTz = resolveSlug(part);
     if (resolvedTz) {
       return {
@@ -128,6 +132,7 @@ export function parseCitiesSlug(citiesSlug: string): { cityName: string; timezon
       timezone: resolveTimeZone(displayName)
     };
   });
+  return result.every(item => DateTime.now().setZone(item.timezone).isValid) ? result : [];
 }
 
 export function getSlugForCityAndZone(cityName: string, zoneName: string): string {
@@ -153,6 +158,6 @@ export const ALL_PAIRINGS = [
 export function isTimezonePairing(pairingSlug: string): boolean {
   const parts = pairingSlug.toLowerCase().split('-to-');
   if (parts.length !== 2) return false;
-  return !!(TIMEZONE_ABBR_MAP[parts[0]] && TIMEZONE_ABBR_MAP[parts[1]]);
+  return Object.hasOwn(TIMEZONE_ABBR_MAP, parts[0]) && Object.hasOwn(TIMEZONE_ABBR_MAP, parts[1]);
 }
 

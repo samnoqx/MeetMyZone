@@ -96,7 +96,7 @@ export default async function Page() {
       <Header />
 
       {/* Main Content Area */}
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 mt-8 flex flex-col gap-6 flex-1 pb-16">
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 mt-4 sm:mt-6 flex flex-col gap-4 sm:gap-6 flex-1 pb-16">
         
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="text-xs sm:text-sm font-semibold text-txt-muted">
@@ -116,15 +116,15 @@ export default async function Page() {
         </nav>
 
         {/* Hero Section */}
-        <header className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-6">
+        <header className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 lg:gap-10 items-center mb-2 sm:mb-4">
           
           {/* Left Column: Headline and description */}
-          <div className="lg:col-span-7 flex flex-col gap-3.5 text-left">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-txt-heading leading-tight">
+          <div className="lg:col-span-7 flex flex-col gap-2 text-left">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-txt-heading leading-tight">
               Current Local Times
             </h1>
-            <p className="text-sm sm:text-base text-txt-secondary leading-relaxed font-medium">
-              Check the current local time, date, UTC offsets, and daylight saving status for major capitals, timezone abbreviations, and cities worldwide.
+            <p className="max-w-xl text-sm sm:text-base text-txt-secondary leading-relaxed">
+              Check the current local time and date in cities worldwide. Live clocks show each location’s UTC offset and daylight saving status. Use each clock’s dropdown to search for a different city. Browse the directory for local time details in your chosen destination.
             </p>
           </div>
 

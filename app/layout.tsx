@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Footer from '@/components/Footer';
-import Script from "next/script";
+import AnalyticsConsent from "@/components/AnalyticsConsent";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://meetmyzone.com'),
@@ -82,28 +82,7 @@ export default function RootLayout({
         `}} />
       </head>
       <body className="min-h-full flex flex-col bg-background text-txt-primary transition-colors duration-150 font-sans">
-        {/* Google AdSense / CMP Integration */}
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
-
-        {/* Google Analytics */}
-        <Script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-W62TK5ME01"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-W62TK5ME01');
-          `}
-        </Script>
+        <AnalyticsConsent />
 
         {/* Spotlight Glow Effect */}
         <div className="fixed inset-0 pointer-events-none z-0 spotlight-glow" />

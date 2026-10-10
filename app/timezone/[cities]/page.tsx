@@ -1,3 +1,4 @@
+import { normalizeParams } from '@/utils/planner';
 import HomeClient from '../../HomeClient';
 import { parseCitiesSlug, isTimezonePairing } from '../../../utils/seoResolver';
 import { notFound } from 'next/navigation';
@@ -61,7 +62,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { cities } = await params;
-  const sParams = await searchParams;
+  const sParams = normalizeParams(await searchParams);
   const resolved = parseCitiesSlug(cities);
   
   if (resolved.length === 0) {
@@ -126,7 +127,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
 export default async function Page({ params, searchParams }: PageProps) {
   const { cities } = await params;
-  const sParams = await searchParams;
+  const sParams = normalizeParams(await searchParams);
   const resolved = parseCitiesSlug(cities);
   
   if (resolved.length === 0) {

@@ -1,4 +1,6 @@
 "use client";
+
+import { readSession, writeSession } from '@/utils/storage';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DateTime } from 'luxon';
 import { ZONE_SEARCH_INDEX, deduplicateSuggestions } from '@/utils/timezone';
@@ -107,10 +109,10 @@ export default function WorldClock({
   useEffect(() => {
     if (isConverterPage) return;
     if (typeof window !== 'undefined') {
-      const savedCity1 = sessionStorage.getItem('wc_c1');
-      const savedZone1 = sessionStorage.getItem('wc_z1');
-      const savedCity2 = sessionStorage.getItem('wc_c2');
-      const savedZone2 = sessionStorage.getItem('wc_z2');
+      const savedCity1 = readSession('wc_c1');
+      const savedZone1 = readSession('wc_z1');
+      const savedCity2 = readSession('wc_c2');
+      const savedZone2 = readSession('wc_z2');
 
       /* eslint-disable react-hooks/set-state-in-effect */
       if (savedCity1) setCity1(savedCity1);
@@ -239,8 +241,8 @@ export default function WorldClock({
       setZone1(sug.timezone);
       if (!isConverterPage) {
         try {
-          sessionStorage.setItem('wc_c1', cityName);
-          sessionStorage.setItem('wc_z1', sug.timezone);
+          writeSession('wc_c1', cityName);
+          writeSession('wc_z1', sug.timezone);
         } catch {}
       }
       if (onSelectionChange) {
@@ -251,8 +253,8 @@ export default function WorldClock({
       setZone2(sug.timezone);
       if (!isConverterPage) {
         try {
-          sessionStorage.setItem('wc_c2', cityName);
-          sessionStorage.setItem('wc_z2', sug.timezone);
+          writeSession('wc_c2', cityName);
+          writeSession('wc_z2', sug.timezone);
         } catch {}
       }
       if (onSelectionChange) {

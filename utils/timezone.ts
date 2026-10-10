@@ -165,6 +165,7 @@ const resolveCache = new Map<string, string>();
  */
 export function resolveTimeZone(city: string): string {
   const normalized = city.trim().toLowerCase();
+  if (!normalized) return '';
   
   const cached = resolveCache.get(normalized);
   if (cached) {
@@ -182,7 +183,7 @@ export function resolveTimeZone(city: string): string {
     const indexMatch = ZONE_SEARCH_INDEX_MAP.get(normalized);
     if (indexMatch) {
       result = indexMatch;
-    } else if (CITY_TO_ZONE[normalized]) {
+    } else if (Object.hasOwn(CITY_TO_ZONE, normalized)) {
       // 3. Try custom CITY_TO_ZONE override
       result = CITY_TO_ZONE[normalized];
     } else {
@@ -196,6 +197,7 @@ export function resolveTimeZone(city: string): string {
     }
   }
 
+  if (resolveCache.size >= 512) resolveCache.clear();
   resolveCache.set(normalized, result);
   return result;
 }
@@ -252,21 +254,19 @@ export function generateTimezoneMatrix(
   
   // Start with selectedDate or today's date in reference zone at 00:00 local time
   const baseTime = selectedDateStr
-    ? DateTime.fromISO(selectedDateStr).setZone(refZone).startOf('day')
+    ? DateTime.fromISO(selectedDateStr, { zone: refZone }).startOf('day')
     : DateTime.now().setZone(refZone).startOf('day');
   
   // Pre-resolve timezone names and short offset names once per city for the entire matrix
-  const cityZones: Record<string, string> = {};
-  const cityOffsetNames: Record<string, string> = {};
+  const cityZones: Record<string, string> = Object.create(null);
   for (const city of cities) {
     const zone = (customMappings && customMappings[city]) || resolveTimeZone(city);
     cityZones[city] = zone;
-    cityOffsetNames[city] = baseTime.setZone(zone).offsetNameShort || '';
   }
 
   for (let h = 0; h < 24; h++) {
     const refTime = baseTime.plus({ hours: h });
-    const citiesData: Record<string, TimeMatrixCell> = {};
+    const citiesData: Record<string, TimeMatrixCell> = Object.create(null);
     
     for (const city of cities) {
       const zone = cityZones[city];
@@ -293,7 +293,7 @@ export function generateTimezoneMatrix(
         localTime: formattedLocal,
         localTime24: formattedLocal24,
         offset: offsetVal,
-        offsetName: cityOffsetNames[city],
+        offsetName: localTime.offsetNameShort || '',
         isWorking: isWorkingHour(hr, min, workStart, workEnd),
         localHour: hr,
         cityName: city,
