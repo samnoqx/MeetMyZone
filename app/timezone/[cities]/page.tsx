@@ -204,7 +204,7 @@ export default async function Page({ params, searchParams }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema).replace(/</g, '\\u003c') }}
       />
-      <HomeClient initialParams={initialParams} headerPrefix={breadcrumbPrefix} />
+      <HomeClient initialDate={new Date().toISOString().slice(0, 10)} initialParams={initialParams} headerPrefix={breadcrumbPrefix} />
     </>
   );
 }

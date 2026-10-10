@@ -6,9 +6,23 @@ import { BLOG_POSTS } from '@/lib/blogData';
 import BlogCategoryBadge from '@/components/BlogCategoryBadge';
 
 export const metadata: Metadata = {
-  title: 'Practical Guides for Global Time Coordination | MeetMyZone Blog',
+  title: 'Time Zone & Meeting Planning Guides | MeetMyZone',
   description:
     'Clear, practical advice for comparing time zones, finding overlapping working hours, and scheduling international meetings without the guesswork.',
+  openGraph: {
+    title: "Time Zone & Meeting Planning Guides | MeetMyZone",
+    description: "Practical guides to time zone differences, working-hour overlap, daylight saving changes and international meeting schedules.",
+    type: "website",
+    url: "https://meetmyzone.com/blog",
+    siteName: "MeetMyZone",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "MeetMyZone time zone guides" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Time Zone & Meeting Planning Guides | MeetMyZone",
+    description: "Practical guides to time zone differences, working-hour overlap, daylight saving changes and international meeting schedules.",
+    images: ["/og-default.png"],
+  },
   alternates: {
     canonical: 'https://meetmyzone.com/blog',
   },

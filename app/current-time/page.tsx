@@ -9,22 +9,24 @@ import CurrentTimeClocksHeroCard from '@/components/CurrentTimeClocksHeroCard';
 export const revalidate = 86400; // Cache for 24 hours
 
 export const metadata: Metadata = {
-  title: "Current Local Times | Live Clocks Directory | MeetMyZone",
-  description: "Discover current local times, IANA timezone names, UTC offsets, and daylight saving status for major cities and regions worldwide.",
+  title: "Current Local Time | Live World Clocks | MeetMyZone",
+  description: "Check the current local time in cities worldwide. View live world clocks, UTC offsets, time zone names and daylight saving status for each location.",
   alternates: {
     canonical: "https://meetmyzone.com/current-time",
   },
   openGraph: {
-    title: "Current Local Times | Live Clocks Directory | MeetMyZone",
-    description: "Discover current local times, IANA timezone names, UTC offsets, and daylight saving status for major cities and regions worldwide.",
+    title: "Current Local Time | Live World Clocks | MeetMyZone",
+    description: "Check the current local time in cities worldwide. View live world clocks, UTC offsets, time zone names and daylight saving status for each location.",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "MeetMyZone time tools" }],
     type: "website",
     siteName: "MeetMyZone",
     url: "https://meetmyzone.com/current-time"
   },
   twitter: {
     card: "summary_large_image",
-    title: "Current Local Times | Live Clocks Directory | MeetMyZone",
-    description: "Discover current local times, IANA timezone names, UTC offsets, and daylight saving status for major cities and regions worldwide."
+    images: ["/og-default.png"],
+    title: "Current Local Time | Live World Clocks | MeetMyZone",
+    description: "Check the current local time in cities worldwide. View live world clocks, UTC offsets, time zone names and daylight saving status for each location."
   }
 };
 
@@ -70,7 +72,7 @@ export default async function Page() {
       "@id": "https://meetmyzone.com/current-time/#collectionpage",
       "url": "https://meetmyzone.com/current-time",
       "name": "Current Local Times | MeetMyZone",
-      "description": "Discover current local times, IANA timezone names, UTC offsets, and daylight saving status for major cities and regions worldwide.",
+      "description": "Check the current local time in cities worldwide. View live world clocks, UTC offsets, time zone names and daylight saving status for each location.",
       "numberOfItems": clockData.length
     };
 

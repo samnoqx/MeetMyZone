@@ -5,8 +5,8 @@ import AnalyticsConsent from "@/components/AnalyticsConsent";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://meetmyzone.com'),
-  title: "MeetMyZone — Global Time Zone Converter & Plan Perfect Meetings Worldwide",
-  description: "Instantly check live times across 190+ countries with MeetMyZone's precision World Clock, or visualize working-hour overlaps to find the perfect meeting slot. Save your favorite locations, share schedules with one click, and coordinate global teams—all for free, with no login required.",
+  title: "Time Zone Converter, World Clock & Meeting Planner | MeetMyZone",
+  description: "Compare time zones, check live world clocks and plan international meetings with MeetMyZone. Find local times, DST changes and working-hour overlaps for free.",
   manifest: "/site.webmanifest",
   icons: {
     icon: [
@@ -21,8 +21,11 @@ export const metadata: Metadata = {
     title: "MeetMyZone"
   },
   openGraph: {
-    siteName: "MeetMyZone"
+    siteName: "MeetMyZone",
+    type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "MeetMyZone time tools" }]
   },
+  twitter: { card: "summary_large_image", images: ["/og-default.png"] },
   alternates: {
     canonical: "https://meetmyzone.com"
   }
@@ -46,7 +49,10 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
+              "@id": "https://meetmyzone.com/#website",
               "name": "MeetMyZone",
+              "alternateName": "Meet My Zone",
+              "inLanguage": "en",
               "url": "https://meetmyzone.com"
             })
           }}

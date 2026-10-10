@@ -45,3 +45,31 @@ assert.ok(summary.includes('Mar 20, 12:00 AM EDT'), summary);
 const noOverlap = generateTimezoneMatrix(['London','Tokyo'], 'London', 9, 10, '2027-03-20');
 assert.ok(generateMeetingSummary(['London','Tokyo'],noOverlap,'2027-03-20','London','https://meetmyzone.com').includes('no overlapping working hours'));
 console.log('Meeting summaries preserve future dates, chosen reference cities and custom time zones.');
+
+// Planner headings and useful links must be present before JavaScript effects run.
+delete global.window;
+const path = require('node:path');
+const Module = require('node:module');
+const originalResolve = Module._resolveFilename;
+Module._resolveFilename = function (name, ...args) {
+  return originalResolve.call(this, name.startsWith('@/') ? path.join(__dirname, '..', name.slice(2)) : name, ...args);
+};
+require.extensions['.tsx'] = (module, file) => module._compile(ts.transpileModule(fs.readFileSync(file, 'utf8'), {
+  compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true},
+}).outputText, file);
+try {
+  const React = require('react');
+  const { renderToString } = require('react-dom/server');
+  const Planner = require('../app/HomeClient.tsx').default;
+  const html = renderToString(React.createElement(Planner, {meetingOnly: true, initialDate: '2027-03-20'}));
+  assert.match(html, /<h1[\s>]/);
+  assert.ok(html.includes('meeting-guide-heading'));
+  assert.ok(html.includes('Overlap Status'));
+  assert.equal((html.match(/href="\/convert\//g) || []).length, 16);
+  assert.ok(!html.includes('Loading meeting planner...'));
+  assert.ok(!html.includes('id="world-clock"'));
+  assert.match(html, /5:00 AM/);
+  console.log('Server-rendered planner exposes its heading, guide, date-aware overlap and sixteen converter links without browser JavaScript.');
+} finally {
+  Module._resolveFilename = originalResolve;
+}

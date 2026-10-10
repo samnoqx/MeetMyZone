@@ -31,6 +31,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: post.seoTitle,
     description: post.metaDescription,
+    openGraph: {
+      type: "article",
+      title: post.seoTitle,
+      description: post.metaDescription,
+      url: `https://meetmyzone.com/blog/${post.slug}`,
+      siteName: "MeetMyZone",
+      images: [{ url: "/og-default.png", width: 1200, height: 630, alt: post.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.seoTitle,
+      description: post.metaDescription,
+      images: ["/og-default.png"],
+    },
     alternates: {
       canonical: `https://meetmyzone.com/blog/${post.slug}`,
     },

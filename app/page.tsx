@@ -21,12 +21,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Time Zone Converter & Meeting Planner | MeetMyZone",
     description: "Convert time zones, compare local times, and plan meetings across cities worldwide. MeetMyZone makes global time coordination simple and accurate.",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "MeetMyZone time tools" }],
     type: "website",
     siteName: "MeetMyZone",
     url: "https://meetmyzone.com"
   },
   twitter: {
     card: "summary_large_image",
+    images: ["/og-default.png"],
     title: "Time Zone Converter & Meeting Planner | MeetMyZone",
     description: "Convert time zones, compare local times, and plan meetings across cities worldwide. MeetMyZone makes global time coordination simple and accurate."
   }

@@ -9,22 +9,24 @@ import TimezoneConverterHeroCard from '@/components/TimezoneConverterHeroCard';
 export const revalidate = 86400; // Cache for 24 hours
 
 export const metadata: Metadata = {
-  title: "Time Zone Converters | Compare World Time Zones | MeetMyZone",
-  description: "Convert between global time zones using MeetMyZone's precision converter directory. View live clocks, UTC offsets, daylight saving details, and plan timezone-aligned meetings.",
+  title: "Time Zone Converter | UTC Offsets & DST | MeetMyZone",
+  description: "Convert time zones such as EST, IST, PST and UTC. Compare local times, UTC offsets and daylight saving changes with free interactive converters.",
   alternates: {
     canonical: "https://meetmyzone.com/timezone-converter",
   },
   openGraph: {
-    title: "Time Zone Converters | Compare World Time Zones | MeetMyZone",
-    description: "Convert between global time zones using MeetMyZone's precision converter directory. View live clocks, UTC offsets, daylight saving details, and plan timezone-aligned meetings.",
+    title: "Time Zone Converter | UTC Offsets & DST | MeetMyZone",
+    description: "Convert time zones such as EST, IST, PST and UTC. Compare local times, UTC offsets and daylight saving changes with free interactive converters.",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "MeetMyZone time tools" }],
     type: "website",
     siteName: "MeetMyZone",
     url: "https://meetmyzone.com/timezone-converter"
   },
   twitter: {
     card: "summary_large_image",
-    title: "Time Zone Converters | Compare World Time Zones | MeetMyZone",
-    description: "Convert between global time zones using MeetMyZone's precision converter directory. View live clocks, UTC offsets, daylight saving details, and plan timezone-aligned meetings."
+    images: ["/og-default.png"],
+    title: "Time Zone Converter | UTC Offsets & DST | MeetMyZone",
+    description: "Convert time zones such as EST, IST, PST and UTC. Compare local times, UTC offsets and daylight saving changes with free interactive converters."
   }
 };
 
@@ -69,7 +71,7 @@ export default async function Page() {
       "@id": "https://meetmyzone.com/timezone-converter/#collectionpage",
       "url": "https://meetmyzone.com/timezone-converter",
       "name": "Time Zone Converters | MeetMyZone",
-      "description": "Convert between global time zones using MeetMyZone's precision converter directory. View live clocks, UTC offsets, daylight saving details, and plan timezone-aligned meetings.",
+      "description": "Convert time zones such as EST, IST, PST and UTC. Compare local times, UTC offsets and daylight saving changes with free interactive converters.",
       "numberOfItems": pairingsData.length
     };
 

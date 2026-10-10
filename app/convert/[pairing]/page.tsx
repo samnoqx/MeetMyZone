@@ -37,13 +37,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   
   const zoneA = resolved.zoneA;
   const zoneB = resolved.zoneB;
-  const nameA = zoneA.displayName.toUpperCase();
-  const nameB = zoneB.displayName.toUpperCase();
+  const nameA = isTimezonePairing(pairing) ? zoneA.displayName.toUpperCase() : zoneA.cityName;
+  const nameB = isTimezonePairing(pairing) ? zoneB.displayName.toUpperCase() : zoneB.cityName;
   const cityA = zoneA.cityName;
   const cityB = zoneB.cityName;
   
-  const title = `${nameA} to ${nameB} Converter | Live Time Difference & Meeting Planner | MeetMyZone`;
-  const description = `Convert ${nameA} to ${nameB} instantly using our live time converter. Compare business hours overlap, plan team meetings, and align schedules for free.`;
+  const title = `${nameA} to ${nameB} Time Converter | MeetMyZone`;
+  const description = `Convert ${nameA} to ${nameB} with an interactive time converter. Compare local clocks, time differences, UTC offsets and daylight saving changes for both locations.`;
   
   const ogSearchParams = new URLSearchParams();
   ogSearchParams.set('cities', `${cityA},${cityB}`);

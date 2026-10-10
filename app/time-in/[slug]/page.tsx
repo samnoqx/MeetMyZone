@@ -46,8 +46,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const zoneName = resolved.zoneName;
   const country = POPULAR_CITIES_GEO[slug.toLowerCase()]?.country || getCountryForTimezone(zoneName);
   
-  const title = `Current Time in ${city} | Live ${city} Clock | MeetMyZone`;
-  const description = `Check the current local time in ${city}, ${country}. View the live clock, UTC offset, daylight saving information, working hours, and compare ${city} with other major cities.`;
+  const isZoneGuide = resolved.displayName !== city;
+  const title = isZoneGuide
+    ? `${resolved.displayName} Time Zone | Current Time in ${city} | MeetMyZone`
+    : `Current Time in ${city} | Local Clock | MeetMyZone`;
+  const description = isZoneGuide
+    ? `Explore the ${resolved.displayName} time zone using the local clock in ${city}, ${country}. Check current UTC offsets and seasonal daylight saving changes for ${zoneName}.`
+    : `Check the current time in ${city}, ${country}. View the live local clock, UTC offset, daylight saving status and time comparisons with other cities.`;
   
   const ogSearchParams = new URLSearchParams();
   ogSearchParams.set('cities', city);

@@ -17,8 +17,8 @@ interface PageProps {
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const params = normalizeParams(await searchParams);
   
-  let title = "International Meeting Planner | Compare Time Zones | MeetMyZone";
-  let description = "Compare multiple time zones, find working-hour overlaps, and plan international meetings with live local times and a visual 24-hour timeline.";
+  let title = "Meeting Planner Across Time Zones | MeetMyZone";
+  let description = "Plan meetings across time zones. Choose cities and a date, compare working-hour overlaps with DST adjustments, and share or export a calendar invitation.";
   
   const citiesParam = params.cities;
   const dateParam = params.date;
@@ -95,7 +95,30 @@ export default async function Page({ searchParams }: PageProps) {
 
   return (
     <>
-      <HomeClient initialParams={resolvedParams} headerPrefix={breadcrumbPrefix} meetingOnly />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebApplication",
+            "@id": "https://meetmyzone.com/meeting-planner#application",
+            name: "MeetMyZone Meeting Planner",
+            url: "https://meetmyzone.com/meeting-planner",
+            applicationCategory: "BusinessApplication",
+            operatingSystem: "Web browser",
+            description: "Plan international meetings by comparing local times and shared working hours for a selected date.",
+            featureList: ["Compare participant cities", "Date-aware daylight saving adjustments", "Working-hour overlap timeline", "Calendar invitation export"],
+            offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+          },
+          {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://meetmyzone.com" },
+              { "@type": "ListItem", position: 2, name: "Meeting Planner", item: "https://meetmyzone.com/meeting-planner" },
+            ],
+          },
+        ],
+      }) }} />
+      <HomeClient initialDate={new Date().toISOString().slice(0, 10)} initialParams={resolvedParams} headerPrefix={breadcrumbPrefix} meetingOnly />
     </>
   );
 }

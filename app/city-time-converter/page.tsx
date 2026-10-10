@@ -9,22 +9,24 @@ import CityTimeConverterHeroCard from '@/components/CityTimeConverterHeroCard';
 export const revalidate = 86400; // Cache for 24 hours
 
 export const metadata: Metadata = {
-  title: "City Time Converters | Compare World Cities | MeetMyZone",
-  description: "Compare local times and working-hour overlaps between major cities worldwide. View live clocks, DST status, and plan international meetings.",
+  title: "City Time Converter | Compare City Times | MeetMyZone",
+  description: "Convert local time between cities such as London, New York, Tokyo and Sydney. Compare time differences and daylight saving changes on an interactive timeline.",
   alternates: {
     canonical: "https://meetmyzone.com/city-time-converter",
   },
   openGraph: {
-    title: "City Time Converters | Compare World Cities | MeetMyZone",
-    description: "Compare local times and working-hour overlaps between major cities worldwide. View live clocks, DST status, and plan international meetings.",
+    title: "City Time Converter | Compare City Times | MeetMyZone",
+    description: "Convert local time between cities such as London, New York, Tokyo and Sydney. Compare time differences and daylight saving changes on an interactive timeline.",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "MeetMyZone time tools" }],
     type: "website",
     siteName: "MeetMyZone",
     url: "https://meetmyzone.com/city-time-converter"
   },
   twitter: {
     card: "summary_large_image",
-    title: "City Time Converters | Compare World Cities | MeetMyZone",
-    description: "Compare local times and working-hour overlaps between major cities worldwide. View live clocks, DST status, and plan international meetings."
+    images: ["/og-default.png"],
+    title: "City Time Converter | Compare City Times | MeetMyZone",
+    description: "Convert local time between cities such as London, New York, Tokyo and Sydney. Compare time differences and daylight saving changes on an interactive timeline."
   }
 };
 
@@ -68,7 +70,7 @@ export default async function Page() {
       "@id": "https://meetmyzone.com/city-time-converter/#collectionpage",
       "url": "https://meetmyzone.com/city-time-converter",
       "name": "City Time Converters | MeetMyZone",
-      "description": "Compare local times and working-hour overlaps between major cities worldwide. View live clocks, DST status, and plan international meetings.",
+      "description": "Convert local time between cities such as London, New York, Tokyo and Sydney. Compare time differences and daylight saving changes on an interactive timeline.",
       "numberOfItems": pairingsData.length
     };
 

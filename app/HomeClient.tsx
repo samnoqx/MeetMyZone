@@ -36,6 +36,7 @@ interface HomeClientProps {
     workEnd?: string;
     date?: string;
   };
+  initialDate?: string;
   headerPrefix?: React.ReactNode;
   meetingOnly?: boolean;
 }
@@ -57,7 +58,7 @@ function buildLocationLabel(name?: string, admin1?: string, country?: string): s
   return parts.join(', ');
 }
 
-export default function Home({ initialParams = {}, headerPrefix, meetingOnly = false }: HomeClientProps) {
+export default function Home({ initialParams = {}, initialDate, headerPrefix, meetingOnly = false }: HomeClientProps) {
   initialParams = normalizeParams(initialParams);
   // Parse initial parameters on client initialization
   const parsedCities = initialParams.cities
@@ -110,18 +111,10 @@ export default function Home({ initialParams = {}, headerPrefix, meetingOnly = f
         return initialParams.date;
       }
     }
-    return DateTime.now().toISODate() || '';
+    return initialDate || DateTime.now().toISODate() || '';
   })();
 
-  const initialViewDate = (() => {
-    if (initialParams.date) {
-      const dt = DateTime.fromISO(initialParams.date);
-      if (dt.isValid) {
-        return dt.startOf('month');
-      }
-    }
-    return DateTime.now().startOf('month');
-  })();
+  const initialViewDate = DateTime.fromISO(initialSelectedDate).startOf('month');
 
   const [cities, setCities] = useState<string[]>(initialCities);
   const [cityTimezones, setCityTimezones] = useState<Record<string, string>>(initialCityTimezones);
@@ -165,8 +158,9 @@ export default function Home({ initialParams = {}, headerPrefix, meetingOnly = f
       let restoredRef = initialReferenceCity;
       let restoredWorkStart = initialWorkHourStart;
       let restoredWorkEnd = initialWorkHourEnd;
-      let restoredDate = initialSelectedDate;
-      let restoredViewDate: DateTime = initialViewDate;
+      // Keep the first render stable, then use the visitor's local date as before.
+      let restoredDate = initialParams.date ? initialSelectedDate : (DateTime.now().toISODate() || initialSelectedDate);
+      let restoredViewDate: DateTime = DateTime.fromISO(restoredDate).startOf('month');
       let restoredIs24Hour = true;
       let restoredNewCity = '';
       let restoredEventTitle = 'Aligned Sync Meeting';
@@ -774,17 +768,6 @@ export default function Home({ initialParams = {}, headerPrefix, meetingOnly = f
   const memoizedSEOSection = useMemo(() => {
     return <SEOSection zones={resolvedZones} />;
   }, [resolvedZones]);
-
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-brand-accent border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-medium text-txt-secondary">Loading meeting planner...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
