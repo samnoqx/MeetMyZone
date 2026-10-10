@@ -10,7 +10,7 @@
     "dev:local": "MMZ_DISABLE_DIRECTORY_LOCK=1 next dev --webpack",
     "typecheck": "tsc --noEmit",
     "test": "node tests/regressions.cjs",
-    "build:cloudflare": "MMZ_CLOUDFLARE_BUILD=1 MMZ_DISABLE_DIRECTORY_LOCK=1 opennextjs-cloudflare build",
+    "build:cloudflare": "node scripts/prepare-cloudflare.cjs && MMZ_CLOUDFLARE_BUILD=1 MMZ_DISABLE_DIRECTORY_LOCK=1 opennextjs-cloudflare build && node tests/cloudflare-manifests.cjs",
     "preview:cloudflare": "opennextjs-cloudflare preview",
     "deploy:cloudflare": "opennextjs-cloudflare deploy",
     "og:static": "node scripts/static-og.cjs",
