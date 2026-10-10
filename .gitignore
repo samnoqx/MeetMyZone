@@ -47,3 +47,11 @@ next-env.d.ts
 *.log
 
 .next-preview/
+
+# Local review notes and agent instructions
+/ADSENSE.md
+/AGENTS.md
+/AUDIT.md
+/CLAUDE.md
+/RELEASE-CHECK.md
+/task.md
