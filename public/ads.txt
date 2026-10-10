@@ -1,1 +1,1 @@
-# Advertising is disabled until a valid publisher and consent platform are configured.
+google.com, pub-9430236853794521, DIRECT, f08c47fec0942fa0

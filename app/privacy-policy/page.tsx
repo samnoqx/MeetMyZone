@@ -75,7 +75,7 @@ export default function PrivacyPolicyPage() {
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-slate-500 dark:text-slate-400 mt-1.5">
                 <span>Effective: July 15, 2026</span>
                 <span>•</span>
-                <span>Updated: July 15, 2026</span>
+                <span>Updated: October 10, 2026</span>
               </div>
             </div>
           </div>
@@ -108,13 +108,13 @@ export default function PrivacyPolicyPage() {
 
             <section className="flex flex-col gap-2">
               <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                3. Optional Analytics & Cookies
+                3. Advertising, Optional Analytics & Cookies
               </h2>
               <p>
-                Advertising scripts are currently disabled. If optional Google Analytics is configured, it loads only after you choose Allow analytics. You can decline and continue using all planner tools.
+                MeetMyZone includes Google AdSense code to connect this website to Google&apos;s advertising service. Google may receive technical information about your visit, including your IP address, browser information and page URL. When ads are enabled, Google and its partners may use cookies for advertising, measurement and fraud prevention.
               </p>
               <p>
-                If you allow Google Analytics, Google receives information about your visit and may set cookies. Read <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">how Google uses information from sites that use its services</a> for details.
+                If optional Google Analytics is configured, it loads only after you choose Allow analytics. You can decline and continue using all planner tools. If you allow analytics, Google receives information about your visit and may set cookies. Read <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">how Google uses information from sites that use its services</a> for details.
               </p>
             </section>
 
