@@ -35,6 +35,8 @@ npm run build:cloudflare
 npm run preview:cloudflare -- --port 3001
 ```
 
+The default `npm run build` produces the complete Cloudflare Worker using OpenNext. The adapter calls `npm run build:next` through `open-next.config.ts`, avoiding recursion while applying its required standalone build settings. Cloudflare Workers Builds can keep build command `npm run build` and deploy command `npx wrangler deploy`.
+
 The Cloudflare build uses the standard `.next` folder, separate from `.next-preview` used by the live development preview. The deploy artifact is `.open-next/worker.js`. After reviewing a preview and logging in to your own Cloudflare account, `npm run deploy:cloudflare` publishes the previously built artifact. No deployment or DNS change is performed by local development or build commands.
 
 `wrangler.jsonc` enables `MMZ_STATIC_OG=1`: Cloudflare serves the shared branded preview image instead of rendering a custom PNG for each request. The regular local Next preview retains dynamic planner images. Regenerate the branded PNG with `npm run og:static` after changing its design.

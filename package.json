@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "build": "npm run build:cloudflare",
     "start": "next start",
     "lint": "eslint",
     "dev:local": "MMZ_DISABLE_DIRECTORY_LOCK=1 next dev --webpack",
@@ -13,7 +13,8 @@
     "build:cloudflare": "MMZ_CLOUDFLARE_BUILD=1 MMZ_DISABLE_DIRECTORY_LOCK=1 opennextjs-cloudflare build",
     "preview:cloudflare": "opennextjs-cloudflare preview",
     "deploy:cloudflare": "opennextjs-cloudflare deploy",
-    "og:static": "node scripts/static-og.cjs"
+    "og:static": "node scripts/static-og.cjs",
+    "build:next": "next build --webpack"
   },
   "dependencies": {
     "@types/luxon": "^3.7.2",
