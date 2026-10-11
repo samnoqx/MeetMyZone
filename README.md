@@ -43,7 +43,9 @@ The Cloudflare build uses the standard `.next` folder, separate from `.next-prev
 
 `wrangler.jsonc` enables `MMZ_STATIC_OG=1`: Cloudflare serves the shared branded preview image instead of rendering a custom PNG for each request. The regular local Next preview retains dynamic planner images. Regenerate the branded PNG with `npm run og:static` after changing its design.
 
-Workers Free has request and CPU limits. A successful local build cannot establish that every dynamic Next.js request fits the hosted CPU budget. Test the actual deployed Worker and inspect its CPU usage before treating the Free plan as production-ready. ISR caching across instances is not configured; add and review a cache binding if required later.
+After the adapter build, `scripts/prepare-static-cloudflare.cjs` renders the curated pages and their direct tool links on a temporary build server, saves their HTML and navigation payloads as assets, and stops that server. The final Worker routes requests to these assets without importing Next's server runtime. Shared meeting dates, locations and working hours restore from the browser URL. Additional valid city combinations use the same interactive page components in the browser and remain unindexed until explicitly included in the build.
+
+Clocks and the current UTC/DST status update in the browser. Reference content is generated at build time; rebuild after changing content or updating timezone rules. Runtime ISR is not used by the asset Worker. `tests/static-cloudflare.cjs` verifies routing, navigation payloads, security headers, private assets, invalid cities and the AdSense ownership integration. Workers Free still has request and CPU limits: verify a version preview and its runtime logs before deploying, because local checks alone cannot prove hosted CPU usage.
 
 References: https://opennext.js.org/cloudflare/get-started and https://developers.cloudflare.com/workers/platform/limits/.
 

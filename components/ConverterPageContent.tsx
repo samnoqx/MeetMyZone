@@ -1,0 +1,345 @@
+import { parsePairing, isTimezonePairing } from '@/utils/seoResolver';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import ConverterClient from '@/app/convert/[pairing]/ConverterClient';
+import Header from '@/components/Header';
+import ConversionExamples from '@/components/ConversionExamples';
+import {
+  calculateTimeDifference,
+  calculateOverlapAndRecommendation,
+  getDstDetail,
+  getTimezoneFacts,
+  generateFAQs,
+  generateRelatedConverters,
+  generateRelatedCities
+} from '@/utils/seoContent';
+
+export default function ConverterPageContent({ pairing }: { pairing: string }) {
+  const resolved = parsePairing(pairing);
+  
+  if (!resolved) {
+    notFound();
+  }
+  
+  const zoneA = resolved.zoneA;
+  const zoneB = resolved.zoneB;
+
+  const diff = calculateTimeDifference(zoneA, zoneB);
+  const overlap = calculateOverlapAndRecommendation(zoneA, zoneB);
+  const dstA = getDstDetail(zoneA);
+  const dstB = getDstDetail(zoneB);
+  const isTz = isTimezonePairing(pairing);
+  const routeAwareIntro = isTz
+    ? `Convert ${zoneA.displayName.toUpperCase()} to ${zoneB.displayName.toUpperCase()} easily. View the live time difference, compare local clocks, check daylight saving changes (DST), and view detailed timezone offsets using our interactive timeline.`
+    : `Convert local time from ${zoneA.displayName} to ${zoneB.displayName} instantly. View the live time difference, compare local clocks side-by-side, check DST schedules, and view offset differences using our interactive timeline.`;
+  const faqs = generateFAQs(zoneA, zoneB, diff.diffText, overlap.recommendation, dstA, dstB);
+  const filteredFaqs = faqs.filter(faq => !faq.question.toLowerCase().includes('meeting'));
+  const factsA = getTimezoneFacts(zoneA.slug, zoneA.displayName, zoneA.zoneName);
+  const factsB = getTimezoneFacts(zoneB.slug, zoneB.displayName, zoneB.zoneName);
+  const relatedConverters = generateRelatedConverters(zoneA, zoneB);
+  const relatedCities = generateRelatedCities(zoneA, zoneB);
+
+  const getCombinedSchema = () => {
+    const softwareSchema = {
+      "@type": "SoftwareApplication",
+      "@id": "https://meetmyzone.com/#software-application",
+      "name": "MeetMyZone Time Zone Converter",
+      "operatingSystem": "All",
+      "applicationCategory": "BusinessApplication",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0.00",
+        "priceCurrency": "USD"
+      },
+      "description": "MeetMyZone is a premium visual timezone meeting planner and timezone converter that aligns team working hours side-by-side on an interactive timeline grid."
+    };
+
+    const breadcrumbSchema = {
+      "@type": "BreadcrumbList",
+      "@id": `https://meetmyzone.com/convert/${pairing}/#breadcrumb`,
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://meetmyzone.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": isTz ? "Time Zone Converter" : "City Time Converter",
+          "item": isTz ? "https://meetmyzone.com/timezone-converter" : "https://meetmyzone.com/city-time-converter"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": `${zoneA.displayName.toUpperCase()} to ${zoneB.displayName.toUpperCase()}`,
+          "item": `https://meetmyzone.com/convert/${pairing}`
+        }
+      ]
+    };
+
+    const faqSchema = {
+      "@type": "FAQPage",
+      "@id": `https://meetmyzone.com/convert/${pairing}/#faq`,
+      "mainEntity": filteredFaqs.map(faq => ({
+        "@type": "Question",
+        "name": faq.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": faq.answer
+        }
+      }))
+    };
+
+    return {
+      "@context": "https://schema.org",
+      "@graph": [
+        softwareSchema,
+        breadcrumbSchema,
+        faqSchema
+      ]
+    };
+  };
+  
+  return (
+    <div>
+      <div className="flex-1 bg-background text-txt-primary flex flex-col justify-start pb-20 font-sans selection:bg-teal-500/30 selection:text-teal-600 dark:selection:text-teal-300 transition-colors duration-200 min-h-screen">
+        
+        {/* Combined JSON-LD Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(getCombinedSchema()).replace(/</g, '\\u003c') }}
+        />
+
+        {/* Shared Header Navigation */}
+        <Header />
+
+        {/* Hero Title & Description block */}
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 mt-8 mb-4">
+          <header className="flex flex-col gap-3.5 max-w-4xl">
+            {/* Breadcrumb Navigation */}
+            <nav aria-label="Breadcrumb" className="text-xs sm:text-sm font-semibold text-txt-primary mb-1">
+              <ol className="flex flex-wrap items-center gap-2">
+                <li>
+                  <Link href="/" className="hover:text-brand-accent transition-colors duration-150">
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <span className="text-txt-subtle select-none">/</span>
+                </li>
+                <li>
+                  <Link href={isTz ? "/timezone-converter" : "/city-time-converter"} className="hover:text-brand-accent transition-colors duration-150">
+                    {isTz ? "Time Zone Converter" : "City Time Converter"}
+                  </Link>
+                </li>
+                <li>
+                  <span className="text-txt-subtle select-none">/</span>
+                </li>
+                <li aria-current="page" className="text-brand-accent truncate max-w-[200px] sm:max-w-none font-bold">
+                  {zoneA.displayName.toUpperCase()} to {zoneB.displayName.toUpperCase()}
+                </li>
+              </ol>
+            </nav>
+
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+              {isTz
+                ? `${zoneA.displayName.toUpperCase()} to ${zoneB.displayName.toUpperCase()} Time Zone Converter`
+                : `${zoneA.displayName} to ${zoneB.displayName} Time Converter`
+              }
+            </h1>
+            <p className="text-sm sm:text-base md:text-lg text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
+              {routeAwareIntro}
+            </p>
+          </header>
+        </div>
+
+
+
+        {/* Standalone Live Converter Interface (preloaded above-the-fold) */}
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 my-6">
+          <ConverterClient
+            key={pairing}
+            initialCities={[zoneA.cityName, zoneB.cityName]}
+            initialCityTimezones={{
+              [zoneA.cityName]: zoneA.zoneName,
+              [zoneB.cityName]: zoneB.zoneName
+            }}
+            initialReferenceCity={zoneA.cityName}
+          />
+        </div>
+
+        {/* Dynamic SEO Landing Page Content Section */}
+        <section className="bg-background border-t border-border-custom py-12 md:py-16">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 flex flex-col gap-16 text-slate-900 dark:text-slate-100">
+            
+
+            <ConversionExamples zoneA={zoneA} zoneB={zoneB} />
+
+            {/* Daylight Saving Time (DST) Section */}
+            <div className="flex flex-col gap-6">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <svg className="w-5 h-5 text-brand-accent shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Daylight Saving Time (DST) Differences
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                {/* DST zone A */}
+                <div className="premium-card premium-card-static p-6 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#0f172a] flex flex-col gap-2.5">
+                  <span className="h-2 w-2 rounded-full bg-brand-accent" />
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-base">
+                    {zoneA.displayName.toUpperCase()} DST Schedule
+                  </h4>
+                  <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
+                    {dstA.description}
+                  </p>
+                </div>
+
+                {/* DST zone B */}
+                <div className="premium-card premium-card-static p-6 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#0f172a] flex flex-col gap-2.5">
+                  <span className="h-2 w-2 rounded-full bg-brand-accent" />
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-base">
+                    {zoneB.displayName.toUpperCase()} DST Schedule
+                  </h4>
+                  <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
+                    {dstB.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Educational / Context Section */}
+            <div className="flex flex-col gap-6">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <svg className="w-5 h-5 text-brand-accent shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              Timezone Reference & Educational Profiles
+            </h3>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+              
+              {/* Profile A */}
+              <div className="premium-card premium-card-static p-6 sm:p-8 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#0f172a] flex flex-col gap-4">
+                <h4 className="text-lg font-black text-slate-900 dark:text-white border-b border-slate-300 dark:border-slate-800 pb-2">
+                  What is {zoneA.displayName.toUpperCase()}?
+                </h4>
+                <div className="flex flex-col gap-3 text-xs sm:text-sm">
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white block mb-0.5">Timezone Standard Name:</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-semibold">{factsA.fullName}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white block mb-0.5">Offset reference:</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-mono font-bold">{factsA.standardOffset}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white block mb-0.5">Geographic coverage:</span>
+                    <span className="text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">{factsA.regions}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white block mb-0.5">Travel significance:</span>
+                    <span className="text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">{factsA.travelRelevance}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Profile B */}
+              <div className="premium-card premium-card-static p-6 sm:p-8 rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#0f172a] flex flex-col gap-4">
+                <h4 className="text-lg font-black text-slate-900 dark:text-white border-b border-slate-300 dark:border-slate-800 pb-2">
+                  What is {zoneB.displayName.toUpperCase()}?
+                </h4>
+                <div className="flex flex-col gap-3 text-xs sm:text-sm">
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white block mb-0.5">Timezone Standard Name:</span>
+                    <span className="text-slate-705 dark:text-slate-300 font-semibold">{factsB.fullName}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white block mb-0.5">Offset reference:</span>
+                    <span className="text-slate-750 dark:text-slate-300 font-mono font-bold">{factsB.standardOffset}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white block mb-0.5">Geographic coverage:</span>
+                    <span className="text-slate-705 dark:text-slate-300 leading-relaxed font-semibold">{factsB.regions}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white block mb-0.5">Travel significance:</span>
+                    <span className="text-slate-755 dark:text-slate-300 leading-relaxed font-semibold">{factsB.travelRelevance}</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Frequently Asked Questions (FAQ) Accordion style */}
+          <div className="flex flex-col gap-6">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <svg className="w-5 h-5 text-brand-accent shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Frequently Asked Questions (FAQ)
+            </h3>
+            
+            <div className="flex flex-col gap-4">
+              {filteredFaqs.map((faq, index) => (
+                <div key={`faq-${index}`} className="p-5 border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#0f172a] rounded-xl">
+                  <h4 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mb-2 leading-tight">
+                    {faq.question}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
+                    {faq.answer}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Related Links Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-slate-300 dark:border-slate-800 pt-12">
+            
+             {/* Related timezone converters */}
+            <div className="flex flex-col gap-4">
+              <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
+                Related Timezone Converters
+              </h4>
+              <ul className="flex flex-col gap-2.5 text-xs sm:text-sm font-semibold text-txt-primary">
+                {relatedConverters.map((link) => (
+                  <li key={link.url}>
+                    <Link href={link.url} className="hover:underline hover:text-brand-accent transition-colors duration-150">
+                      {link.label} &rarr;
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Related cities converters */}
+            <div className="flex flex-col gap-4">
+              <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
+                Related Cities Comparisons
+              </h4>
+              <ul className="flex flex-col gap-2.5 text-xs sm:text-sm font-semibold text-txt-primary">
+                {relatedCities.map((link) => (
+                  <li key={link.url}>
+                    <Link href={link.url} className="hover:underline hover:text-brand-accent transition-colors duration-150">
+                      {link.label} &rarr;
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      </div>
+    </div>
+  );
+}

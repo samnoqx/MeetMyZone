@@ -155,13 +155,15 @@ export default function Home({ initialParams = {}, initialDate, headerPrefix, me
   // Load saved planner and event scheduler state from sessionStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const locationParams = normalizeParams({ ...initialParams, ...Object.fromEntries(new URLSearchParams(window.location.search)) });
+      const locationCities = locationParams.cities ? parsePlannerList(locationParams.cities) : [];
       let restoredCities = initialCities;
       let restoredCityTimezones = initialCityTimezones;
       let restoredRef = initialReferenceCity;
       let restoredWorkStart = initialWorkHourStart;
       let restoredWorkEnd = initialWorkHourEnd;
       // Keep the first render stable, then use the visitor's local date as before.
-      let restoredDate = initialParams.date ? initialSelectedDate : (DateTime.now().toISODate() || initialSelectedDate);
+      let restoredDate = locationParams.date ? initialSelectedDate : (DateTime.now().toISODate() || initialSelectedDate);
       let restoredViewDate: DateTime = DateTime.fromISO(restoredDate).startOf('month');
       let restoredIs24Hour = true;
       let restoredNewCity = '';
@@ -216,41 +218,41 @@ export default function Home({ initialParams = {}, initialDate, headerPrefix, me
       }
 
       // URL Parameter Overrides (URL parameters always take precedence over sessionStorage)
-      if (parsedCities.length > 0) {
-        restoredCities = parsePlannerList(initialParams.cities);
+      if (locationCities.length > 0) {
+        restoredCities = parsePlannerList(locationParams.cities);
         restoredCityTimezones = Object.create(null);
-        const parsedZones = initialParams.zones
-          ? parsePlannerList(initialParams.zones)
+        const parsedZones = locationParams.zones
+          ? parsePlannerList(locationParams.zones)
           : [];
         restoredCities.forEach((city, idx) => {
           restoredCityTimezones[city] = safeZone(city, parsedZones[idx]);
         });
       }
 
-      if (initialParams.reference && restoredCities.includes(initialParams.reference)) {
-        restoredRef = initialParams.reference.trim();
-      } else if (initialParams.cities && restoredCities.length > 0) {
+      if (locationParams.reference && restoredCities.includes(locationParams.reference)) {
+        restoredRef = locationParams.reference.trim();
+      } else if (locationParams.cities && restoredCities.length > 0) {
         restoredRef = restoredCities[0];
       }
 
-      if (initialParams.workStart) {
-        const parsed = parseInt(initialParams.workStart, 10);
+      if (locationParams.workStart) {
+        const parsed = parseInt(locationParams.workStart, 10);
         if (!isNaN(parsed) && parsed >= 0 && parsed <= 23) {
           restoredWorkStart = parsed;
         }
       }
 
-      if (initialParams.workEnd) {
-        const parsed = parseInt(initialParams.workEnd, 10);
+      if (locationParams.workEnd) {
+        const parsed = parseInt(locationParams.workEnd, 10);
         if (!isNaN(parsed) && parsed >= 0 && parsed <= 23) {
           restoredWorkEnd = parsed;
         }
       }
 
-      if (initialParams.date) {
-        const dt = DateTime.fromISO(initialParams.date);
-        if (validDate(initialParams.date)) {
-          restoredDate = initialParams.date;
+      if (locationParams.date) {
+        const dt = DateTime.fromISO(locationParams.date);
+        if (validDate(locationParams.date)) {
+          restoredDate = locationParams.date;
           restoredViewDate = dt.startOf('month');
         }
       }
