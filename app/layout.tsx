@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Footer from '@/components/Footer';
+import { GOOGLE_CONSENT_BOOTSTRAP } from '@/utils/googleConsent';
 import Analytics from "@/components/Analytics";
 
 export const metadata: Metadata = {
@@ -43,6 +44,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <script id="google-consent-defaults" dangerouslySetInnerHTML={{ __html: GOOGLE_CONSENT_BOOTSTRAP }} />
         <meta name="google-adsense-account" content="ca-pub-9430236853794521" />
         {process.env.NODE_ENV === "production" && (
           <script

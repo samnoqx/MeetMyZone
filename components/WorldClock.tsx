@@ -3,7 +3,8 @@
 import { readSession, writeSession } from '@/utils/storage';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DateTime } from 'luxon';
-import { ZONE_SEARCH_INDEX, deduplicateSuggestions } from '@/utils/timezone';
+import { deduplicateSuggestions } from '@/utils/timezone';
+import { searchCities } from '@/utils/citySearch';
 
 interface ClockCity {
   label: string;
@@ -185,42 +186,19 @@ export default function WorldClock({
     if (!searchQuery.trim()) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions([]);
+      setIsLoading(false);
       return;
     }
     setIsLoading(true);
-    const q = searchQuery.toLowerCase().trim();
-
+    const controller = new AbortController();
     const fetchTimer = setTimeout(() => {
-      fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=en&format=json`)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.results) {
-            const list = data.results.map((item: { name: string; admin1?: string; country?: string; timezone?: string }) => ({
-              label: `${item.name}${item.admin1 ? `, ${item.admin1}` : ''}${item.country ? `, ${item.country}` : ''}`,
-              timezone: item.timezone || 'UTC'
-            }));
-
-            setSuggestions(deduplicateSuggestions(list));
-          } else {
-            setSuggestions([]);
-          }
-          setIsLoading(false);
-        })
-        .catch(() => {
-          const fallbackMatches = ZONE_SEARCH_INDEX
-            .filter(item => item.key.includes(q) || item.zone.toLowerCase().includes(q))
-            .map(item => ({
-              label: `${item.label} (${item.zone})`,
-              timezone: item.zone
-            }))
-            .slice(0, 6);
-
-          setSuggestions(deduplicateSuggestions(fallbackMatches));
-          setIsLoading(false);
-        });
+      searchCities(searchQuery, 6, controller.signal).then(list => {
+        if (controller.signal.aborted) return;
+        setSuggestions(deduplicateSuggestions(list));
+        setIsLoading(false);
+      });
     }, 250);
-
-    return () => clearTimeout(fetchTimer);
+    return () => { controller.abort(); clearTimeout(fetchTimer); };
   }, [searchQuery]);
 
   const toggleSearch = (cardIndex: 1 | 2) => {

@@ -1,6 +1,8 @@
 import pages from '../.open-next/static-pages.json' with { type: 'json' };
 
 const security = {
+  'Strict-Transport-Security': 'max-age=86400',
+  'Content-Security-Policy': "object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests",
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
@@ -44,6 +46,9 @@ const worker = {
     const asset = await env.ASSETS.fetch(new Request(url, { method: request.method }));
     const response = new Response(request.method === 'HEAD' ? null : asset.body, asset);
     for (const [name, value] of Object.entries(security)) response.headers.set(name, value);
+    if (/^\/city-search\/v[a-z0-9]+\/(?:metadata|[0-9a-f]{3})\.json$/.test(path) && response.status === 200) {
+      response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    }
     if (page) {
       response.headers.set('Content-Type', flight && !runtime && page.flight ? 'text/x-component' : 'text/html; charset=utf-8');
       response.headers.set('Cache-Control', 'public, max-age=0, must-revalidate');

@@ -5,7 +5,8 @@ import { readSession } from '@/utils/storage';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DateTime } from 'luxon';
 import Link from 'next/link';
-import { ZONE_SEARCH_INDEX, deduplicateSuggestions } from '@/utils/timezone';
+import { deduplicateSuggestions } from '@/utils/timezone';
+import { searchCities } from '@/utils/citySearch';
 
 interface ClockState {
   city: string;
@@ -222,42 +223,19 @@ export default function HomeMeetingOverlap() {
     if (!searchQuery.trim()) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions([]);
+      setIsLoading(false);
       return;
     }
     setIsLoading(true);
-    const q = searchQuery.toLowerCase().trim();
-
+    const controller = new AbortController();
     const fetchTimer = setTimeout(() => {
-      fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=en&format=json`)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.results) {
-            const list = data.results.map((item: { name: string; admin1?: string; country?: string; timezone?: string }) => ({
-              label: `${item.name}${item.admin1 ? `, ${item.admin1}` : ''}${item.country ? `, ${item.country}` : ''}`,
-              timezone: item.timezone || 'UTC'
-            }));
-
-            setSuggestions(deduplicateSuggestions(list));
-          } else {
-            setSuggestions([]);
-          }
-          setIsLoading(false);
-        })
-        .catch(() => {
-          const matches = ZONE_SEARCH_INDEX
-            .filter(item => item.key.includes(q) || item.zone.toLowerCase().includes(q))
-            .map(item => ({
-              label: `${item.label} (${item.zone})`,
-              timezone: item.zone
-            }))
-            .slice(0, 5);
-
-          setSuggestions(deduplicateSuggestions(matches));
-          setIsLoading(false);
-        });
+      searchCities(searchQuery, 5, controller.signal).then(list => {
+        if (controller.signal.aborted) return;
+        setSuggestions(deduplicateSuggestions(list));
+        setIsLoading(false);
+      });
     }, 300);
-
-    return () => clearTimeout(fetchTimer);
+    return () => { controller.abort(); clearTimeout(fetchTimer); };
   }, [searchQuery]);
 
   const handleSelectLocation = (sug: { label: string; timezone: string }) => {

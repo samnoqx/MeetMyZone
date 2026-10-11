@@ -75,7 +75,7 @@ export default function PrivacyPolicyPage() {
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-slate-500 dark:text-slate-400 mt-1.5">
                 <span>Effective: July 15, 2026</span>
                 <span>•</span>
-                <span>Updated: October 10, 2026</span>
+                <span>Updated: October 11, 2026</span>
               </div>
             </div>
           </div>
@@ -87,7 +87,7 @@ export default function PrivacyPolicyPage() {
                 1. General Overview & Privacy Commitment
               </h2>
               <p>
-                At MeetMyZone, we follow a privacy-first philosophy. Our platform is designed to help users coordinate time zones globally while processing only the minimum information required to deliver our services. Most of our tools and functionalities operate fully without requiring user registration or account creation. Planner settings are saved in browser session storage. Searching for a location sends your search text to Open-Meteo, our geocoding provider. Hosting providers may process request information needed to serve the website.
+                At MeetMyZone, we follow a privacy-first philosophy. Our platform is designed to help users coordinate time zones globally while processing only the minimum information required to deliver our services. Most of our tools and functionalities operate fully without requiring user registration or account creation. Planner settings are saved in browser session storage. City searches use location data hosted on MeetMyZone; your search text is not sent to a third-party geocoding service. City names, regions and timezone identifiers are adapted from <a href="https://www.geonames.org/" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">GeoNames</a>, licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">Creative Commons Attribution 4.0</a>. Hosting providers may process request information needed to serve the website.
               </p>
               <p>
                 If you have questions regarding this Privacy Policy or our practices, please contact us at <a href="mailto:support@meetmyzone.com" className="text-brand-accent hover:text-brand-accent-hover hover:underline transition duration-150 font-semibold">support@meetmyzone.com</a> or visit our <Link href="/contact-us" className="text-brand-accent hover:text-brand-accent-hover hover:underline transition duration-150 font-semibold">Contact Us</Link> page.
@@ -114,16 +114,16 @@ export default function PrivacyPolicyPage() {
                 MeetMyZone includes Google AdSense code to connect this website to Google&apos;s advertising service. Google may receive technical information about your visit, including your IP address, browser information and page URL. When ads are enabled, Google and its partners may use cookies for advertising, measurement and fraud prevention.
               </p>
               <p>
-                MeetMyZone uses Google Analytics to understand visits and improve its tools. Analytics loads automatically and Google may receive technical information about your visit and set analytics cookies. Read <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">how Google uses information from sites that use its services</a> for details.
+                MeetMyZone uses Google Analytics to understand visits and improve its tools. Analytics loads automatically. In the European Economic Area, United Kingdom and Switzerland, advertising and analytics cookie storage default to denied until your consent choice is processed. Google may receive limited cookieless measurement signals when consent is denied. Outside these regions, automatic analytics collection remains enabled, subject to browser privacy controls. Read <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">how Google uses information from sites that use its services</a> for details.
               </p>
             </section>
 
             <section className="flex flex-col gap-2">
               <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                4. Analytics Preferences
+                4. Consent & Analytics Preferences
               </h2>
               <p>
-                You can manage cookies through your browser settings or use Google&apos;s <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">Google Analytics opt-out browser add-on</a>. Browser privacy settings and content blockers may limit analytics collection. This site does not currently integrate a Google-certified advertising Consent Management Platform.
+                MeetMyZone uses Google&apos;s certified consent management platform for visitors in the European Economic Area, United Kingdom and Switzerland. The message lets you consent, decline consent or manage individual purposes and partners. The analytics storage choice follows the cookie-storage consent signal. Where this message applies, use the &quot;Privacy and cookie settings&quot; link in the footer to revisit or withdraw your choices. You can also manage cookies through your browser settings or use Google&apos;s <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">Google Analytics opt-out browser add-on</a>. Browser privacy settings and content blockers may limit analytics collection.
               </p>
             </section>
 

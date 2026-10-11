@@ -25,11 +25,17 @@ async function main() {
     assert.equal(response.status, 200, route);
     assert.match(response.headers.get('Content-Type'), /text\/html/);
     assert.equal(response.headers.get('X-Content-Type-Options'), 'nosniff');
+    assert.equal(response.headers.get('Strict-Transport-Security'), 'max-age=86400');
+    assert.match(response.headers.get('Content-Security-Policy'), /object-src 'none'/);
+    assert.match(response.headers.get('Content-Security-Policy'), /base-uri 'self'/);
     assert.equal(response.headers.get('X-Robots-Tag'), null, route);
     assert((await response.text()).includes('<h1'), route);
   }
   const home = await (await request('/')).text();
   assert(home.includes('ca-pub-9430236853794521'), 'AdSense ownership integration retained');
+  assert(home.indexOf('id="google-consent-defaults"') > 0);
+  assert(home.indexOf('id="google-consent-defaults"') < home.indexOf('src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'), 'Regional consent defaults execute before the asynchronous advertising tag');
+  assert.equal((await request('/city-search/v20261011/metadata.json')).headers.get('Cache-Control'), 'public, max-age=31536000, immutable');
   assert.equal((await request('/', { method: 'HEAD' })).status, 200);
   assert.equal(await (await request('/', { method: 'HEAD' })).text(), '');
   assert.equal((await request('/', { method: 'POST' })).status, 405);

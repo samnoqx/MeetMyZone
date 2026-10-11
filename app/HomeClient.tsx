@@ -3,6 +3,7 @@
 import { readSession, writeSession, removeSession } from '@/utils/storage';
 
 import { parsePlannerList, safeZone, validDate, validSnapshot, normalizeParams } from '@/utils/planner';
+import { searchCities } from '@/utils/citySearch';
 import { escapeCalendarText, foldCalendarLine } from '@/utils/calendar';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -10,7 +11,6 @@ import { DateTime } from 'luxon';
 import {
   generateTimezoneMatrix,
   resolveTimeZone,
-  ZONE_SEARCH_INDEX,
   deduplicateSuggestions
 } from '@/utils/timezone';
 import TimezoneTimeline from '@/components/TimezoneTimeline';
@@ -42,24 +42,6 @@ interface HomeClientProps {
   heading?: string;
   intro?: string;
 }
-function buildLocationLabel(name?: string, admin1?: string, country?: string): string {
-  const parts: string[] = [];
-  const seen = new Set<string>();
-
-  [name, admin1, country].forEach((val) => {
-    if (!val) return;
-    const trimmed = val.trim();
-    if (!trimmed) return;
-    const lower = trimmed.toLowerCase();
-    if (!seen.has(lower)) {
-      seen.add(lower);
-      parts.push(trimmed);
-    }
-  });
-
-  return parts.join(', ');
-}
-
 export default function Home({ initialParams = {}, initialDate, headerPrefix, meetingOnly = false, heading = 'Meeting Planner', intro }: HomeClientProps) {
   initialParams = normalizeParams(initialParams);
   // Parse initial parameters on client initialization
@@ -405,7 +387,7 @@ export default function Home({ initialParams = {}, initialDate, headerPrefix, me
     return () => clearInterval(timer);
   }, [referenceCity, selectedDate, cityTimezones]);
 
-  // Handle autocomplete/suggestions as user types using Open-Meteo Geocoding API
+  // Suggestions use lazy-loaded, commercially reusable first-party city data.
   useEffect(() => {
     if (!newCity.trim()) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -413,50 +395,13 @@ export default function Home({ initialParams = {}, initialDate, headerPrefix, me
       return;
     }
     const controller = new AbortController();
-    const query = newCity.toLowerCase().trim();
-
-    const delayDebounceFn = setTimeout(() => {
-      fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=en&format=json`, { signal: controller.signal })
-        .then((res) => { if (!res.ok) throw new Error('Geocoding failed'); return res.json(); })
-        .then((data) => {
-          if (controller.signal.aborted) return;
-          if (data && data.results) {
-            const list = data.results.map((item: { name: string; admin1?: string; country?: string; timezone?: string }) => {
-              const fullLabel = buildLocationLabel(item.name, item.admin1, item.country);
-              const timezone = item.timezone || 'UTC';
-              return {
-                label: fullLabel,
-                timezone: timezone,
-                name: item.name
-              };
-            });
-            
-            setSuggestions(deduplicateSuggestions(list));
-          } else {
-            setSuggestions([]);
-          }
-        })
-        .catch((err) => {
-          if (controller.signal.aborted) return;
-          console.error("Geocoding fetch error:", err);
-          const matches = ZONE_SEARCH_INDEX
-            .filter(item =>
-              (item.key.includes(query) || item.zone.toLowerCase().includes(query)) &&
-              !cities.map(c => c.toLowerCase()).includes(item.label.toLowerCase())
-            )
-            .map(item => ({
-              label: `${item.label} (${item.zone})`,
-              timezone: item.zone,
-              name: item.label
-            }))
-            .slice(0, 8);
-
-          setSuggestions(deduplicateSuggestions(matches));
-        });
+    const timer = setTimeout(() => {
+      searchCities(newCity, 10, controller.signal).then(list => {
+        if (!controller.signal.aborted) setSuggestions(deduplicateSuggestions(list));
+      });
     }, 400);
-
-    return () => { controller.abort(); clearTimeout(delayDebounceFn); };
-  }, [newCity, cities]);
+    return () => { controller.abort(); clearTimeout(timer); };
+  }, [newCity]);
 
   // Generate matrix based on active cities and custom parameters
   const matrix = useMemo(() => {
@@ -500,62 +445,26 @@ export default function Home({ initialParams = {}, initialDate, headerPrefix, me
       return;
     }
 
-    try {
-      const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmed)}&count=1&language=en&format=json`);
-      const data = await res.json();
-
-      if (data && data.results && data.results.length > 0) {
-        const item = data.results[0];
-        const fullLabel = buildLocationLabel(item.name, item.admin1, item.country);
-        const timezone = item.timezone || 'UTC';
-
-        if (cities.map(c => c.toLowerCase()).includes(fullLabel.toLowerCase())) {
-          setErrorMsg(`"${fullLabel}" is already added.`);
-          return;
-        }
-
-        setCityTimezones(prev => ({
-          ...prev,
-          [fullLabel]: timezone
-        }));
-        setCities([...cities, fullLabel]);
-        setNewCity('');
-        setErrorMsg('');
-        setSuggestions([]);
-      } else {
-        const resolvedZone = resolveTimeZone(trimmed);
-        const dt = DateTime.local().setZone(resolvedZone);
-        if (!dt.isValid) {
-          setErrorMsg(`Could not resolve timezone for "${trimmed}". Try a major city or country name.`);
-          return;
-        }
-
-        setCityTimezones(prev => ({
-          ...prev,
-          [trimmed]: resolvedZone
-        }));
-        setCities([...cities, trimmed]);
-        setNewCity('');
-        setErrorMsg('');
-        setSuggestions([]);
-      }
-    } catch (err) {
-      console.error(err);
-      const resolvedZone = resolveTimeZone(trimmed);
-      const dt = DateTime.local().setZone(resolvedZone);
-      if (!dt.isValid) {
-        setErrorMsg(`Could not resolve timezone for "${trimmed}".`);
-        return;
-      }
-      setCityTimezones(prev => ({
-        ...prev,
-        [trimmed]: resolvedZone
-      }));
-      setCities([...cities, trimmed]);
-      setNewCity('');
-      setErrorMsg('');
-      setSuggestions([]);
+    const matches = await searchCities(trimmed, 1);
+    const item = matches[0];
+    if (!item) {
+      setErrorMsg(`Could not find "${trimmed}". Choose a city suggestion or enter a valid timezone.`);
+      return;
     }
+    if (cities.map(c => c.toLowerCase()).includes(item.label.toLowerCase())) {
+      setErrorMsg(`"${item.label}" is already added.`);
+      return;
+    }
+    if (!DateTime.local().setZone(item.timezone).isValid) {
+      setErrorMsg(`Could not resolve timezone for "${trimmed}".`);
+      return;
+    }
+    setCityTimezones(prev => ({ ...prev, [item.label]: item.timezone }));
+    setCities(prev => prev.length < 16 && !prev.some(c => c.toLowerCase() === item.label.toLowerCase())
+      ? [...prev, item.label] : prev);
+    setNewCity('');
+    setErrorMsg('');
+    setSuggestions([]);
   };
 
   // Remove a city from the planner

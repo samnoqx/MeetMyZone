@@ -9,7 +9,7 @@
     "lint": "eslint",
     "dev:local": "MMZ_DISABLE_DIRECTORY_LOCK=1 next dev --webpack",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/regressions.cjs && node tests/analytics.cjs && node tests/sitemap.cjs",
+    "test": "node tests/regressions.cjs && node tests/analytics.cjs && node tests/sitemap.cjs && node tests/city-search.cjs && node tests/lint-directory-glob.cjs && node tests/google-consent.cjs",
     "build:cloudflare": "node scripts/prepare-cloudflare.cjs && MMZ_CLOUDFLARE_BUILD=1 MMZ_DISABLE_DIRECTORY_LOCK=1 opennextjs-cloudflare build && node tests/cloudflare-manifests.cjs && node scripts/prepare-static-cloudflare.cjs && node tests/static-cloudflare.cjs",
     "preview:cloudflare": "opennextjs-cloudflare preview",
     "deploy:cloudflare": "opennextjs-cloudflare deploy",
@@ -43,6 +43,9 @@
   "overrides": {
     "@node-minify/core": {
       "glob": "^10.5.0"
+    },
+    "@next/eslint-plugin-next": {
+      "fast-glob": "npm:tinyglobby@0.2.15"
     }
   }
 }

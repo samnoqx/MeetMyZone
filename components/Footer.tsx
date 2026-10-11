@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import PrivacyChoices from './PrivacyChoices';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -70,6 +71,7 @@ export default function Footer() {
             <span className="text-xs font-bold text-txt-primary uppercase tracking-wider">Legal</span>
             <Link href="/privacy-policy" className="text-txt-secondary hover:text-brand-accent-hover transition-colors font-medium">Privacy Policy</Link>
             <Link href="/terms-of-service" className="text-txt-secondary hover:text-brand-accent-hover transition-colors font-medium">Terms of Service</Link>
+            <PrivacyChoices />
           </div>
 
         </div>
