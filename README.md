@@ -51,7 +51,7 @@ References: https://opennext.js.org/cloudflare/get-started and https://developer
 
 ## Analytics and privacy
 
-Tracking is disabled by default. Optionally set `NEXT_PUBLIC_GA_ID=G-YOURID` before building. The analytics component loads Google scripts only after an explicit visitor opt-in and remembers the choice for the browser session. Placeholder AdSense integration is removed. Advertising requires a real publisher configuration and an appropriate consent platform before enabling it.
+The site's existing GA4 property is `G-W62TK5ME01`. Set `NEXT_PUBLIC_GA_ID` before building to override it; an empty or invalid value disables analytics. Google Analytics loads only after an explicit visitor opt-in and remembers the choice for the browser session. The real AdSense publisher is `ca-pub-9430236853794521`; its site-review script and `ads.txt` are configured. AdSense approval and advertising consent settings are managed in Google's dashboard.
 
 Shared planner links contain city labels, zones, reference location, working hours and date. Those URL parameters reach the hosting provider and can appear in logs or browsing history. Planner preferences are stored in the browser session; location searches are sent directly to Open-Meteo.
 

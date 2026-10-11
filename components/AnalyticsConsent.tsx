@@ -5,7 +5,9 @@ import { readSession, writeSession } from '@/utils/storage';
 
 export default function AnalyticsConsent() {
   const [choice, setChoice] = useState<string | null>('loading');
-  const id = process.env.NEXT_PUBLIC_GA_ID;
+  // Keep the site's existing public GA4 property when build variables are absent.
+  // An explicit empty/invalid override still disables analytics.
+  const id = process.env.NEXT_PUBLIC_GA_ID ?? 'G-W62TK5ME01';
   // Restore a choice from browser-only storage after hydration.
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setChoice(readSession('mmz_analytics_consent')); }, []);
