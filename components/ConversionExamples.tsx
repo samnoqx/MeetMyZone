@@ -5,8 +5,7 @@ import { getConversionExamples } from '@/utils/conversionExamples';
 
 const STANDARD_OFFSETS: Record<string, number> = { est: -5, pst: -8, mst: -7, cst: -6, ast: -4, gmt: 0, cet: 1, aest: 10 };
 
-export default function ConversionExamples({ zoneA, zoneB }: { zoneA: ResolvedTimezone; zoneB: ResolvedTimezone }) {
-  const year = DateTime.utc().year;
+export default function ConversionExamples({ zoneA, zoneB, year = DateTime.utc().year }: { zoneA: ResolvedTimezone; zoneB: ResolvedTimezone; year?: number }) {
   const rows = getConversionExamples(zoneA, zoneB, year);
   const fixedOffset = STANDARD_OFFSETS[zoneA.slug.toLowerCase()];
   const fixedSlug = fixedOffset === 0 ? 'utc' : `utc-${fixedOffset < 0 ? 'minus' : 'plus'}-${Math.abs(fixedOffset)}`;

@@ -117,3 +117,20 @@ for (const pairing of ALL_PAIRINGS) {
     assert.equal(parseCitiesSlug(link.url.replace('/timezone/', '')).length, 2, `Broken related city link: ${link.url}`);
   }
 }
+
+const { referenceSignature } = require('../utils/useTimezoneReference.ts');
+const { calculateTimeDifference, getDstDetail, generateCityFAQs, getTimezoneFacts } = require('../utils/seoContent.ts');
+const london = resolveSlug('london');
+const newYork = resolveSlug('new-york');
+const beforeUkChange = DateTime.fromISO('2026-10-24T12:00:00Z');
+const afterUkChange = DateTime.fromISO('2026-10-26T12:00:00Z');
+assert.match(calculateTimeDifference(london, newYork, beforeUkChange).diffText, /5 hours/);
+assert.match(calculateTimeDifference(london, newYork, afterUkChange).diffText, /4 hours/);
+assert.equal(getDstDetail(london, beforeUkChange).isCurrentlyDst, true);
+assert.equal(getDstDetail(london, afterUkChange).isCurrentlyDst, false);
+assert.match(getDstDetail(london, afterUkChange).nextChange, /2027/);
+assert.notEqual(referenceSignature(beforeUkChange, [london.zoneName]), referenceSignature(afterUkChange, [london.zoneName]));
+assert.equal(referenceSignature(beforeUkChange, [london.zoneName]), referenceSignature(beforeUkChange.plus({ minutes: 1 }), [london.zoneName]));
+assert(generateCityFAQs(newYork, getDstDetail(newYork, afterUkChange), afterUkChange).some(faq => faq.answer.includes('4 hours')));
+assert.match(getTimezoneFacts('nairobi', 'Nairobi', 'Africa/Nairobi', DateTime.fromISO('2027-01-01T00:00:00Z')).standardOffset, /2027/);
+console.log('Build snapshots refresh reference facts across DST changes and New Year without re-rendering every clock tick.');

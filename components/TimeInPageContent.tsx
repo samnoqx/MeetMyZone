@@ -1,3 +1,6 @@
+'use client';
+
+import { useTimezoneReference } from '@/utils/useTimezoneReference';
 import { CITY_BY_SLUG } from '@/utils/cityDirectory';
 import { resolveSlug } from '@/utils/seoResolver';
 import { notFound } from 'next/navigation';
@@ -5,7 +8,6 @@ import Link from 'next/link';
 import WorldClock from '@/components/WorldClock';
 import Header from '@/components/Header';
 import LiveTimezoneValue from '@/components/LiveTimezoneValue';
-import { DateTime } from 'luxon';
 import {
   getDstDetail,
   getTimezoneFacts,
@@ -16,8 +18,9 @@ import {
   generateRelatedLinksForCity
 } from '@/utils/seoContent';
 
-export default function TimeInPageContent({ slug }: { slug: string }) {
+export default function TimeInPageContent({ slug, initialInstant }: { slug: string; initialInstant?: string }) {
   const resolved = resolveSlug(slug);
+  const now = useTimezoneReference(initialInstant, [resolved?.zoneName || 'UTC', 'Europe/London', 'America/New_York']);
   
   if (!resolved) {
     notFound();
@@ -25,7 +28,7 @@ export default function TimeInPageContent({ slug }: { slug: string }) {
   
   const city = resolved.cityName;
   const zoneName = resolved.zoneName;
-  const dst = getDstDetail(resolved);
+  const dst = getDstDetail(resolved, now);
   const country = CITY_BY_SLUG[slug.toLowerCase()]?.country || POPULAR_CITIES_GEO[slug.toLowerCase()]?.country || getCountryForTimezone(zoneName);
   const geoInfo = POPULAR_CITIES_GEO[slug.toLowerCase()];
   const region = geoInfo?.region || zoneName.split('/')[0] || 'Global';
@@ -35,12 +38,12 @@ export default function TimeInPageContent({ slug }: { slug: string }) {
     : 'N/A';
   
   const intro = generateTimeInIntro(resolved, country);
-  const faqs = generateCityFAQs(resolved, dst);
-  const facts = getTimezoneFacts(resolved.slug, resolved.displayName, resolved.zoneName);
+  const faqs = generateCityFAQs(resolved, dst, now);
+  const facts = getTimezoneFacts(resolved.slug, resolved.displayName, resolved.zoneName, now);
   const related = generateRelatedLinksForCity(resolved);
 
   // Compute offset representation
-  const dtNow = DateTime.now().setZone(zoneName);
+  const dtNow = now.setZone(zoneName);
   const offsetMinutes = dtNow.offset;
   const absOffsetMinutes = Math.abs(offsetMinutes);
   const offsetHours = Math.floor(absOffsetMinutes / 60);

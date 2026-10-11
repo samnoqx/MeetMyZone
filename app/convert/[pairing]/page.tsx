@@ -71,5 +71,5 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function Page({ params }: PageProps) {
   const { pairing } = await params;
-  return <ConverterPageContent pairing={pairing} />;
+  return <ConverterPageContent pairing={pairing} initialInstant={new Date().toISOString()} />;
 }

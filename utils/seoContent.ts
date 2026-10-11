@@ -134,7 +134,7 @@ const SLUG_TO_FACT_KEY: Record<string, string> = {
   'kolkata': 'ist'
 };
 
-export function getTimezoneFacts(slug: string, displayName: string, zoneName: string): TimezoneFact {
+export function getTimezoneFacts(slug: string, displayName: string, zoneName: string, reference = DateTime.now()): TimezoneFact {
   const cleanSlug = slug.toLowerCase().trim();
   const key = SLUG_TO_FACT_KEY[cleanSlug] || cleanSlug;
   
@@ -144,7 +144,7 @@ export function getTimezoneFacts(slug: string, displayName: string, zoneName: st
   
   const city = CITY_BY_SLUG[cleanSlug];
   if (city) {
-    const year = DateTime.utc().year;
+    const year = reference.toUTC().year;
     const january = DateTime.fromObject({ year, month: 1, day: 15 }, { zone: city.zone });
     const july = DateTime.fromObject({ year, month: 7, day: 15 }, { zone: city.zone });
     const offset = january.offset === july.offset
@@ -176,8 +176,7 @@ export function getTimezoneFacts(slug: string, displayName: string, zoneName: st
   };
 }
 
-export function calculateTimeDifference(zoneA: ResolvedTimezone, zoneB: ResolvedTimezone): { diffText: string; formattedDiff: string } {
-  const now = DateTime.now();
+export function calculateTimeDifference(zoneA: ResolvedTimezone, zoneB: ResolvedTimezone, now = DateTime.now()): { diffText: string; formattedDiff: string } {
   const timeA = now.setZone(zoneA.zoneName);
   const timeB = now.setZone(zoneB.zoneName);
   
@@ -212,9 +211,9 @@ export interface OverlapRecommendation {
   recommendation: string;
 }
 
-export function calculateOverlapAndRecommendation(zoneA: ResolvedTimezone, zoneB: ResolvedTimezone): OverlapRecommendation {
+export function calculateOverlapAndRecommendation(zoneA: ResolvedTimezone, zoneB: ResolvedTimezone, now = DateTime.now()): OverlapRecommendation {
   const overlapHours: number[] = [];
-  const baseDate = DateTime.now().setZone(zoneA.zoneName).startOf('day');
+  const baseDate = now.setZone(zoneA.zoneName).startOf('day');
   
   for (let h = 0; h < 24; h++) {
     const dtA = baseDate.plus({ hours: h });
@@ -280,8 +279,8 @@ export interface DstDetail {
   description: string;
 }
 
-export function getDstDetail(zone: ResolvedTimezone): DstDetail {
-  const dt = DateTime.now().setZone(zone.zoneName);
+export function getDstDetail(zone: ResolvedTimezone, now = DateTime.now()): DstDetail {
+  const dt = now.setZone(zone.zoneName);
   const isDst = dt.isInDST;
   
   let nextChangeDate: string | null = null;
@@ -535,10 +534,9 @@ export function generateTimeInIntro(zone: ResolvedTimezone, country: string): st
   return `${cityName}, ${country} follows the ${zoneName} time zone. The live clock shows ${cityName}’s local time and date. ${daylightInfo} Check ${cityName}’s UTC offset and daylight saving details before arranging a call or visit.`;
 }
 
-export function generateCityFAQs(zone: ResolvedTimezone, dst: DstDetail): FAQItem[] {
+export function generateCityFAQs(zone: ResolvedTimezone, dst: DstDetail, now = DateTime.now()): FAQItem[] {
   const cityName = zone.cityName;
   
-  const now = DateTime.now();
   const dtCity = now.setZone(zone.zoneName);
   const dtLondon = now.setZone('Europe/London');
   const dtNY = now.setZone('America/New_York');

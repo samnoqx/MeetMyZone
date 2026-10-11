@@ -10,12 +10,14 @@ import { useRouter } from 'next/navigation';
 
 
 interface ConverterClientProps {
+  initialDate?: string;
   initialCities: string[];
   initialCityTimezones: Record<string, string>;
   initialReferenceCity: string;
 }
 
 export default function ConverterClient({
+  initialDate,
   initialCities,
   initialCityTimezones,
   initialReferenceCity
@@ -53,9 +55,15 @@ export default function ConverterClient({
   };
   
   // Date State: starts with today's date
-  const [selectedDate, setSelectedDate] = useState<string>(DateTime.now().toISODate()!);
+  const [selectedDate, setSelectedDate] = useState<string>(initialDate || DateTime.now().toISODate()!);
   const [is24Hour, setIs24Hour] = useState<boolean>(true);
   const [currentRefHour, setCurrentRefHour] = useState<number>(0);
+
+  useEffect(() => {
+    // Hydrate the build date, then retain the existing visitor-local today default.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedDate(DateTime.now().toISODate()!);
+  }, []);
 
   // Synchronize current reference city local hour for red indicator line
   useEffect(() => {

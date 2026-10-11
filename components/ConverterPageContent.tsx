@@ -1,3 +1,6 @@
+'use client';
+
+import { useTimezoneReference } from '@/utils/useTimezoneReference';
 import { parsePairing, isTimezonePairing } from '@/utils/seoResolver';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -14,8 +17,9 @@ import {
   generateRelatedCities
 } from '@/utils/seoContent';
 
-export default function ConverterPageContent({ pairing }: { pairing: string }) {
+export default function ConverterPageContent({ pairing, initialInstant }: { pairing: string; initialInstant?: string }) {
   const resolved = parsePairing(pairing);
+  const now = useTimezoneReference(initialInstant, [resolved?.zoneA.zoneName || 'UTC', resolved?.zoneB.zoneName || 'UTC']);
   
   if (!resolved) {
     notFound();
@@ -24,18 +28,18 @@ export default function ConverterPageContent({ pairing }: { pairing: string }) {
   const zoneA = resolved.zoneA;
   const zoneB = resolved.zoneB;
 
-  const diff = calculateTimeDifference(zoneA, zoneB);
-  const overlap = calculateOverlapAndRecommendation(zoneA, zoneB);
-  const dstA = getDstDetail(zoneA);
-  const dstB = getDstDetail(zoneB);
+  const diff = calculateTimeDifference(zoneA, zoneB, now);
+  const overlap = calculateOverlapAndRecommendation(zoneA, zoneB, now);
+  const dstA = getDstDetail(zoneA, now);
+  const dstB = getDstDetail(zoneB, now);
   const isTz = isTimezonePairing(pairing);
   const routeAwareIntro = isTz
     ? `Convert ${zoneA.displayName.toUpperCase()} to ${zoneB.displayName.toUpperCase()} easily. View the live time difference, compare local clocks, check daylight saving changes (DST), and view detailed timezone offsets using our interactive timeline.`
     : `Convert local time from ${zoneA.displayName} to ${zoneB.displayName} instantly. View the live time difference, compare local clocks side-by-side, check DST schedules, and view offset differences using our interactive timeline.`;
   const faqs = generateFAQs(zoneA, zoneB, diff.diffText, overlap.recommendation, dstA, dstB);
   const filteredFaqs = faqs.filter(faq => !faq.question.toLowerCase().includes('meeting'));
-  const factsA = getTimezoneFacts(zoneA.slug, zoneA.displayName, zoneA.zoneName);
-  const factsB = getTimezoneFacts(zoneB.slug, zoneB.displayName, zoneB.zoneName);
+  const factsA = getTimezoneFacts(zoneA.slug, zoneA.displayName, zoneA.zoneName, now);
+  const factsB = getTimezoneFacts(zoneB.slug, zoneB.displayName, zoneB.zoneName, now);
   const relatedConverters = generateRelatedConverters(zoneA, zoneB);
   const relatedCities = generateRelatedCities(zoneA, zoneB);
 
@@ -161,6 +165,7 @@ export default function ConverterPageContent({ pairing }: { pairing: string }) {
         {/* Standalone Live Converter Interface (preloaded above-the-fold) */}
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 my-6">
           <ConverterClient
+            initialDate={now.toISODate() || undefined}
             key={pairing}
             initialCities={[zoneA.cityName, zoneB.cityName]}
             initialCityTimezones={{
@@ -176,7 +181,7 @@ export default function ConverterPageContent({ pairing }: { pairing: string }) {
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 flex flex-col gap-16 text-slate-900 dark:text-slate-100">
             
 
-            <ConversionExamples zoneA={zoneA} zoneB={zoneB} />
+            <ConversionExamples zoneA={zoneA} zoneB={zoneB} year={now.toUTC().year} />
 
             {/* Daylight Saving Time (DST) Section */}
             <div className="flex flex-col gap-6">

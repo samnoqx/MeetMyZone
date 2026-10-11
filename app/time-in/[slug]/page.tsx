@@ -77,5 +77,5 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function Page({ params }: PageProps) {
   const { slug } = await params;
-  return <TimeInPageContent slug={slug} />;
+  return <TimeInPageContent slug={slug} initialInstant={new Date().toISOString()} />;
 }
