@@ -22,6 +22,26 @@ assert.equal(existing.dataLayer[0], 'existing');
 existing.gtag('config', 'G-W62TK5ME01');
 assert.equal(existing.dataLayer[2][1], 'G-W62TK5ME01');
 console.log('Consent defaults cover all 32 EEA/UK/Swiss countries, precede configuration, and preserve the existing queue/property.');
+// Exercise the real production layout: React can hoist async scripts ahead of
+// inline consent defaults even when the source JSX has the expected order.
+const layoutExports = {};
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('app/layout.tsx', 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
+}).outputText, {
+  exports: layoutExports, URL, process: { env: { NODE_ENV: 'production' } },
+  require(name) {
+    if (name === './globals.css') return {};
+    if (name === '@/utils/googleConsent') return exportsObject;
+    if (name === '@/components/Footer' || name === '@/components/Analytics') return { default: () => null };
+    return require(name);
+  },
+});
+const html = require('react-dom/server').renderToStaticMarkup(layoutExports.default({ children: 'Test page' }));
+const defaultsIndex = html.indexOf('id="google-consent-defaults"');
+const adsIndex = html.indexOf('src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js');
+assert(defaultsIndex >= 0 && adsIndex > defaultsIndex, 'Rendered consent defaults must execute before the asynchronous AdSense script');
+assert.equal((html.match(/src="https:\/\/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/g) || []).length, 1);
+console.log('Actual production layout renders consent defaults before the single asynchronous AdSense tag.');
 // Exercise Google's asynchronous consent API and the actual React control.
 let available = false;
 const effects = [];

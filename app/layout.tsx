@@ -48,6 +48,9 @@ export default function RootLayout({
         <meta name="google-adsense-account" content="ca-pub-9430236853794521" />
         {process.env.NODE_ENV === "production" && (
           <script
+            // Keep this tag in place: React otherwise hoists async scripts
+            // ahead of the regional consent defaults. An empty itemProp opts out.
+            itemProp=""
             async
             src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9430236853794521"
             crossOrigin="anonymous"
