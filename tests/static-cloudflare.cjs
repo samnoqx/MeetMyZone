@@ -56,6 +56,9 @@ async function main() {
     assert(fs.existsSync(path.join(assets, entry.html)), route);
     if (entry.flight) assert(fs.existsSync(path.join(assets, entry.flight)), route);
   }
+  const { createSitemap } = require('../scripts/static-sitemap.cjs');
+  const expectedSitemap = createSitemap(manifest.routes, page => fs.readFileSync(path.join(assets, page.html), 'utf8'));
+  assert.equal(await (await request('/sitemap.xml')).text(), expectedSitemap, 'Every canonical indexable rendered page must be in the production sitemap');
   console.log(`Static Worker checks passed (${Object.keys(manifest.routes).length} pages, ${(source.length / 1024).toFixed(1)} KiB Worker).`);
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

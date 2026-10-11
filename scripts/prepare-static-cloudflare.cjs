@@ -107,6 +107,12 @@ async function main() {
   for (const sign of ['plus', 'minus']) for (let hour = 0; hour <= 14; hour++) for (const minute of ['', '-30', '-45']) candidates.add(`utc-${sign}-${hour}${minute}`);
   for (const slug of candidates) if (resolver.exports.resolveSlug(slug)) manifest.aliases[slug] = true;
   for (const kind of ['converter', 'clock', 'planner']) if (!manifest.fallback[kind]) throw new Error(`Missing runtime template ${kind}`);
+  // Publish every fully rendered canonical public page, including the existing
+  // linked pages discovered above. Alternate/noindex URLs stay consolidated.
+  const { createSitemap } = require('./static-sitemap.cjs');
+  const sitemap = createSitemap(manifest.routes, page => fs.readFileSync(path.join(assets, page.html), 'utf8'));
+  fs.writeFileSync(path.join(assets, 'sitemap.xml'), sitemap);
+  console.log(`Canonical sitemap: ${(sitemap.match(/<loc>/g) || []).length} indexable pages.`);
   fs.writeFileSync('.open-next/static-pages.json', JSON.stringify(manifest));
   await esbuild.build({ entryPoints: ['cloudflare/static-worker.mjs'], outfile: '.open-next/worker.js', bundle: true, platform: 'browser', target: 'es2022', format: 'esm', minify: true });
   console.log(`Asset renderer: ${Object.keys(manifest.routes).length} pages; ${Object.keys(manifest.aliases).length} timezone aliases. Build server stopped.`);

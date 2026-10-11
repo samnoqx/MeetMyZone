@@ -5,7 +5,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 
 export const metadata: Metadata = {
   title: "Privacy Policy | MeetMyZone",
-  description: "Learn how MeetMyZone protects your privacy, minimizes data collection, manages cookies, handles optional analytics, and safeguards your information while using our global timezone planning platform.",
+  description: "Learn how MeetMyZone protects your privacy, manages cookies, uses analytics, and safeguards your information while using our global timezone planning platform.",
   alternates: {
     canonical: "https://meetmyzone.com/privacy-policy"
   }
@@ -22,7 +22,7 @@ export default function PrivacyPolicyPage() {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "Privacy Policy | MeetMyZone",
-    "description": "Learn how MeetMyZone protects your privacy, minimizes data collection, manages cookies, handles optional analytics, and safeguards your information while using our global timezone planning platform.",
+    "description": "Learn how MeetMyZone protects your privacy, manages cookies, uses analytics, and safeguards your information while using our global timezone planning platform.",
     "url": "https://meetmyzone.com/privacy-policy"
   };
 
@@ -108,13 +108,13 @@ export default function PrivacyPolicyPage() {
 
             <section className="flex flex-col gap-2">
               <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                3. Advertising, Optional Analytics & Cookies
+                3. Advertising, Analytics & Cookies
               </h2>
               <p>
                 MeetMyZone includes Google AdSense code to connect this website to Google&apos;s advertising service. Google may receive technical information about your visit, including your IP address, browser information and page URL. When ads are enabled, Google and its partners may use cookies for advertising, measurement and fraud prevention.
               </p>
               <p>
-                If optional Google Analytics is configured, it loads only after you choose Allow analytics. You can decline and continue using all planner tools. If you allow analytics, Google receives information about your visit and may set cookies. Read <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">how Google uses information from sites that use its services</a> for details.
+                MeetMyZone uses Google Analytics to understand visits and improve its tools. Analytics loads automatically and Google may receive technical information about your visit and set analytics cookies. Read <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">how Google uses information from sites that use its services</a> for details.
               </p>
             </section>
 
@@ -123,7 +123,7 @@ export default function PrivacyPolicyPage() {
                 4. Analytics Preferences
               </h2>
               <p>
-                When optional analytics is configured, all visitors receive a choice to allow or decline it. The choice lasts for the browser session. Clear this site&apos;s session storage or close the session to choose again. This site does not currently integrate a Google-certified advertising Consent Management Platform.
+                You can manage cookies through your browser settings or use Google&apos;s <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">Google Analytics opt-out browser add-on</a>. Browser privacy settings and content blockers may limit analytics collection. This site does not currently integrate a Google-certified advertising Consent Management Platform.
               </p>
             </section>
 

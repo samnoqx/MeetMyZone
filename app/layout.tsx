@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Footer from '@/components/Footer';
-import AnalyticsConsent from "@/components/AnalyticsConsent";
+import Analytics from "@/components/Analytics";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://meetmyzone.com'),
@@ -96,7 +96,7 @@ export default function RootLayout({
         `}} />
       </head>
       <body className="min-h-full flex flex-col bg-background text-txt-primary transition-colors duration-150 font-sans">
-        <AnalyticsConsent />
+        <Analytics />
 
         {/* Spotlight Glow Effect */}
         <div className="fixed inset-0 pointer-events-none z-0 spotlight-glow" />

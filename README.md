@@ -45,13 +45,15 @@ The Cloudflare build uses the standard `.next` folder, separate from `.next-prev
 
 After the adapter build, `scripts/prepare-static-cloudflare.cjs` renders the curated pages and their direct tool links on a temporary build server, saves their HTML and navigation payloads as assets, and stops that server. The final Worker routes requests to these assets without importing Next's server runtime. Shared meeting dates, locations and working hours restore from the browser URL. Additional valid city combinations use the same interactive page components in the browser and remain unindexed until explicitly included in the build.
 
+The Cloudflare build publishes every fully rendered, indexable canonical page in `sitemap.xml`. It validates each page's canonical, title, description and heading before listing it. Alternate URLs marked `noindex`, private build templates and client-only fallback pages are excluded. Sitemap inclusion supports discovery; Google controls actual indexing and ranking.
+
 Clocks, UTC/DST status, upcoming clock changes, FAQs and seasonal reference examples update in the browser. The first render uses the build timestamp for stable hydration; reference facts refresh when the day or a relevant UTC offset changes. Rebuild after changing content or updating timezone rules. Runtime ISR is not used by the asset Worker. `tests/static-cloudflare.cjs` verifies routing, navigation payloads, security headers, private assets, invalid cities and the AdSense ownership integration. Workers Free still has request and CPU limits: verify a version preview and its runtime logs before deploying, because local checks alone cannot prove hosted CPU usage.
 
 References: https://opennext.js.org/cloudflare/get-started and https://developers.cloudflare.com/workers/platform/limits/.
 
 ## Analytics and privacy
 
-The site's existing GA4 property is `G-W62TK5ME01`. Set `NEXT_PUBLIC_GA_ID` before building to override it; an empty or invalid value disables analytics. Google Analytics loads only after an explicit visitor opt-in and remembers the choice for the browser session. The real AdSense publisher is `ca-pub-9430236853794521`; its site-review script and `ads.txt` are configured. AdSense approval and advertising consent settings are managed in Google's dashboard.
+The site's existing GA4 property is `G-W62TK5ME01`. Set `NEXT_PUBLIC_GA_ID` before building to override it; an empty or invalid value disables analytics. Google Analytics loads automatically after page hydration, preserving the original tracking behavior without an Allow/Decline prompt. The real AdSense publisher is `ca-pub-9430236853794521`; its site-review script and `ads.txt` are configured. AdSense approval and advertising consent settings are managed in Google's dashboard.
 
 Shared planner links contain city labels, zones, reference location, working hours and date. Those URL parameters reach the hosting provider and can appear in logs or browsing history. Planner preferences are stored in the browser session; location searches are sent directly to Open-Meteo.
 
