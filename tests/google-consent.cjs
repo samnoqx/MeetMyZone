@@ -39,9 +39,16 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('app/layout.tsx', 'utf8'),
 const html = require('react-dom/server').renderToStaticMarkup(layoutExports.default({ children: 'Test page' }));
 const defaultsIndex = html.indexOf('id="google-consent-defaults"');
 const adsIndex = html.indexOf('src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js');
-assert(defaultsIndex >= 0 && adsIndex > defaultsIndex, 'Rendered consent defaults must execute before the asynchronous AdSense script');
-assert.equal((html.match(/src="https:\/\/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/g) || []).length, 1);
-console.log('Actual production layout renders consent defaults before the single asynchronous AdSense tag.');
+assert(defaultsIndex >= 0 && adsIndex === -1, 'The synchronous defaults must render before the deferred AdSense loader can execute');
+const layout = layoutExports.default({ children: 'Test page' });
+const head = require('react').Children.toArray(layout.props.children).find(e => e.type === 'head');
+const adsLoader = require('react').Children.toArray(head.props.children).find(e => e.props.id === 'google-adsense');
+assert.equal(adsLoader.type, require('next/script').default);
+assert.equal(adsLoader.props.strategy, 'afterInteractive');
+assert.equal(adsLoader.props.src, 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9430236853794521');
+assert.equal(adsLoader.props.crossOrigin, 'anonymous');
+assert(html.includes('name="google-adsense-account" content="ca-pub-9430236853794521"'), 'Server-rendered AdSense ownership verification retained');
+console.log('Actual production layout renders synchronous consent defaults and retains ownership verification; Next loads AdSense once after hydration.');
 // Exercise Google's asynchronous consent API and the actual React control.
 let available = false;
 const effects = [];

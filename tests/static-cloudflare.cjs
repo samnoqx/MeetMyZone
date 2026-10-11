@@ -34,7 +34,8 @@ async function main() {
   const home = await (await request('/')).text();
   assert(home.includes('ca-pub-9430236853794521'), 'AdSense ownership integration retained');
   assert(home.indexOf('id="google-consent-defaults"') > 0);
-  assert(home.indexOf('id="google-consent-defaults"') < home.indexOf('src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'), 'Regional consent defaults execute before the asynchronous advertising tag');
+  assert(home.includes('google-adsense'), 'The deferred AdSense loader is retained in the production page');
+  assert(!home.includes('src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'), 'AdSense executes after hydration, following the synchronous regional defaults');
   assert.equal((await request('/city-search/v20261011/metadata.json')).headers.get('Cache-Control'), 'public, max-age=31536000, immutable');
   assert.equal((await request('/', { method: 'HEAD' })).status, 200);
   assert.equal(await (await request('/', { method: 'HEAD' })).text(), '');

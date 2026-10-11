@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from 'next/script';
 import "./globals.css";
 import Footer from '@/components/Footer';
 import { GOOGLE_CONSENT_BOOTSTRAP } from '@/utils/googleConsent';
@@ -47,11 +48,9 @@ export default function RootLayout({
         <script id="google-consent-defaults" dangerouslySetInnerHTML={{ __html: GOOGLE_CONSENT_BOOTSTRAP }} />
         <meta name="google-adsense-account" content="ca-pub-9430236853794521" />
         {process.env.NODE_ENV === "production" && (
-          <script
-            // Keep this tag in place: React otherwise hoists async scripts
-            // ahead of the regional consent defaults. An empty itemProp opts out.
-            itemProp=""
-            async
+          <Script
+            id="google-adsense"
+            strategy="afterInteractive"
             src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9430236853794521"
             crossOrigin="anonymous"
           />

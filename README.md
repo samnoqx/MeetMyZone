@@ -53,6 +53,8 @@ References: https://opennext.js.org/cloudflare/get-started and https://developer
 
 ## Analytics and privacy
 
+AdSense uses Next's `afterInteractive` script loader, preserving its public ownership meta tag and `ads.txt`. The consent defaults execute synchronously before that loader. Next deduplicates the advertising script across hydration and navigation; a regular async tag can be hoisted before defaults, while opting out of hoisting with `itemProp` can leave duplicate tags during hydration.
+
 The site's existing GA4 property is `G-W62TK5ME01`. Set `NEXT_PUBLIC_GA_ID` before building to override it; an empty or invalid value disables analytics. Google Analytics loads automatically after page hydration. Regional consent defaults apply in the EEA, UK and Switzerland before Google tags run; the Google-certified AdSense CMP interprets visitor choices for advertising and analytics when enabled in the publisher dashboard. Outside those regions, automatic collection remains unchanged. The footer exposes Google's consent revocation control only when its TCF API confirms that GDPR applies. The real AdSense publisher is `ca-pub-9430236853794521`; its site-review script and `ads.txt` are configured. AdSense approval and advertising consent settings are managed in Google's dashboard.
 
 Shared planner links contain city labels, zones, reference location, working hours and date. Those URL parameters reach the hosting provider and can appear in logs or browsing history. Planner preferences are stored in the browser session; city searches use first-party static GeoNames data and do not send search text to a geocoding provider.
