@@ -3,7 +3,7 @@
 import { readSession, writeSession } from '@/utils/storage';
 
 import React from 'react';
-import { TimeMatrixHour } from '@/utils/timezone';
+import { getOverlapColumns, type TimeMatrixHour } from '@/utils/timezone';
 
 interface TimezoneTimelineProps {
   cities: string[];
@@ -14,17 +14,15 @@ interface TimezoneTimelineProps {
 
 interface TimelineRowProps {
   city: string;
-  cities: string[];
+  overlapColumns: boolean[];
   matrix: TimeMatrixHour[];
-  currentUtcHour: number;
   is24Hour: boolean;
 }
 
 const TimelineRow = React.memo(function TimelineRow({
   city,
-  cities,
+  overlapColumns,
   matrix,
-  currentUtcHour,
   is24Hour,
 }: TimelineRowProps) {
   const firstRowCell = matrix[0]?.cities[city];
@@ -48,13 +46,13 @@ const TimelineRow = React.memo(function TimelineRow({
 
       {/* 24 Hour Blocks for this city */}
       <div className="flex-1 grid grid-cols-[repeat(24,minmax(42px,1fr))]">
-        {matrix.map((row) => {
+        {matrix.map((row, columnIndex) => {
           const cell = row.cities[city];
           if (!cell) return null;
 
           // Determine if this cell falls within the city's active work hours
           const isDay = cell.isWorking;
-          const isOverlap = cities.filter(c => row.cities[c]?.isWorking).length >= 2;
+          const isOverlap = overlapColumns[columnIndex];
           const isHighlighted = isOverlap && isDay;
 
           return (
@@ -107,9 +105,9 @@ const TimelineRow = React.memo(function TimelineRow({
 export default function TimezoneTimeline({
   cities,
   matrix,
-  currentUtcHour,
   is24Hour = true,
 }: TimezoneTimelineProps) {
+  const overlapColumns = React.useMemo(() => getOverlapColumns(cities, matrix), [cities, matrix]);
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -169,8 +167,8 @@ export default function TimezoneTimeline({
 
             {/* Timeline Hours Header */}
             <div className="flex-1 grid grid-cols-[repeat(24,minmax(42px,1fr))]">
-              {matrix.map((row) => {
-                const isOverlap = cities.filter(c => row.cities[c]?.isWorking).length >= 2;
+              {matrix.map((row, columnIndex) => {
+                const isOverlap = overlapColumns[columnIndex];
                 return (
                   <div
                     key={`header-utc-${row.utcHour}`}
@@ -215,9 +213,8 @@ export default function TimezoneTimeline({
               <TimelineRow
                 key={`row-${city}`}
                 city={city}
-                cities={cities}
+                overlapColumns={overlapColumns}
                 matrix={matrix}
-                currentUtcHour={currentUtcHour}
                 is24Hour={is24Hour}
               />
             ))}

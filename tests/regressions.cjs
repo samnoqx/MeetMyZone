@@ -73,3 +73,47 @@ try {
 } finally {
   Module._resolveFilename = originalResolve;
 }
+
+// Expanded search coverage must use real zones, preserve dates and keep timeline highlights unchanged.
+const { CITY_DIRECTORY, TIME_IN_SLUGS } = require('../utils/cityDirectory.ts');
+const { ALL_PAIRINGS, parsePairing, resolveSlug, getSlugForCityAndZone } = require('../utils/seoResolver.ts');
+const { getConversionExamples } = require('../utils/conversionExamples.ts');
+const { getOverlapColumns } = require('../utils/timezone.ts');
+const { DateTime } = require('luxon');
+assert.equal(new Set(ALL_PAIRINGS).size, ALL_PAIRINGS.length);
+assert.equal(new Set(TIME_IN_SLUGS).size, TIME_IN_SLUGS.length);
+for (const city of CITY_DIRECTORY) {
+  assert.ok(DateTime.now().setZone(city.zone).isValid, city.slug);
+  const resolved = resolveSlug(city.slug);
+  assert.equal(resolved.cityName, city.name);
+  assert.equal(resolved.zoneName, city.zone);
+}
+for (const pairing of ALL_PAIRINGS) assert.ok(parsePairing(pairing), pairing);
+assert.equal(resolveSlug('utc-plus-15'), null);
+assert.equal(resolveSlug('utc-plus-14-30'), null);
+assert.equal(resolveSlug('utc-plus-5-45').zoneName, 'UTC+5:45');
+assert.equal(getSlugForCityAndZone('São Paulo', 'America/Sao_Paulo'), 'sao-paulo');
+const fixedPair = parsePairing('utc-plus-5-to-utc-plus-8');
+const fixedExamples = getConversionExamples(fixedPair.zoneA, fixedPair.zoneB, 2026);
+assert.equal(fixedExamples[2].targetTime, '6:00 PM');
+assert.equal(fixedExamples[3].targetTime, '2:00 AM');
+assert.equal(fixedExamples[3].dayDifference, 1);
+assert.equal(fixedExamples[3].targetDate, 'Jan 16, 2026');
+const seasonalPair = parsePairing('london-to-mumbai');
+const seasonalExamples = getConversionExamples(seasonalPair.zoneA, seasonalPair.zoneB, 2026);
+assert.equal(seasonalExamples[2].targetTime, '8:30 PM');
+assert.equal(seasonalExamples[6].targetTime, '7:30 PM');
+const nightMatrix = generateTimezoneMatrix(['London', 'Paris', 'Tokyo'], 'London', 9, 17, '2026-03-29');
+const highlights = getOverlapColumns(['London', 'Paris', 'Tokyo'], nightMatrix);
+assert.equal(highlights[12], true); // London and Paris work while Tokyo is outside working hours.
+assert.equal(highlights[0], false);
+assert.ok(getOverlapColumns(['London'], nightMatrix).every(value => value === false));
+console.log('City catalog, fixed-offset conversions, seasonal examples, date rollover and shared timeline highlights passed.');
+
+const { generateRelatedCities } = require('../utils/seoContent.ts');
+for (const pairing of ALL_PAIRINGS) {
+  const [source, target] = pairing.split('-to-').map(resolveSlug);
+  for (const link of generateRelatedCities(source, target)) {
+    assert.equal(parseCitiesSlug(link.url.replace('/timezone/', '')).length, 2, `Broken related city link: ${link.url}`);
+  }
+}

@@ -1,3 +1,4 @@
+import { TIME_IN_SLUGS } from '@/utils/cityDirectory';
 import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
@@ -31,10 +32,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const slugs = [
-    'london', 'new-york', 'tokyo', 'sydney', 'paris', 'dubai', 'los-angeles', 'mumbai', 'singapore', 'seoul', 'berlin', 'denver', 'halifax',
-    'est', 'ist', 'pst', 'utc', 'gmt', 'cet', 'mst', 'cst', 'ast', 'sgt', 'jst', 'kst', 'aest'
-  ];
+  const slugs = TIME_IN_SLUGS;
 
   const clockData = slugs.map(slug => {
     const resolved = resolveSlug(slug);

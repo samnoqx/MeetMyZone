@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import { CITY_BY_SLUG, CITY_DIRECTORY } from './cityDirectory';
 import { ResolvedTimezone } from './seoResolver';
 
 export interface TimezoneFact {
@@ -141,6 +142,30 @@ export function getTimezoneFacts(slug: string, displayName: string, zoneName: st
     return TIMEZONE_FACTS_MAP[key];
   }
   
+  const city = CITY_BY_SLUG[cleanSlug];
+  if (city) {
+    const year = DateTime.utc().year;
+    const january = DateTime.fromObject({ year, month: 1, day: 15 }, { zone: city.zone });
+    const july = DateTime.fromObject({ year, month: 7, day: 15 }, { zone: city.zone });
+    const offset = january.offset === july.offset
+      ? `UTC${january.toFormat('ZZ')} in January and July ${year}`
+      : `January ${year}: UTC${january.toFormat('ZZ')}; July ${year}: UTC${july.toFormat('ZZ')}`;
+    return {
+      fullName: `${city.name} local time (${city.zone})`,
+      standardOffset: offset,
+      regions: `${city.name}, ${city.country}. This page uses ${city.zone} time-zone rules.`,
+      businessUsage: `Use ${city.name}'s local date when setting deadlines. A deadline in another city may fall on the previous or following calendar day.`,
+      travelRelevance: `Departure and arrival times are usually shown in each airport's local time. Check the date as well as the hour when travelling to or from ${city.name}.`,
+      remoteWork: `Choose the meeting date before comparing ${city.name} with other locations; seasonal clock changes can alter the difference.`,
+    };
+  }
+  if (/^UTC[+-]/.test(zoneName)) return {
+    fullName: `Fixed offset ${displayName}`, standardOffset: displayName,
+    regions: 'A fixed UTC offset describes a clock offset, not a country or city.',
+    businessUsage: 'Use fixed offsets when a schedule explicitly specifies an offset from UTC.',
+    travelRelevance: 'A city may change its offset seasonally. Check its named time zone for travel dates.',
+    remoteWork: 'Fixed offsets do not change for daylight saving time. Use named city zones for recurring local meetings.',
+  };
   return {
     fullName: displayName.toUpperCase(),
     standardOffset: zoneName,
@@ -384,15 +409,17 @@ export function generateRelatedConverters(zoneA: ResolvedTimezone, zoneB: Resolv
 }
 
 export function generateRelatedCities(zoneA: ResolvedTimezone, zoneB: ResolvedTimezone): RelatedLink[] {
-  const slugify = (city: string) => city.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+  const slugify = (city: string) => city.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
   
   const cityA = zoneA.cityName;
   const cityB = zoneB.cityName;
+  const slugA = /^utc-(?:plus|minus)-/.test(zoneA.slug) ? zoneA.slug : slugify(cityA);
+  const slugB = /^utc-(?:plus|minus)-/.test(zoneB.slug) ? zoneB.slug : slugify(cityB);
   
   const links: RelatedLink[] = [
     {
       label: `${cityA} to ${cityB} Meeting Planner`,
-      url: `/timezone/${slugify(cityA)}-to-${slugify(cityB)}`
+      url: `/timezone/${slugA}-to-${slugB}`
     }
   ];
   
@@ -400,11 +427,11 @@ export function generateRelatedCities(zoneA: ResolvedTimezone, zoneB: ResolvedTi
   popularCities.slice(0, 3).forEach(city => {
     links.push({
       label: `${cityA} to ${city} Comparison`,
-      url: `/timezone/${slugify(cityA)}-to-${slugify(city)}`
+      url: `/timezone/${slugA}-to-${slugify(city)}`
     });
     links.push({
       label: `${city} to ${cityB} Comparison`,
-      url: `/timezone/${slugify(city)}-to-${slugify(cityB)}`
+      url: `/timezone/${slugify(city)}-to-${slugB}`
     });
   });
   
@@ -441,6 +468,9 @@ export const POPULAR_CITIES_GEO: Record<string, CityGeoInfo> = {
 };
 
 export function getCountryForTimezone(zone: string): string {
+  const directoryCity = CITY_DIRECTORY.find(city => city.zone === zone);
+  if (directoryCity) return directoryCity.country;
+  if (/^UTC[+-]/.test(zone)) return 'a fixed UTC offset';
   const zoneLower = zone.toLowerCase();
   if (zoneLower.includes('kolkata') || zoneLower.includes('delhi') || zoneLower.includes('mumbai') || zoneLower.includes('calcutta')) return 'India';
   if (zoneLower.includes('london')) return 'United Kingdom';
@@ -566,7 +596,7 @@ export function generateCityFAQs(zone: ResolvedTimezone, dst: DstDetail): FAQIte
 }
 
 export function generateRelatedLinksForCity(zone: ResolvedTimezone): { converters: RelatedLink[]; currentTimes: RelatedLink[] } {
-  const slugify = (city: string) => city.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+  const slugify = (city: string) => city.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
   const citySlug = slugify(zone.cityName);
   const currentCity = zone.cityName;
   

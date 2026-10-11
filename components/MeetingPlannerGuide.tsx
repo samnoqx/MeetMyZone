@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { MEETING_GUIDES } from '@/lib/meetingGuides';
 import type { ResolvedTimezone } from '@/utils/seoResolver';
 import OverlapTable from '@/components/OverlapTable';
 import InternalLinks from '@/components/InternalLinks';
@@ -34,6 +36,16 @@ export default function MeetingPlannerGuide({ zones, selectedDate }: { zones: Re
             <p>Select a slot, add a title, duration, and agenda, then share the details or export a calendar invitation. Check the local dates and times before sending it to your team.</p>
           </div>
         </div>
+        <div className="mt-8 text-sm leading-relaxed text-txt-secondary">
+          <h3 className="font-semibold text-txt-heading mb-2">Use a time zone scheduler for recurring international meetings</h3>
+          <p>A recurring meeting needs more than today&apos;s time difference. Check dates around each participant&apos;s daylight saving changes, keep the reference city consistent, and confirm the local time before exporting an invitation. If the team has no shared working hours, rotate early and late calls or use a written handover. Save and share the plan so everyone can check their own city and calendar date.</p>
+        </div>
+        <nav aria-label="Team meeting guides" className="mt-8">
+          <h3 className="font-semibold text-txt-heading mb-3">Meeting planners for global teams</h3>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-sm">
+            {MEETING_GUIDES.map(guide => <li key={guide.slug}><Link className="text-brand-accent hover:underline" href={`/meeting-planner/${guide.slug}`}>{guide.title}</Link></li>)}
+          </ul>
+        </nav>
         <InternalLinks />
       </div>
     </section>

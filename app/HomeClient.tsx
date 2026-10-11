@@ -39,6 +39,8 @@ interface HomeClientProps {
   initialDate?: string;
   headerPrefix?: React.ReactNode;
   meetingOnly?: boolean;
+  heading?: string;
+  intro?: string;
 }
 function buildLocationLabel(name?: string, admin1?: string, country?: string): string {
   const parts: string[] = [];
@@ -58,7 +60,7 @@ function buildLocationLabel(name?: string, admin1?: string, country?: string): s
   return parts.join(', ');
 }
 
-export default function Home({ initialParams = {}, initialDate, headerPrefix, meetingOnly = false }: HomeClientProps) {
+export default function Home({ initialParams = {}, initialDate, headerPrefix, meetingOnly = false, heading = 'Meeting Planner', intro }: HomeClientProps) {
   initialParams = normalizeParams(initialParams);
   // Parse initial parameters on client initialization
   const parsedCities = initialParams.cities
@@ -787,12 +789,12 @@ export default function Home({ initialParams = {}, initialDate, headerPrefix, me
           {headerPrefix}
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-txt-heading leading-tight">
             <span className="from-grad-from via-grad-via to-grad-to bg-linear-to-r text-transparent bg-clip-text">
-              Meeting Planner
+              {heading}
             </span>
           </h1>
 
           <p className="max-w-xl text-sm sm:text-base text-txt-secondary leading-relaxed">
-            Plan a meeting around your participants’ local working hours. Add their cities, choose a date, and review the shared availability. The timeline accounts for daylight saving time on your selected date. Pick a meeting slot, then share the plan or export a calendar invitation.
+            {intro || 'Plan a meeting around your participants’ local working hours. Add their cities, choose a date, and review the shared availability. The timeline accounts for daylight saving time on your selected date. Pick a meeting slot, then share the plan or export a calendar invitation.'}
           </p>
 
           {!meetingOnly && <div className="hidden md:flex md:flex-row gap-4 w-full max-w-2xl mt-6 mb-2 mx-auto">

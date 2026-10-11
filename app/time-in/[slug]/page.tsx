@@ -1,3 +1,4 @@
+import { TIME_IN_SLUGS, CITY_BY_SLUG } from '@/utils/cityDirectory';
 import { resolveSlug } from '../../../utils/seoResolver';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -24,10 +25,7 @@ interface PageProps {
 export const revalidate = 86400; // Cache pages for 24 hours (1 day)
 
 export async function generateStaticParams() {
-  const slugs = [
-    'est', 'ist', 'pst', 'utc', 'gmt', 'cet', 'mst', 'cst', 'ast', 'sgt', 'jst', 'kst', 'aest',
-    'london', 'new-york', 'tokyo', 'sydney', 'paris', 'dubai', 'los-angeles', 'mumbai', 'singapore', 'seoul', 'berlin', 'denver', 'halifax'
-  ];
+  const slugs = TIME_IN_SLUGS;
   return slugs.map(slug => ({ slug }));
 }
 
@@ -44,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   
   const city = resolved.cityName;
   const zoneName = resolved.zoneName;
-  const country = POPULAR_CITIES_GEO[slug.toLowerCase()]?.country || getCountryForTimezone(zoneName);
+  const country = CITY_BY_SLUG[slug.toLowerCase()]?.country || POPULAR_CITIES_GEO[slug.toLowerCase()]?.country || getCountryForTimezone(zoneName);
   
   const isZoneGuide = resolved.displayName !== city;
   const title = isZoneGuide
@@ -100,7 +98,7 @@ export default async function Page({ params }: PageProps) {
   const city = resolved.cityName;
   const zoneName = resolved.zoneName;
   const dst = getDstDetail(resolved);
-  const country = POPULAR_CITIES_GEO[slug.toLowerCase()]?.country || getCountryForTimezone(zoneName);
+  const country = CITY_BY_SLUG[slug.toLowerCase()]?.country || POPULAR_CITIES_GEO[slug.toLowerCase()]?.country || getCountryForTimezone(zoneName);
   const geoInfo = POPULAR_CITIES_GEO[slug.toLowerCase()];
   const region = geoInfo?.region || zoneName.split('/')[0] || 'Global';
   
@@ -148,7 +146,7 @@ export default async function Page({ params }: PageProps) {
           "@type": "ListItem",
           "position": 2,
           "name": "Local Time",
-          "item": `https://meetmyzone.com/time-in/${slug}`
+          "item": "https://meetmyzone.com/current-time"
         },
         {
           "@type": "ListItem",

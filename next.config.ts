@@ -29,6 +29,21 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.meetmyzone.com' }],
+        destination: 'https://meetmyzone.com/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [
+          { type: 'host', value: 'meetmyzone.com' },
+          { type: 'header', key: 'x-forwarded-proto', value: 'http' },
+        ],
+        destination: 'https://meetmyzone.com/:path*',
+        permanent: true,
+      },
+      {
         source: '/blog/remote-work-hours-overlap-engineering-teams',
         destination: '/blog/find-working-hours-overlap-global-teams',
         permanent: true,

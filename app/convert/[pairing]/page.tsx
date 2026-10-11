@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import ConverterClient from './ConverterClient';
 import Header from '@/components/Header';
+import ConversionExamples from '@/components/ConversionExamples';
 import {
   calculateTimeDifference,
   calculateOverlapAndRecommendation,
@@ -19,6 +20,8 @@ interface PageProps {
     pairing: string;
   }>;
 }
+
+export const revalidate = 86400;
 
 export async function generateStaticParams() {
   return ALL_PAIRINGS.map(pairing => ({ pairing }));
@@ -242,7 +245,7 @@ export default async function Page({ params }: PageProps) {
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 flex flex-col gap-16 text-slate-900 dark:text-slate-100">
             
 
-            {/* Business Hours Overlap & Meeting Recommendations Removed */}
+            <ConversionExamples zoneA={zoneA} zoneB={zoneB} />
 
             {/* Daylight Saving Time (DST) Section */}
             <div className="flex flex-col gap-6">

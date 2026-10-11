@@ -1,9 +1,11 @@
 import { DateTime } from 'luxon';
+import { CITY_DIRECTORY } from './cityDirectory';
 
 /**
  * Map of common city names to their corresponding IANA timezone identifiers.
  */
 export const CITY_TO_ZONE: Record<string, string> = {
+  ...Object.fromEntries(CITY_DIRECTORY.map(city => [city.name.toLowerCase(), city.zone])),
   'london': 'Europe/London',
   'new york': 'America/New_York',
   'tokyo': 'Asia/Tokyo',
@@ -334,3 +336,14 @@ export function deduplicateSuggestions<T extends { label: string; timezone: stri
   return uniqueList;
 }
 
+
+/** Shared highlight state for each column; preserves the two-working-cities rule. */
+export function getOverlapColumns(cities: string[], matrix: TimeMatrixHour[]): boolean[] {
+  return matrix.map(row => {
+    let count = 0;
+    for (const city of cities) {
+      if (row.cities[city]?.isWorking && ++count >= 2) return true;
+    }
+    return false;
+  });
+}

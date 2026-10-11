@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import { CITY_BY_SLUG, CITY_DIRECTORY } from './cityDirectory';
 import { resolveTimeZone, ALL_IANA_ZONES } from './timezone';
 
 export interface ResolvedTimezone {
@@ -28,8 +29,27 @@ export const TIMEZONE_ABBR_MAP: Record<string, { displayName: string; cityName: 
  * Resolves a URL slug to a standardized timezone entity.
  * Handles abbreviations, dynamic city name parsing, and full IANA timezones.
  */
+export function resolveFixedOffsetSlug(slug: string): ResolvedTimezone | null {
+  const match = /^utc-(plus|minus)-(\d{1,2})(?:-(30|45))?$/.exec(slug.toLowerCase());
+  if (!match) return null;
+  const hours = Number(match[2]);
+  const minutes = Number(match[3] || 0);
+  if (hours > 14 || (hours === 14 && minutes !== 0)) return null;
+  const sign = match[1] === 'plus' ? '+' : '-';
+  const name = `UTC${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  return { slug: slug.toLowerCase(), displayName: name, cityName: name, zoneName: `UTC${sign}${hours}:${String(minutes).padStart(2, '0')}` };
+}
+
 export function resolveSlug(slug: string): ResolvedTimezone | null {
   if (!slug.trim() || slug.length > 120) return null;
+  const fixedOffset = resolveFixedOffsetSlug(slug);
+  if (fixedOffset) return fixedOffset;
+  if (/^utc-(?:plus|minus)-/i.test(slug)) return null;
+  const cityKey = slug.trim().toLowerCase();
+  if (Object.hasOwn(CITY_BY_SLUG, cityKey)) {
+    const city = CITY_BY_SLUG[cityKey];
+    return { slug: city.slug, displayName: city.name, cityName: city.name, zoneName: city.zone };
+  }
   const normalized = slug.trim().toLowerCase().replace(/-+/g, ' ');
   
   // 1. Check mapped abbreviations first
@@ -136,12 +156,16 @@ export function parseCitiesSlug(citiesSlug: string): { cityName: string; timezon
 }
 
 export function getSlugForCityAndZone(cityName: string, zoneName: string): string {
+  const fixed = /^UTC([+-])(\d{1,2})(?::(\d{2}))?$/.exec(zoneName);
+  if (fixed) return `utc-${fixed[1] === '+' ? 'plus' : 'minus'}-${Number(fixed[2])}${fixed[3] && fixed[3] !== '00' ? `-${fixed[3]}` : ''}`;
   for (const [abbr, item] of Object.entries(TIMEZONE_ABBR_MAP)) {
     if (item.zoneName === zoneName) {
       return abbr;
     }
   }
-  return cityName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const city = CITY_DIRECTORY.find(item => item.name.toLowerCase() === cityName.trim().toLowerCase());
+  if (city) return city.slug;
+  return cityName.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
 
 export const ALL_PAIRINGS = [
@@ -152,12 +176,102 @@ export const ALL_PAIRINGS = [
   'ast-to-est', 'est-to-ast', 'jst-to-aest', 'aest-to-jst', 'kst-to-jst',
   'jst-to-kst', 'tokyo-to-london', 'london-to-tokyo', 'paris-to-new-york',
   'new-york-to-paris', 'singapore-to-london', 'london-to-singapore',
-  'sydney-to-tokyo', 'tokyo-to-sydney'
+  'sydney-to-tokyo', 'tokyo-to-sydney',
+  "new-york-to-los-angeles",
+  "los-angeles-to-new-york",
+  "new-york-to-chicago",
+  "chicago-to-new-york",
+  "london-to-dubai",
+  "dubai-to-london",
+  "london-to-mumbai",
+  "mumbai-to-london",
+  "london-to-sydney",
+  "sydney-to-london",
+  "new-york-to-mumbai",
+  "mumbai-to-new-york",
+  "new-york-to-dubai",
+  "dubai-to-new-york",
+  "new-york-to-tokyo",
+  "tokyo-to-new-york",
+  "new-york-to-singapore",
+  "singapore-to-new-york",
+  "los-angeles-to-tokyo",
+  "tokyo-to-los-angeles",
+  "los-angeles-to-sydney",
+  "sydney-to-los-angeles",
+  "toronto-to-london",
+  "london-to-toronto",
+  "vancouver-to-london",
+  "london-to-vancouver",
+  "toronto-to-mumbai",
+  "mumbai-to-toronto",
+  "berlin-to-new-york",
+  "new-york-to-berlin",
+  "paris-to-tokyo",
+  "tokyo-to-paris",
+  "singapore-to-sydney",
+  "sydney-to-singapore",
+  "dubai-to-singapore",
+  "singapore-to-dubai",
+  "hong-kong-to-london",
+  "london-to-hong-kong",
+  "hong-kong-to-new-york",
+  "new-york-to-hong-kong",
+  "chicago-to-london",
+  "london-to-chicago",
+  "san-francisco-to-london",
+  "london-to-san-francisco",
+  "melbourne-to-london",
+  "london-to-melbourne",
+  "brisbane-to-sydney",
+  "sydney-to-brisbane",
+  "adelaide-to-sydney",
+  "sydney-to-adelaide",
+  "perth-to-sydney",
+  "sydney-to-perth",
+  "auckland-to-sydney",
+  "sydney-to-auckland",
+  "kathmandu-to-mumbai",
+  "mumbai-to-kathmandu",
+  "bangkok-to-singapore",
+  "singapore-to-bangkok",
+  "manila-to-new-york",
+  "new-york-to-manila",
+  "johannesburg-to-london",
+  "london-to-johannesburg",
+  "sao-paulo-to-london",
+  "london-to-sao-paulo",
+  "mexico-city-to-new-york",
+  "new-york-to-mexico-city",
+  "est-to-utc",
+  "utc-to-est",
+  "pst-to-ist",
+  "ist-to-pst",
+  "cet-to-ist",
+  "ist-to-cet",
+  "sgt-to-ist",
+  "ist-to-sgt",
+  "jst-to-ist",
+  "ist-to-jst",
+  "utc-plus-5-to-utc-plus-8",
+  "utc-plus-8-to-utc-plus-5",
+  "utc-plus-5-30-to-utc",
+  "utc-to-utc-plus-5-30",
+  "utc-plus-5-45-to-utc",
+  "utc-to-utc-plus-5-45",
+  "utc-minus-5-to-utc",
+  "utc-to-utc-minus-5",
+  "utc-minus-8-to-utc-plus-8",
+  "utc-plus-8-to-utc-minus-8",
+  "utc-plus-10-to-utc",
+  "utc-to-utc-plus-10",
+  "utc-plus-9-to-utc",
+  "utc-to-utc-plus-9"
 ];
 
 export function isTimezonePairing(pairingSlug: string): boolean {
   const parts = pairingSlug.toLowerCase().split('-to-');
   if (parts.length !== 2) return false;
-  return Object.hasOwn(TIMEZONE_ABBR_MAP, parts[0]) && Object.hasOwn(TIMEZONE_ABBR_MAP, parts[1]);
+  return parts.every(part => Object.hasOwn(TIMEZONE_ABBR_MAP, part) || resolveFixedOffsetSlug(part) !== null);
 }
 

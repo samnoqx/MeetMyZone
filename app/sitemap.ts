@@ -1,3 +1,5 @@
+import { MEETING_GUIDES } from '@/lib/meetingGuides';
+import { TIME_IN_SLUGS } from '@/utils/cityDirectory';
 import { MetadataRoute } from 'next';
 import { ALL_PAIRINGS } from '../utils/seoResolver';
 import { getAllBlogSlugs } from '@/lib/blogData';
@@ -78,10 +80,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  const timeInSlugs = [
-    'est', 'ist', 'pst', 'utc', 'gmt', 'cet', 'mst', 'cst', 'ast', 'sgt', 'jst', 'kst', 'aest',
-    'london', 'new-york', 'tokyo', 'sydney', 'paris', 'dubai', 'los-angeles', 'mumbai', 'singapore', 'seoul', 'berlin', 'denver', 'halifax'
-  ];
+  const timeInSlugs = TIME_IN_SLUGS;
 
   const timeInPages: MetadataRoute.Sitemap = timeInSlugs.map(slug => ({
     url: `${baseUrl}/time-in/${slug}`,
@@ -89,5 +88,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  return [...staticPages, ...pairingPages, ...blogPages, ...timeInPages];
+  const meetingPages: MetadataRoute.Sitemap = MEETING_GUIDES.map(guide => ({ url: `${baseUrl}/meeting-planner/${guide.slug}`, changeFrequency: 'weekly', priority: 0.8 }));
+  return [...staticPages, ...pairingPages, ...blogPages, ...timeInPages, ...meetingPages];
 }
